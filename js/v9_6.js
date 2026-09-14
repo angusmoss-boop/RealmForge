@@ -1,7 +1,7 @@
 window.RF = window.RF || {};
-RF.VERSION = '9.6.0';
+RF.VERSION = '9.6.1';
 
-/* Realmforge V9.6 — App Shell & Focus
+/* Realmforge V9.6.1 — App Shell & Focus
    - Android/PWA Back unwinds interfaces instead of immediately leaving the app.
    - Informational modals pause simulated time and restore the prior speed when closed.
    - Native dropdowns pause while open, preventing tick renders from collapsing them.
@@ -134,6 +134,30 @@ RF.v96ArmBack=function(){
   }catch{}
 };
 
+RF.v96ShowExitConfirm=function(){
+  RF.UI.modal={type:'exitV96'};
+  RF.UI.render(RF.state);
+};
+
+RF.v96ExitApp=function(){
+  // Make one last verified local save before leaving if Campaign Manager is available.
+  try{ if(RF.V95?.saveNow) RF.V95.saveNow(); else if(RF.state) RF.save(RF.state); }catch{}
+  RF.UI.modal=null;
+  RF.V96.suppressPop=true;
+
+  // Installed PWAs cannot rely on window.close() alone. Unwind our two-entry history guard;
+  // once the synthetic entries are gone, Android handles the final Back as an app exit.
+  try{
+    history.back();
+    setTimeout(()=>{
+      try{ history.back(); }catch{}
+      setTimeout(()=>{ try{ window.close(); }catch{} },120);
+    },60);
+  }catch{
+    try{ window.close(); }catch{}
+  }
+};
+
 RF.v96CloseTopInterface=function(){
   let s=RF.state;
   // Hands-on activity popup: use the existing proper abandon/resume routine.
@@ -143,23 +167,59 @@ RF.v96CloseTopInterface=function(){
     else {RF.actionGame=null;RF.UI.modal=null;RF.UI.render(s)}
     return true;
   }
-  if(RF.UI.modal){RF.UI.modal=null;RF.UI.render(s);return true;}
-  let active=document.activeElement;
-  if(active?.tagName==='SELECT'){active.blur();v96ReleaseSelect();return true;}
-  // Navigating away from a tab returns to World before leaving the app.
-  if(s&&RF.UI.tab&&RF.UI.tab!=='world'){
-    RF.UI.tab='world';RF.UI.render(s);return true;
+
+  // Any ordinary popup gets first refusal on Back.
+  if(RF.UI.modal){
+    RF.UI.modal=null;
+    RF.UI.render(s);
+    return true;
   }
+
+  let active=document.activeElement;
+  if(active?.tagName==='SELECT'){
+    active.blur();
+    v96ReleaseSelect();
+    return true;
+  }
+
+  // First root-level Back always takes the player to Options, regardless of current tab.
+  if(s&&RF.UI.tab!=='options'){
+    RF.UI.tab='options';
+    RF.UI.render(s);
+    return true;
+  }
+
+  // Back again from Options asks before leaving the installed app.
+  if(s&&RF.UI.tab==='options'){
+    RF.v96ShowExitConfirm();
+    return true;
+  }
+
   return false;
+};
+
+// Add the exit confirmation to the existing modal renderer.
+const v961ModalBase=RF.UI.modalHtml.bind(RF.UI);
+RF.UI.modalHtml=function(s){
+  let m=this.modal;
+  if(m?.type==='exitV96')return `<div class="modalBack"><div class="modal"><h2>Exit Realmforge?</h2><div class="sub">Your campaign will be saved before Realmforge closes.</div><div class="choices"><button class="choice dangerChoice" data-v96-exit><b>Exit Realmforge</b></button><button class="choice" data-v96-stay><b>Stay in Game</b></button></div></div></div>`;
+  return v961ModalBase(s);
+};
+
+// Bind exit/stay controls after every render without disturbing older interface handlers.
+const v961BindBase=RF.UI.bind.bind(RF.UI);
+RF.UI.bind=function(s){
+  v961BindBase(s);
+  document.querySelector('[data-v96-exit]')?.addEventListener('click',()=>RF.v96ExitApp());
+  document.querySelector('[data-v96-stay]')?.addEventListener('click',()=>{RF.UI.modal=null;RF.UI.render(RF.state)});
 };
 
 window.addEventListener('popstate',()=>{
   if(RF.V96.suppressPop)return;
   const handled=RF.v96CloseTopInterface();
-  // Always re-arm after consuming Back for an in-game interface. At the World root,
-  // consume one back press as a safety catch rather than instantly terminating the PWA.
+  // Consume Android Back inside Realmforge, then recreate the guard so the next press can
+  // continue unwinding the in-game stack instead of terminating the PWA immediately.
   if(handled){setTimeout(()=>history.pushState({rfRealmforgeGuard:true},'',location.href),0);return;}
-  // Root safety catch: keep the app open. Android Home/Recents remain the normal exit routes.
   setTimeout(()=>history.pushState({rfRealmforgeGuard:true},'',location.href),0);
 });
 
@@ -167,8 +227,8 @@ window.addEventListener('popstate',()=>{
 setTimeout(()=>RF.v96ArmBack(),50);
 
 if(RF.state){
-  RF.state.version='9.6.0';
-  RF.log(RF.state,'V9.6: Back navigation and focus-paused interfaces are active.','important');
+  RF.state.version='9.6.1';
+  RF.log(RF.state,'V9.6.1: Back navigation, exit confirmation and focus-paused interfaces are active.','important');
   RF.save(RF.state);
   RF.UI.render(RF.state);
 }
