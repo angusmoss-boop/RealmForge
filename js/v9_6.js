@@ -1,7 +1,7 @@
 window.RF = window.RF || {};
-RF.VERSION = '9.6.1';
+RF.VERSION = '9.6.2';
 
-/* Realmforge V9.6.1 — App Shell & Focus
+/* Realmforge V9.6.2 — App Shell & Focus
    - Android/PWA Back unwinds interfaces instead of immediately leaving the app.
    - Informational modals pause simulated time and restore the prior speed when closed.
    - Native dropdowns pause while open, preventing tick renders from collapsing them.
@@ -126,9 +126,14 @@ document.addEventListener('change',e=>{if(e.target?.tagName==='SELECT')v96Releas
 document.addEventListener('focusout',e=>{if(e.target?.tagName==='SELECT')v96ReleaseSelect()},true);
 
 // ---------- Android / installed-PWA Back behaviour ----------
-RF.v96ArmBack=function(){
+// Android may restore an installed PWA with only a single history entry after reopening.
+// Always rebuild a known two-entry in-app guard: BASE <- GUARD (current).
+RF.v96ArmBack=function(force=false){
   try{
-    history.replaceState({...history.state,rfRealmforgeBase:true},'',location.href);
+    if(!force && history.state?.rfRealmforgeGuard){RF.V96.backArmed=true;return;}
+    // Replace the current entry with our base marker, then add one synthetic guard above it.
+    // Using replace first prevents the stack growing each time the app resumes.
+    history.replaceState({...(history.state||{}),rfRealmforgeBase:true,rfRealmforgeGuard:false},'',location.href);
     history.pushState({rfRealmforgeGuard:true},'',location.href);
     RF.V96.backArmed=true;
   }catch{}
@@ -145,14 +150,10 @@ RF.v96ExitApp=function(){
   RF.UI.modal=null;
   RF.V96.suppressPop=true;
 
-  // Installed PWAs cannot rely on window.close() alone. Unwind our two-entry history guard;
-  // once the synthetic entries are gone, Android handles the final Back as an app exit.
+  // We deliberately stop re-arming and unwind the synthetic guard. Android/PWA then owns exit.
   try{
     history.back();
-    setTimeout(()=>{
-      try{ history.back(); }catch{}
-      setTimeout(()=>{ try{ window.close(); }catch{} },120);
-    },60);
+    setTimeout(()=>{ try{ window.close(); }catch{} },120);
   }catch{
     try{ window.close(); }catch{}
   }
@@ -211,24 +212,31 @@ const v961BindBase=RF.UI.bind.bind(RF.UI);
 RF.UI.bind=function(s){
   v961BindBase(s);
   document.querySelector('[data-v96-exit]')?.addEventListener('click',()=>RF.v96ExitApp());
-  document.querySelector('[data-v96-stay]')?.addEventListener('click',()=>{RF.UI.modal=null;RF.UI.render(RF.state)});
+  document.querySelector('[data-v96-stay]')?.addEventListener('click',()=>{RF.UI.modal=null;RF.UI.render(RF.state);RF.V96.suppressPop=false;RF.v96ArmBack(true)});
 };
 
 window.addEventListener('popstate',()=>{
   if(RF.V96.suppressPop)return;
-  const handled=RF.v96CloseTopInterface();
-  // Consume Android Back inside Realmforge, then recreate the guard so the next press can
-  // continue unwinding the in-game stack instead of terminating the PWA immediately.
-  if(handled){setTimeout(()=>history.pushState({rfRealmforgeGuard:true},'',location.href),0);return;}
-  setTimeout(()=>history.pushState({rfRealmforgeGuard:true},'',location.href),0);
+  RF.v96CloseTopInterface();
+  // We are now sitting on the BASE entry. Re-add GUARD immediately, before the user can
+  // press Back again. This removes the old timing race after Stay in Game / rapid presses.
+  try{history.pushState({rfRealmforgeGuard:true},'',location.href);RF.V96.backArmed=true;}catch{}
 });
 
+// Installed PWAs can be frozen and later restored with browser history partially discarded.
+// Rebuild the two-entry guard whenever the app becomes active again.
+window.addEventListener('pageshow',()=>setTimeout(()=>{if(!RF.V96.suppressPop)RF.v96ArmBack(true)},20));
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')setTimeout(()=>{if(!RF.V96.suppressPop)RF.v96ArmBack(true)},30);
+});
+window.addEventListener('focus',()=>setTimeout(()=>{if(!RF.V96.suppressPop)RF.v96ArmBack(true)},30));
+
 // Arm after the app scripts have finished their first render.
-setTimeout(()=>RF.v96ArmBack(),50);
+setTimeout(()=>RF.v96ArmBack(true),50);
 
 if(RF.state){
-  RF.state.version='9.6.1';
-  RF.log(RF.state,'V9.6.1: Back navigation, exit confirmation and focus-paused interfaces are active.','important');
+  RF.state.version='9.6.2';
+  RF.log(RF.state,'V9.6.2: Back navigation guard now survives app resume and Stay in Game reliably.','important');
   RF.save(RF.state);
   RF.UI.render(RF.state);
 }
