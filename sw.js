@@ -1,4 +1,4 @@
-const CACHE = 'realmforge-v9-5-pwa-v1';
+const CACHE = 'realmforge-v9-6-pwa-v1';
 const FILES = [
   "./",
   "./index.html",
@@ -27,7 +27,8 @@ const FILES = [
   "./js/v9_2.js",
   "./js/v9_3.js",
   "./js/v9_4.js",
-  "./js/v9_5.js"
+  "./js/v9_5.js",
+  "./js/v9_6.js"
 ];
 
 self.addEventListener('install', event => {
