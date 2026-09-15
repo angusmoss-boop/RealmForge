@@ -1,4 +1,4 @@
-const CACHE = 'realmforge-v9-6-2-pwa-v1';
+const CACHE = 'realmforge-v9-6-3-pwa-v1';
 const FILES = [
   "./",
   "./index.html",
