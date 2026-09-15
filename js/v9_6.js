@@ -1,7 +1,7 @@
 window.RF = window.RF || {};
-RF.VERSION = '9.6.2';
+RF.VERSION = '9.6.0';
 
-/* Realmforge V9.6.2 — App Shell & Focus
+/* Realmforge V9.6 — App Shell & Focus
    - Android/PWA Back unwinds interfaces instead of immediately leaving the app.
    - Informational modals pause simulated time and restore the prior speed when closed.
    - Native dropdowns pause while open, preventing tick renders from collapsing them.
@@ -126,164 +126,49 @@ document.addEventListener('change',e=>{if(e.target?.tagName==='SELECT')v96Releas
 document.addEventListener('focusout',e=>{if(e.target?.tagName==='SELECT')v96ReleaseSelect()},true);
 
 // ---------- Android / installed-PWA Back behaviour ----------
-// ---------- Android / installed-PWA Back behaviour ----------
-/*
-  V9.6.3 uses a fixed three-entry history ring instead of repeatedly pushing ad-hoc
-  guard entries. Current entry is RF_TOP. Android Back traverses to RF_CATCH;
-  popstate handles the in-game action, then history.forward() returns to RF_TOP.
-  A second RF_BASE entry gives us another safety layer if the browser restores an
-  incomplete history stack after a cold PWA launch.
-*/
-RF.VERSION='9.6.3';
-RF.V96.historyReady=false;
-RF.V96.historyRepairing=false;
-RF.V96.exitConfirmed=false;
-RF.V96.hasUserGesture=false;
-
-RF.v963BuildHistory=function(force=false){
-  if(RF.V96.exitConfirmed || RF.V96.historyRepairing)return;
+RF.v96ArmBack=function(){
   try{
-    if(!force && history.state?.rfTop){RF.V96.historyReady=true;return;}
-    RF.V96.historyRepairing=true;
-    const baseUrl=location.pathname+location.search;
-    history.replaceState({rfBase:true},'',baseUrl+'#realmforge');
-    history.pushState({rfCatch:true},'',baseUrl+'#realmforge-catch');
-    history.pushState({rfTop:true},'',baseUrl+'#realmforge-app');
-    RF.V96.historyReady=true;
-  }catch(e){
-    console.warn('Realmforge back-stack setup failed',e);
-  }finally{
-    RF.V96.historyRepairing=false;
-  }
-};
-
-RF.v96ShowExitConfirm=function(){
-  RF.UI.modal={type:'exitV96'};
-  RF.UI.render(RF.state);
-};
-
-RF.v96SaveBeforeExit=function(){
-  try{
-    if(RF.V95?.saveNow)RF.V95.saveNow();
-    else if(RF.state)RF.save(RF.state);
-  }catch(e){console.warn('Save before exit failed',e)}
-};
-
-RF.v96ExitApp=function(){
-  RF.v96SaveBeforeExit();
-  RF.UI.modal=null;
-  RF.V96.exitConfirmed=true;
-  try{
-    history.go(-2);
-  }catch(e){
-    try{window.close()}catch(_){}
-  }
+    history.replaceState({...history.state,rfRealmforgeBase:true},'',location.href);
+    history.pushState({rfRealmforgeGuard:true},'',location.href);
+    RF.V96.backArmed=true;
+  }catch{}
 };
 
 RF.v96CloseTopInterface=function(){
   let s=RF.state;
-
+  // Hands-on activity popup: use the existing proper abandon/resume routine.
   if(RF.UI.modal&&(RF.UI.modal.type==='v6Action'||RF.UI.modal.type==='v7Action')&&RF.actionGame){
     if(typeof RF.closeActionGame==='function'&&['work','fishing','hunt','firemaking','cooking','production'].includes(RF.actionGame.type))RF.closeActionGame();
     else if(typeof RF.v7Resume==='function')RF.v7Resume();
     else {RF.actionGame=null;RF.UI.modal=null;RF.UI.render(s)}
-    return 'interface';
+    return true;
   }
-
-  if(RF.UI.modal){
-    RF.UI.modal=null;
-    RF.UI.render(s);
-    return 'interface';
-  }
-
+  if(RF.UI.modal){RF.UI.modal=null;RF.UI.render(s);return true;}
   let active=document.activeElement;
-  if(active?.tagName==='SELECT'){
-    active.blur();
-    v96ReleaseSelect();
-    return 'interface';
+  if(active?.tagName==='SELECT'){active.blur();v96ReleaseSelect();return true;}
+  // Navigating away from a tab returns to World before leaving the app.
+  if(s&&RF.UI.tab&&RF.UI.tab!=='world'){
+    RF.UI.tab='world';RF.UI.render(s);return true;
   }
-
-  if(s&&RF.UI.tab!=='options'){
-    RF.UI.tab='options';
-    RF.UI.render(s);
-    return 'options';
-  }
-
-  if(s&&RF.UI.tab==='options'){
-    RF.v96ShowExitConfirm();
-    return 'confirm';
-  }
-
-  return 'none';
+  return false;
 };
 
-const v963ModalBase=RF.UI.modalHtml.bind(RF.UI);
-RF.UI.modalHtml=function(s){
-  let m=this.modal;
-  if(m?.type==='exitV96')return `<div class="modalBack"><div class="modal"><h2>Exit Realmforge?</h2><div class="sub">Your campaign will be saved before Realmforge closes.</div><div class="choices"><button class="choice dangerChoice" data-v96-exit><b>Exit Realmforge</b></button><button class="choice" data-v96-stay><b>Stay in Game</b></button></div></div></div>`;
-  return v963ModalBase(s);
-};
-
-const v963BindBase=RF.UI.bind.bind(RF.UI);
-RF.UI.bind=function(s){
-  v963BindBase(s);
-  document.querySelector('[data-v96-exit]')?.addEventListener('click',()=>RF.v96ExitApp());
-  document.querySelector('[data-v96-stay]')?.addEventListener('click',()=>{
-    RF.UI.modal=null;
-    RF.UI.render(RF.state);
-    RF.V96.exitConfirmed=false;
-    setTimeout(()=>RF.v963BuildHistory(true),0);
-  });
-};
-
-['pointerdown','keydown','touchstart'].forEach(type=>{
-  window.addEventListener(type,()=>{
-    RF.V96.hasUserGesture=true;
-    if(!RF.V96.exitConfirmed)RF.v963BuildHistory(false);
-  },{capture:true,once:false,passive:true});
+window.addEventListener('popstate',()=>{
+  if(RF.V96.suppressPop)return;
+  const handled=RF.v96CloseTopInterface();
+  // Always re-arm after consuming Back for an in-game interface. At the World root,
+  // consume one back press as a safety catch rather than instantly terminating the PWA.
+  if(handled){setTimeout(()=>history.pushState({rfRealmforgeGuard:true},'',location.href),0);return;}
+  // Root safety catch: keep the app open. Android Home/Recents remain the normal exit routes.
+  setTimeout(()=>history.pushState({rfRealmforgeGuard:true},'',location.href),0);
 });
 
-window.addEventListener('popstate',(ev)=>{
-  if(RF.V96.exitConfirmed)return;
-
-  if(ev.state?.rfCatch){
-    RF.v96CloseTopInterface();
-    setTimeout(()=>{
-      try{history.forward()}catch(_){RF.v963BuildHistory(true)}
-    },0);
-    return;
-  }
-
-  RF.v96CloseTopInterface();
-  setTimeout(()=>RF.v963BuildHistory(true),0);
-});
-
-window.addEventListener('beforeunload',(e)=>{
-  if(RF.V96.exitConfirmed || !RF.V96.hasUserGesture)return;
-  RF.v96SaveBeforeExit();
-  e.preventDefault();
-  e.returnValue='';
-});
-
-function v963ResumeGuard(){
-  if(RF.V96.exitConfirmed)return;
-  setTimeout(()=>RF.v963BuildHistory(true),10);
-}
-window.addEventListener('pageshow',v963ResumeGuard);
-window.addEventListener('focus',v963ResumeGuard);
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible')v963ResumeGuard();
-});
-window.addEventListener('resume',v963ResumeGuard);
-
-RF.v963BuildHistory(true);
-requestAnimationFrame(()=>RF.v963BuildHistory(true));
-setTimeout(()=>RF.v963BuildHistory(true),80);
-setTimeout(()=>RF.v963BuildHistory(true),400);
+// Arm after the app scripts have finished their first render.
+setTimeout(()=>RF.v96ArmBack(),50);
 
 if(RF.state){
-  RF.state.version='9.6.3';
-  RF.log(RF.state,'V9.6.3: hardened Android Back stack and exit confirmation are active.','important');
+  RF.state.version='9.6.0';
+  RF.log(RF.state,'V9.6: Back navigation and focus-paused interfaces are active.','important');
   RF.save(RF.state);
   RF.UI.render(RF.state);
 }
