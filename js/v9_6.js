@@ -126,17 +126,35 @@ document.addEventListener('change',e=>{if(e.target?.tagName==='SELECT')v96Releas
 document.addEventListener('focusout',e=>{if(e.target?.tagName==='SELECT')v96ReleaseSelect()},true);
 
 // ---------- Android / installed-PWA Back behaviour ----------
-// Android may restore an installed PWA with only a single history entry after reopening.
-// Always rebuild a known two-entry in-app guard: BASE <- GUARD (current).
-RF.v96ArmBack=function(force=false){
+// ---------- Android / installed-PWA Back behaviour ----------
+/*
+  V9.6.3 uses a fixed three-entry history ring instead of repeatedly pushing ad-hoc
+  guard entries. Current entry is RF_TOP. Android Back traverses to RF_CATCH;
+  popstate handles the in-game action, then history.forward() returns to RF_TOP.
+  A second RF_BASE entry gives us another safety layer if the browser restores an
+  incomplete history stack after a cold PWA launch.
+*/
+RF.VERSION='9.6.3';
+RF.V96.historyReady=false;
+RF.V96.historyRepairing=false;
+RF.V96.exitConfirmed=false;
+RF.V96.hasUserGesture=false;
+
+RF.v963BuildHistory=function(force=false){
+  if(RF.V96.exitConfirmed || RF.V96.historyRepairing)return;
   try{
-    if(!force && history.state?.rfRealmforgeGuard){RF.V96.backArmed=true;return;}
-    // Replace the current entry with our base marker, then add one synthetic guard above it.
-    // Using replace first prevents the stack growing each time the app resumes.
-    history.replaceState({...(history.state||{}),rfRealmforgeBase:true,rfRealmforgeGuard:false},'',location.href);
-    history.pushState({rfRealmforgeGuard:true},'',location.href);
-    RF.V96.backArmed=true;
-  }catch{}
+    if(!force && history.state?.rfTop){RF.V96.historyReady=true;return;}
+    RF.V96.historyRepairing=true;
+    const baseUrl=location.pathname+location.search;
+    history.replaceState({rfBase:true},'',baseUrl+'#realmforge');
+    history.pushState({rfCatch:true},'',baseUrl+'#realmforge-catch');
+    history.pushState({rfTop:true},'',baseUrl+'#realmforge-app');
+    RF.V96.historyReady=true;
+  }catch(e){
+    console.warn('Realmforge back-stack setup failed',e);
+  }finally{
+    RF.V96.historyRepairing=false;
+  }
 };
 
 RF.v96ShowExitConfirm=function(){
@@ -144,99 +162,128 @@ RF.v96ShowExitConfirm=function(){
   RF.UI.render(RF.state);
 };
 
-RF.v96ExitApp=function(){
-  // Make one last verified local save before leaving if Campaign Manager is available.
-  try{ if(RF.V95?.saveNow) RF.V95.saveNow(); else if(RF.state) RF.save(RF.state); }catch{}
-  RF.UI.modal=null;
-  RF.V96.suppressPop=true;
-
-  // We deliberately stop re-arming and unwind the synthetic guard. Android/PWA then owns exit.
+RF.v96SaveBeforeExit=function(){
   try{
-    history.back();
-    setTimeout(()=>{ try{ window.close(); }catch{} },120);
-  }catch{
-    try{ window.close(); }catch{}
+    if(RF.V95?.saveNow)RF.V95.saveNow();
+    else if(RF.state)RF.save(RF.state);
+  }catch(e){console.warn('Save before exit failed',e)}
+};
+
+RF.v96ExitApp=function(){
+  RF.v96SaveBeforeExit();
+  RF.UI.modal=null;
+  RF.V96.exitConfirmed=true;
+  try{
+    history.go(-2);
+  }catch(e){
+    try{window.close()}catch(_){}
   }
 };
 
 RF.v96CloseTopInterface=function(){
   let s=RF.state;
-  // Hands-on activity popup: use the existing proper abandon/resume routine.
+
   if(RF.UI.modal&&(RF.UI.modal.type==='v6Action'||RF.UI.modal.type==='v7Action')&&RF.actionGame){
     if(typeof RF.closeActionGame==='function'&&['work','fishing','hunt','firemaking','cooking','production'].includes(RF.actionGame.type))RF.closeActionGame();
     else if(typeof RF.v7Resume==='function')RF.v7Resume();
     else {RF.actionGame=null;RF.UI.modal=null;RF.UI.render(s)}
-    return true;
+    return 'interface';
   }
 
-  // Any ordinary popup gets first refusal on Back.
   if(RF.UI.modal){
     RF.UI.modal=null;
     RF.UI.render(s);
-    return true;
+    return 'interface';
   }
 
   let active=document.activeElement;
   if(active?.tagName==='SELECT'){
     active.blur();
     v96ReleaseSelect();
-    return true;
+    return 'interface';
   }
 
-  // First root-level Back always takes the player to Options, regardless of current tab.
   if(s&&RF.UI.tab!=='options'){
     RF.UI.tab='options';
     RF.UI.render(s);
-    return true;
+    return 'options';
   }
 
-  // Back again from Options asks before leaving the installed app.
   if(s&&RF.UI.tab==='options'){
     RF.v96ShowExitConfirm();
-    return true;
+    return 'confirm';
   }
 
-  return false;
+  return 'none';
 };
 
-// Add the exit confirmation to the existing modal renderer.
-const v961ModalBase=RF.UI.modalHtml.bind(RF.UI);
+const v963ModalBase=RF.UI.modalHtml.bind(RF.UI);
 RF.UI.modalHtml=function(s){
   let m=this.modal;
   if(m?.type==='exitV96')return `<div class="modalBack"><div class="modal"><h2>Exit Realmforge?</h2><div class="sub">Your campaign will be saved before Realmforge closes.</div><div class="choices"><button class="choice dangerChoice" data-v96-exit><b>Exit Realmforge</b></button><button class="choice" data-v96-stay><b>Stay in Game</b></button></div></div></div>`;
-  return v961ModalBase(s);
+  return v963ModalBase(s);
 };
 
-// Bind exit/stay controls after every render without disturbing older interface handlers.
-const v961BindBase=RF.UI.bind.bind(RF.UI);
+const v963BindBase=RF.UI.bind.bind(RF.UI);
 RF.UI.bind=function(s){
-  v961BindBase(s);
+  v963BindBase(s);
   document.querySelector('[data-v96-exit]')?.addEventListener('click',()=>RF.v96ExitApp());
-  document.querySelector('[data-v96-stay]')?.addEventListener('click',()=>{RF.UI.modal=null;RF.UI.render(RF.state);RF.V96.suppressPop=false;RF.v96ArmBack(true)});
+  document.querySelector('[data-v96-stay]')?.addEventListener('click',()=>{
+    RF.UI.modal=null;
+    RF.UI.render(RF.state);
+    RF.V96.exitConfirmed=false;
+    setTimeout(()=>RF.v963BuildHistory(true),0);
+  });
 };
 
-window.addEventListener('popstate',()=>{
-  if(RF.V96.suppressPop)return;
+['pointerdown','keydown','touchstart'].forEach(type=>{
+  window.addEventListener(type,()=>{
+    RF.V96.hasUserGesture=true;
+    if(!RF.V96.exitConfirmed)RF.v963BuildHistory(false);
+  },{capture:true,once:false,passive:true});
+});
+
+window.addEventListener('popstate',(ev)=>{
+  if(RF.V96.exitConfirmed)return;
+
+  if(ev.state?.rfCatch){
+    RF.v96CloseTopInterface();
+    setTimeout(()=>{
+      try{history.forward()}catch(_){RF.v963BuildHistory(true)}
+    },0);
+    return;
+  }
+
   RF.v96CloseTopInterface();
-  // We are now sitting on the BASE entry. Re-add GUARD immediately, before the user can
-  // press Back again. This removes the old timing race after Stay in Game / rapid presses.
-  try{history.pushState({rfRealmforgeGuard:true},'',location.href);RF.V96.backArmed=true;}catch{}
+  setTimeout(()=>RF.v963BuildHistory(true),0);
 });
 
-// Installed PWAs can be frozen and later restored with browser history partially discarded.
-// Rebuild the two-entry guard whenever the app becomes active again.
-window.addEventListener('pageshow',()=>setTimeout(()=>{if(!RF.V96.suppressPop)RF.v96ArmBack(true)},20));
+window.addEventListener('beforeunload',(e)=>{
+  if(RF.V96.exitConfirmed || !RF.V96.hasUserGesture)return;
+  RF.v96SaveBeforeExit();
+  e.preventDefault();
+  e.returnValue='';
+});
+
+function v963ResumeGuard(){
+  if(RF.V96.exitConfirmed)return;
+  setTimeout(()=>RF.v963BuildHistory(true),10);
+}
+window.addEventListener('pageshow',v963ResumeGuard);
+window.addEventListener('focus',v963ResumeGuard);
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible')setTimeout(()=>{if(!RF.V96.suppressPop)RF.v96ArmBack(true)},30);
+  if(document.visibilityState==='visible')v963ResumeGuard();
 });
-window.addEventListener('focus',()=>setTimeout(()=>{if(!RF.V96.suppressPop)RF.v96ArmBack(true)},30));
+window.addEventListener('resume',v963ResumeGuard);
 
-// Arm after the app scripts have finished their first render.
-setTimeout(()=>RF.v96ArmBack(true),50);
+RF.v963BuildHistory(true);
+requestAnimationFrame(()=>RF.v963BuildHistory(true));
+setTimeout(()=>RF.v963BuildHistory(true),80);
+setTimeout(()=>RF.v963BuildHistory(true),400);
 
 if(RF.state){
-  RF.state.version='9.6.2';
-  RF.log(RF.state,'V9.6.2: Back navigation guard now survives app resume and Stay in Game reliably.','important');
+  RF.state.version='9.6.3';
+  RF.log(RF.state,'V9.6.3: hardened Android Back stack and exit confirmation are active.','important');
   RF.save(RF.state);
   RF.UI.render(RF.state);
 }
