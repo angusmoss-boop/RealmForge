@@ -1,5 +1,5 @@
-version=10.38.0
-title=Navigator Grid
-built=2026-09-16T03:24:00+01:00
-build_id=20260916-0324-bst
-notes=Bottom tab navigation replaced with a custom polished launcher that opens a 3-column tab grid instead of the native list picker.
+version=10.39.0
+title=Living Vistas
+built=2026-09-16T03:30:00+01:00
+build_id=20260916-0330-bst
+notes=World location display rebuilt as a location-aware generated landscape with continuous time-of-day lighting, sun/moon movement, stars and richer animated weather.
