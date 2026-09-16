@@ -1,5 +1,5 @@
-version=10.35.0
-title=Battle Lines
-built=2026-09-16T02:38:00+01:00
-build_id=20260916-0238-bst
-notes=Compact side-by-side battle UI, 3-column action/item grids, and persistent Attack/Strength/Defence training focus.
+version=10.36.0
+title=Battle Intel
+built=2026-09-16T02:51:00+01:00
+build_id=20260916-0251-bst
+notes=Press and hold combat Actions for 2 seconds to inspect full ability information without sacrificing the compact battle grid.
