@@ -1,5 +1,5 @@
-version=10.40.0
-title=Vista Composition
-built=2026-09-16T03:38:00+01:00
-build_id=20260916-0338-bst
-notes=Living Vistas refined to a 75/25 landscape/detail layout, duplicate location chip removed, weather retained, and cloud drift rebuilt to remain smooth across UI rerenders.
+version=10.41.0
+title=Rainfall & Type Polish
+built=2026-09-16T03:50:00+01:00
+build_id=20260916-0350-bst
+notes=Adds descender-safe location title spacing and replaces full-height rain rails with short, fast angled rain streaks.
