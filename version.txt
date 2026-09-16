@@ -1,5 +1,5 @@
-version=10.45.0
-title=Pack Grid
-built=2026-09-16T22:52:00+01:00
-build_id=20260916-2252-bst
-notes=The main Pack tab now uses the same compact 4-column grid direction as the Vault, and inventory-facing category selectors are replaced with a single-row tab strip across Pack and Bank-style interfaces.
+version=10.46.0
+title=Category Grid
+built=2026-09-16T23:02:00+01:00
+build_id=20260916-2302-bst
+notes=Category tabs are now arranged as a compact 2-row, 4-column grid so all 8 categories fit cleanly on screen in Pack and Vault-style inventory interfaces without stretching the layout.
