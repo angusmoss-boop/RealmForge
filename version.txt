@@ -1,5 +1,5 @@
-version=10.43.0
-title=Vault Compact
-built=2026-09-16T22:22:00+01:00
-build_id=20260916-2222-bst
-notes=The V10.42 bank vault is compacted into a denser 4-column grid with shorter item cards, smaller item-name text, and the redundant Pack/Bank quantity subline removed.
+version=10.44.0
+title=Vault Flow
+built=2026-09-16T22:31:00+01:00
+build_id=20260916-2231-bst
+notes=The vault quantity popup now shows the available stack amount beside the item name, keeps the interface open for repeated quick transfers while the amount counts down, and adds a red quick-close button in the preset grid.
