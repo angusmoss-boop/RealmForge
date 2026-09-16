@@ -1,5 +1,5 @@
-version=10.42.0
-title=Vault Grid
-built=2026-09-16T22:15:00+01:00
-build_id=20260916-2215-bst
-notes=Bank and pack storage are rebuilt into sleek Pack/Bank tabs with 3-column item grids, tap-to-move transfers, stack quantity popups, and long-press item details.
+version=10.43.0
+title=Vault Compact
+built=2026-09-16T22:22:00+01:00
+build_id=20260916-2222-bst
+notes=The V10.42 bank vault is compacted into a denser 4-column grid with shorter item cards, smaller item-name text, and the redundant Pack/Bank quantity subline removed.
