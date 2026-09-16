@@ -1,5 +1,5 @@
-version=10.47.0
-title=Three Vaults
-built=2026-09-16T23:12:00+01:00
-build_id=20260916-2312-bst
-notes=The redundant bottom Close Bank row is removed from the Vault, and Ironridge plus Reedmere now expose dedicated World Bank sections with full access to the shared regional vault alongside Greenvale.
+version=10.48.0
+title=Field Identification
+built=2026-09-16T23:42:00+01:00
+build_id=20260916-2342-bst
+notes=Creature names and field data remain hidden until Field Research reaches 3/3. Nearby Creatures and Field Research stay unidentified until completion, and the Database bestiary contains only fully researched creatures.
