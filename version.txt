@@ -1,5 +1,5 @@
-version=10.46.0
-title=Category Grid
-built=2026-09-16T23:02:00+01:00
-build_id=20260916-2302-bst
-notes=Category tabs are now arranged as a compact 2-row, 4-column grid so all 8 categories fit cleanly on screen in Pack and Vault-style inventory interfaces without stretching the layout.
+version=10.47.0
+title=Three Vaults
+built=2026-09-16T23:12:00+01:00
+build_id=20260916-2312-bst
+notes=The redundant bottom Close Bank row is removed from the Vault, and Ironridge plus Reedmere now expose dedicated World Bank sections with full access to the shared regional vault alongside Greenvale.
