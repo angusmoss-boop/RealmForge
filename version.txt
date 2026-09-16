@@ -1,0 +1,5 @@
+version=10.33.0
+title=Build Beacon
+built=2026-09-16T01:10:00+01:00
+build_id=20260916-0110-bst
+notes=Developer console repaired; main-menu deployment sentinel added.
