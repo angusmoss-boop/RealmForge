@@ -1,5 +1,5 @@
 version=10.41.0
-title=Rainfall & Type Polish
-built=2026-09-16T03:50:00+01:00
-build_id=20260916-0350-bst
-notes=Adds descender-safe location title spacing and replaces full-height rain rails with short, fast angled rain streaks.
+title=Rainline
+built=2026-09-16T21:35:00+01:00
+build_id=20260916-2135-bst
+notes=V10.40's Living Vista gets a roomier location strip so names like Ironridge no longer clip, and rain/storm weather now uses slower short diagonal drops instead of full-height streaks.
