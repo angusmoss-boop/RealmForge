@@ -1,5 +1,5 @@
-version=10.50.0
-title=Loadout Pages
-built=2026-09-17T02:24:00+01:00
-build_id=20260917-0224-bst
-notes=Equipment and Tool Belt are promoted into dedicated navigation pages using compact 4-column loadout grids, while the old Equipment and Tool Belt sections are removed from Character.
+version=10.51.0
+title=Vault Trim
+built=2026-09-17T03:27:00+01:00
+build_id=20260917-0327-bst
+notes=Removed the redundant secondary Pack/Bank count beside Vault category filters; the top Pack and Bank tabs remain the single place showing slot and stored-stack counts.
