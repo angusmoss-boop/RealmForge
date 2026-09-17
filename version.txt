@@ -1,5 +1,5 @@
-version=10.53.0
-title=Detached Loadout
-built=2026-09-17T07:26:00+01:00
-build_id=20260917-0726-bst
-notes=Equipped combat gear and Tool Belt tools are now detached from Pack inventory: equipping removes the item from Pack, replacing returns the old item to Pack, and equipped items no longer consume Pack slots.
+version=10.54.0
+title=Local Markets
+built=2026-09-17T08:05:00+01:00
+build_id=20260917-0805-bst
+notes=Shop leaves global navigation and commerce becomes location-based: ten finite-stock regional markets now appear in suitable World locations, with Vault-style Buy/Sell grids, daily restocking, local pricing, quantity trading and new regional equipment.
