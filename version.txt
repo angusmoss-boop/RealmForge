@@ -1,5 +1,5 @@
-version=10.59.0
-title=Stable Battle Tabs
-built=2026-09-17T16:44:00+01:00
-build_id=20260917-1644-bst
-notes=Combat category switching is now DOM-only so Aggressive, Defensive, Abilities and Magic no longer trigger a battle-modal camera jolt; category emojis and action counts are also larger and more centrally grouped.
+version=10.60.0
+title=Full Battle Frame
+built=2026-09-17T19:38:00+01:00
+build_id=20260917-1938-bst
+notes=Tactical Battle now uses a fixed full-height viewport frame, so switching combat categories cannot resize the popup; longer content simply scrolls within the same battle window.
