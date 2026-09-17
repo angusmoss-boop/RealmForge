@@ -1,5 +1,5 @@
-version=10.54.0
-title=Local Markets
-built=2026-09-17T08:05:00+01:00
-build_id=20260917-0805-bst
-notes=Shop leaves global navigation and commerce becomes location-based: ten finite-stock regional markets now appear in suitable World locations, with Vault-style Buy/Sell grids, daily restocking, local pricing, quantity trading and new regional equipment.
+version=10.55.0
+title=Loadout Balance
+built=2026-09-17T15:30:00+01:00
+build_id=20260917-1530-bst
+notes=All worn equipment slots now contribute their damage and armour bonuses to combat totals. Existing equipment is normalised with weapon-led damage/defence ratios and armour-led defence/damage ratios, while current detached loadouts migrate in place without changing equipped item IDs.
