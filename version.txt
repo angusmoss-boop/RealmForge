@@ -1,5 +1,5 @@
-version=11.2.3
-title=Close Button Standardisation
-built=2026-09-17T21:35:00+01:00
-build_id=20260917-2135-bst
-notes=All top-right X close boxes are now standardised to a smaller fixed size across popup and overlay interfaces, including database/location detail, resource selection, bank and market overlays.
+version=11.3.0
+title=Dungeon Codex
+built=2026-09-17T21:32:00+01:00
+build_id=20260917-2132-bst
+notes=Database navigation is now a 4-column by 2-row grid with new Dungeons and Magic sections. Dungeon records list each dungeon's level and exact world location/region; Magic is reserved for the coming spell system.
