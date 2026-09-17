@@ -1,5 +1,5 @@
-version=11.3.2
-title=Battle Reward Flow
-built=2026-09-17T22:05:00+01:00
-build_id=20260917-2205-bst
-notes=Post-combat reward lists no longer create a nested scroll area. Rewards expand to their full length and the battle summary popup is the single scrolling surface, with Continue naturally at the bottom.
+version=11.4.0
+title=Eightfold Dungeons
+built=2026-09-17T22:25:00+01:00
+build_id=20260917-2225-bst
+notes=Realmforge now has eight dungeons. Every standard combat location has eight local entity species, dungeon waves fight that location's eight entities from lowest to highest level, and each dungeon has a unique boss with a tier-scaled rare equipment pool.
