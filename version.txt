@@ -1,5 +1,5 @@
-version=11.2.0
-title=Requirement Integrity
-built=2026-09-17T20:59:00+01:00
-build_id=20260917-2059-bst
-notes=Skill requirement checks are normalized across gathering, crafting, cooking, equipment, travel, excavation and abilities. Resource menus now show Your Lv vs Requires Lv clearly. V11.1.1 detail-close polish is folded into V11.2 so V11.0 installs only need v11_1.js and v11_2.js.
+version=11.2.1
+title=Modal Scroll Lock
+built=2026-09-17T21:08:00+01:00
+build_id=20260917-2108-bst
+notes=Opening any Realmforge popup, navigation picker, battle/travel overlay or supported detail overlay now locks the page behind it. Popup content keeps its own scrolling, edge swipes no longer scroll the underlying interface, and the exact page position is restored when the overlay closes.
