@@ -29,7 +29,7 @@ RF.migrateV103=function(s){
   if(!s)return s;s.version='10.3.0';s.flags=s.flags||{};s.toolbelt=s.toolbelt||{};
   RF.v103ToolTypes().forEach(type=>{
     const current=s.toolbelt[type];
-    if(current&&RF.DATA.items[current]?.tool===type&&(s.inventory[current]||0)>0)return;
+    if(current&&RF.DATA.items[current]?.tool===type)return;
     const best=RF.v103BestOwnedTool(s,type);s.toolbelt[type]=best?.id||null;
   });
   return s
@@ -41,7 +41,7 @@ if(RF.V95){RF.V95.SCHEMA='10.3.0';const oldMig=RF.V95.migrate.bind(RF.V95);RF.V9
 // The explicitly equipped tool is now the active tool. No silent best-in-pack selection.
 RF.bestTool=function(s,skill){
   const id=s?.toolbelt?.[skill],it=id&&RF.DATA.items[id];
-  if(id&&it?.tool===skill&&(s.inventory?.[id]||0)>0)return {id,...it};
+  if(id&&it?.tool===skill)return {id,...it};
   return null
 };
 
