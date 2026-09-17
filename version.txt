@@ -1,5 +1,5 @@
-version=10.56.0
-title=Overburdened
-built=2026-09-17T15:58:00+01:00
-build_id=20260917-1558-bst
-notes=Item acquisition is now lossless: the Pack may temporarily exceed its slot limit, with over-encumbered characters unable to advance time or travel until they bank, drop, sell, use or equip enough items. Loadout returns are overflow-safe and existing campaigns/loadouts migrate in place.
+version=10.57.0
+title=Battle Categories
+built=2026-09-17T16:05:00+01:00
+build_id=20260917-1605-bst
+notes=Magic joins navigation with a Coming Soon page, while Tactical Battle actions are tightened into a 4-column layout with Aggressive, Defensive, Abilities and Magic categories. Existing campaign loadouts remain untouched.
