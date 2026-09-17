@@ -1,5 +1,5 @@
-version=11.1.0
-title=Location Directory
-built=2026-09-17T20:36:00+01:00
-build_id=20260917-2036-bst
-notes=V11.0 is now the Dungeon Gauntlets milestone. V11.1 enriches Database location records with facilities and services such as banks, inns, local markets, dungeons, workshops and excavation sites.
+version=11.2.0
+title=Requirement Integrity
+built=2026-09-17T20:59:00+01:00
+build_id=20260917-2059-bst
+notes=Skill requirement checks are normalized across gathering, crafting, cooking, equipment, travel, excavation and abilities. Resource menus now show Your Lv vs Requires Lv clearly. V11.1.1 detail-close polish is folded into V11.2 so V11.0 installs only need v11_1.js and v11_2.js.
