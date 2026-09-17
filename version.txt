@@ -1,5 +1,5 @@
-version=10.58.0
-title=Battle Tabs
-built=2026-09-17T16:12:00+01:00
-build_id=20260917-1612-bst
-notes=Combat action categories are restyled as one full-width gold segmented tab bar, visually separated from action tiles, and category switching no longer retriggers the battle-modal entrance jolt.
+version=10.59.0
+title=Stable Battle Tabs
+built=2026-09-17T16:44:00+01:00
+build_id=20260917-1644-bst
+notes=Combat category switching is now DOM-only so Aggressive, Defensive, Abilities and Magic no longer trigger a battle-modal camera jolt; category emojis and action counts are also larger and more centrally grouped.
