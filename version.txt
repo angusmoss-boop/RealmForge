@@ -1,5 +1,5 @@
-version=10.61.0
-title=Database Grid
-built=2026-09-17T20:10:12+01:00
-build_id=20260917-2010-bst
-notes=Database sections now use fast emoji/name sector tiles in a three-column grid, and every Database category is ordered by progression level first and alphabetically within the same level.
+version=10.62.0
+title=Dungeon Gauntlets
+built=2026-09-17T20:46:00+01:00
+build_id=20260917-2046-bst
+notes=Forgotten Crypt and Emberdeep now use full dungeon gauntlets: 8 random local enemy waves, a new location-specific boss, wave/boss interstitials, live wave tracking, strong dungeon gear rewards, and one final combined dungeon summary.
