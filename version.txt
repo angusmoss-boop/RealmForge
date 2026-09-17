@@ -1,5 +1,5 @@
-version=10.49.0
-title=Unknown Entity
-built=2026-09-16T23:59:00+01:00
-build_id=20260916-2359-bst
-notes=Unresearched wildlife keeps its visible emoji while being labelled Unknown Entity. Combat now hides enemy identity and armour until Research 3/3, while identified enemies show Attack rating and Armour.
+version=10.50.0
+title=Loadout Pages
+built=2026-09-17T02:24:00+01:00
+build_id=20260917-0224-bst
+notes=Equipment and Tool Belt are promoted into dedicated navigation pages using compact 4-column loadout grids, while the old Equipment and Tool Belt sections are removed from Character.
