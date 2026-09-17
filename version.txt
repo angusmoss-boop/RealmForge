@@ -1,5 +1,5 @@
-version=11.2.1
-title=Modal Scroll Lock
-built=2026-09-17T21:08:00+01:00
-build_id=20260917-2108-bst
-notes=Opening any Realmforge popup, navigation picker, battle/travel overlay or supported detail overlay now locks the page behind it. Popup content keeps its own scrolling, edge swipes no longer scroll the underlying interface, and the exact page position is restored when the overlay closes.
+version=11.2.2
+title=Clock Sentinel
+built=2026-09-17T21:20:00+01:00
+build_id=20260917-2120-bst
+notes=The world clock and travel system now use a guarded RAF scheduler plus an independent visible-page watchdog. Stalled journeys self-recover, stale pause debris is repaired, already-stuck saves resume safely, and deliberate pauses/over-encumbrance/combat remain authoritative.
