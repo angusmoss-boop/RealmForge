@@ -1,5 +1,5 @@
-version=11.5.1
-title=Wayfinder Hints
-built=2026-09-17T23:28:00+01:00
-build_id=20260917-2328-bst
-notes=Locked World Map destinations now show subtle, state-aware hints for the next progression step instead of internal save-flag names. Hints advance automatically as prerequisite story steps are completed.
+version=11.5.2
+title=Fieldcraft Research
+built=2026-09-18T00:28:00+01:00
+build_id=20260918-0028-bst
+notes=Field Research now scales with both Exploration and Hunting. Exploration primarily improves observation safety; Hunting primarily improves clue quality and the chance to gain an extra research note. Existing research progress is preserved.
