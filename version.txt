@@ -1,5 +1,5 @@
-version=11.5.0
-title=Loadout Manager
-built=2026-09-17T21:58:00+01:00
-build_id=20260917-2158-bst
-notes=Equipment and Tool Belt slots are now interactive loadout managers. Gear details show live stat comparisons, rings can be equipped explicitly to Ring I or Ring II including duplicate rings, and active Tool Belt copies remain detached from Pack storage.
+version=11.5.1
+title=Wayfinder Hints
+built=2026-09-17T23:28:00+01:00
+build_id=20260917-2328-bst
+notes=Locked World Map destinations now show subtle, state-aware hints for the next progression step instead of internal save-flag names. Hints advance automatically as prerequisite story steps are completed.
