@@ -1,5 +1,5 @@
-version=10.52.0
-title=Quick Stack
-built=2026-09-17T03:36:00+01:00
-build_id=20260917-0336-bst
-notes=Added a Vault Quick Stack action that moves all movable Pack items into matching stacks that already exist in the Bank while protecting equipped copies.
+version=10.53.0
+title=Detached Loadout
+built=2026-09-17T07:26:00+01:00
+build_id=20260917-0726-bst
+notes=Equipped combat gear and Tool Belt tools are now detached from Pack inventory: equipping removes the item from Pack, replacing returns the old item to Pack, and equipped items no longer consume Pack slots.
