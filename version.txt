@@ -1,5 +1,5 @@
-version=11.3.0
-title=Dungeon Codex
-built=2026-09-17T21:32:00+01:00
-build_id=20260917-2132-bst
-notes=Database navigation is now a 4-column by 2-row grid with new Dungeons and Magic sections. Dungeon records list each dungeon's level and exact world location/region; Magic is reserved for the coming spell system.
+version=11.3.1
+title=Verdant Count Tabs
+built=2026-09-17T21:55:00+01:00
+build_id=20260917-2155-bst
+notes=Refreshed the small green count/status ovals into a cleaner tab style that fits neatly into the top-right corner across database, world map and other standard header badges.
