@@ -1,5 +1,5 @@
-version=11.2.2
-title=Clock Sentinel
-built=2026-09-17T21:20:00+01:00
-build_id=20260917-2120-bst
-notes=The world clock and travel system now use a guarded RAF scheduler plus an independent visible-page watchdog. Stalled journeys self-recover, stale pause debris is repaired, already-stuck saves resume safely, and deliberate pauses/over-encumbrance/combat remain authoritative.
+version=11.2.3
+title=Close Button Standardisation
+built=2026-09-17T21:35:00+01:00
+build_id=20260917-2135-bst
+notes=All top-right X close boxes are now standardised to a smaller fixed size across popup and overlay interfaces, including database/location detail, resource selection, bank and market overlays.
