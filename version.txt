@@ -1,5 +1,5 @@
-version=11.5.2
-title=Fieldcraft Research
-built=2026-09-18T00:28:00+01:00
-build_id=20260918-0028-bst
-notes=Field Research now scales with both Exploration and Hunting. Exploration primarily improves observation safety; Hunting primarily improves clue quality and the chance to gain an extra research note. Existing research progress is preserved.
+version=11.5.3
+title=Living Encounters
+built=2026-09-18T00:58:00+01:00
+build_id=20260918-0058-bst
+notes=Nearby creature rotations now refresh every in-game hour. Field Research lists every unique nearby creature with duplicates removed, while the main Nearby Creatures roster can still contain duplicate spawns.
