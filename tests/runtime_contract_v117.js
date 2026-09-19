@@ -1,5 +1,5 @@
 const fs=require('fs'), vm=require('vm'), path=require('path');
-const root='/mnt/data/rf_current_1170';
+const root=path.resolve(__dirname,'..');
 const storage=new Map();
 let ctx;
 function dummyEl(){return {innerHTML:'',textContent:'',value:'',disabled:false,style:{},dataset:{},classList:{add(){},remove(){},contains(){return false}},setAttribute(){},getAttribute(){return null},appendChild(el){if(el&&el.tagName==='SCRIPT'&&el.textContent){try{vm.runInContext(el.textContent,ctx,{filename:el.sourceURL||'embedded.js'});}catch(e){ctx.__errs.push(String(e.stack||e));}} return el;},remove(){},addEventListener(){},removeEventListener(){},querySelectorAll(){return[]},querySelector(){return null},closest(){return null},focus(){}}}
