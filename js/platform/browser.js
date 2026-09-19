@@ -1,6 +1,6 @@
-/* Browser/PWA platform adapter. New production code should use RF.Platform
-   rather than calling browser globals directly. The legacy compatibility layer
-   is intentionally not rewritten in V11.7.0. */
+/* Browser/PWA platform adapter. Canonical persistence uses this boundary so a
+   future Capacitor/Android adapter can replace browser storage without changing
+   game systems. */
 (() => {
   'use strict';
   const RF = window.RF;
