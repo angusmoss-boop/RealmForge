@@ -1,7 +1,4 @@
-/* Realmforge V11.7.0 — canonical production bootstrap.
-   This file owns only architecture namespaces and module registration.
-   Gameplay remains supplied by the frozen V11.5.3 compatibility layer until
-   individual systems are deliberately migrated behind these contracts. */
+/* Realmforge V11.8.0 — canonical production bootstrap. */
 window.RF = window.RF || {};
 (() => {
   'use strict';
@@ -26,9 +23,9 @@ window.RF = window.RF || {};
   RF.Modules.list = () => Array.from(registry.values()).map(x => ({ name: x.name, ...x.meta }));
 
   RF.Core.contract = Object.freeze({
-    appVersion: '11.7.0',
+    appVersion: '11.8.0',
     saveSchema: '11.5.3',
-    architecture: 'canonical-boundary-v1',
+    architecture: 'canonical-save-core-v2',
     legacyBaseline: '11.5.3'
   });
   RF.Modules.register('core.bootstrap', RF.Core.contract, { owner: 'core', status: 'canonical' });
