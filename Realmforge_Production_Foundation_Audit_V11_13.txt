@@ -1,0 +1,83 @@
+REALMFORGE V11.13.0 — PRODUCTION FOUNDATION VIII AUDIT
+
+Scope
+-----
+Canonical extraction of the mature Combat, Equipment / Tool Belt, and modern Pack / Vault / over-encumbrance implementation layers from the active historical compatibility runtime.
+
+Compatibility reduction
+-----------------------
+V11.12 active compatibility: 960,222 bytes
+V11.13 active compatibility: 780,574 bytes
+Removed from compatibility: 179,648 bytes
+Historical stages extracted: 22
+
+Canonical Combat
+----------------
+8 stages now owned by js/systems/combat.js:
+- V8.1 Combat & Cadence
+- V10.35 Battle Lines
+- V10.36 Battle Intel
+- V10.57 Battle Categories
+- V10.58 Battle Tabs
+- V10.59 Stable Battle Tabs
+- V10.60 Full Battle Frame
+- V11.3.2 Battle Reward Flow
+
+Canonical Equipment / Tool Belt
+--------------------------------
+5 stages now owned by js/systems/equipment.js:
+- V10.3 Tool Belt
+- V10.50 Loadout Pages
+- V10.53 Detached Loadout
+- V10.55 Loadout Balance
+- V11.5 Loadout Manager
+
+Canonical Inventory / Vault / Encumbrance
+------------------------------------------
+9 stages now owned by js/systems/inventory.js:
+- V10.42 through V10.47
+- V10.51
+- V10.52
+- V10.56
+
+Deliberate frozen seams
+-----------------------
+V4 remains in compatibility because it mixes world/social logic with tactical-combat foundations.
+V8.2 remains in compatibility because it mixes Pack/Bank/Mastery/combat-feedback foundations.
+V1 bootstrap primitives remain in legacy/base state/main.
+These are intentionally not split in V11.13. New V12 work must target canonical systems rather than extend these seams.
+
+Save / migration contract
+-------------------------
+Application version: 11.13.0
+Save schema: 11.5.3
+No player-state migration is required.
+Existing Equipment and Tool Belt assignments are preserved. Valid equipped items are not moved, deleted or retroactively unequipped. Pack overflow remains lossless and blocks time/travel until corrected.
+
+Validation completed
+--------------------
+PASS — V11.12 ↔ V11.13 Pack used/capacity/free-space equivalence.
+PASS — modern Pack HTML equivalence.
+PASS — Equipment page HTML equivalence.
+PASS — Tool Belt page HTML equivalence.
+PASS — weapon Damage Output and Armour equivalence.
+PASS — detached Tool Belt equip behaviour equivalence.
+PASS — explicit Ring I / Ring II handling with two identical physical rings.
+PASS — unequip returns the item to Pack.
+PASS — V10.56 lossless over-capacity behaviour and forced pause equivalence.
+PASS — battle-start state equivalence.
+PASS — Tactical Battle renderer equivalence.
+PASS — combat action-category renderer equivalence.
+PASS — canonical ownership verifier for Combat, Equipment and Inventory.
+PASS — V11.12 advanced campaign loaded into V11.13 with Equipment, Tool Belt, Pack, Bank, research, progression flags, dungeon history, active combat state, combat category and over-capacity state preserved.
+PASS — occupied Tool Belt slots preserved; canonical migration also normalises the newer lockpicking slot to null when absent.
+PASS — runtime contract V11.13.
+PASS — JavaScript syntax validation across production and test sources.
+
+Known harness-only warning
+--------------------------
+The historical V10.9 modalHTML/modalHtml mismatch still emits the same error in the simplified Node fake-DOM harness used by both the V11.12 reference and V11.13 candidate runtime. It is not a V11.13 behavioural difference and has not reproduced in the real Samsung/browser runtime.
+
+Result
+------
+V11.13 is suitable for Samsung/browser sanity testing as the next production-foundation build.

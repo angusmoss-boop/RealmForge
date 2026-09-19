@@ -1,0 +1,49 @@
+REALMFORGE V11.13.0 — COMBAT / LOADOUT EXTRACTION PROVENANCE
+
+CANONICAL COMBAT SOURCE
+js/systems/combat.js
+
+EXTRACTED COMBAT STAGES
+- js/v8_1.js
+- js/v10_35.js
+- js/v10_36.js
+- js/v10_57.js
+- js/v10_58.js
+- js/v10_59.js
+- js/v10_60.js
+- js/v11_3_2.js
+
+CANONICAL EQUIPMENT SOURCE
+js/systems/equipment.js
+
+EXTRACTED EQUIPMENT STAGES
+- js/v10_3.js
+- js/v10_50.js
+- js/v10_53.js
+- js/v10_55.js
+- js/v11_5.js
+
+CANONICAL INVENTORY SOURCE
+js/systems/inventory.js
+
+EXTRACTED INVENTORY STAGES
+- js/v10_42.js
+- js/v10_43.js
+- js/v10_44.js
+- js/v10_45.js
+- js/v10_46.js
+- js/v10_47.js
+- js/v10_51.js
+- js/v10_52.js
+- js/v10_56.js
+
+ACTIVE COMPATIBILITY
+js/legacy/compat_gameplay_combat_loadout_trimmed_v1153.js
+
+Every extracted boundary remains present in the 93-stage historical timeline as a small canonical installer call. Exact pre-extraction implementation source is retained inside its canonical owner and executes at the same chronological boundary.
+
+DELIBERATE NON-EXTRACTIONS
+- V4 remains mixed world/social/tactical-combat history.
+- V8.2 remains mixed Pack/Bank/Mastery/combat-feedback history.
+- V1 state/main bootstrap primitives remain frozen under legacy/base.
+- Other cross-cutting patches may still wrap canonical systems at later boundaries until their owning system is extracted.
