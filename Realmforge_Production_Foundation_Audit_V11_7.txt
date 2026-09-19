@@ -1,0 +1,109 @@
+REALMFORGE V11.7.0 — PRODUCTION FOUNDATION II / CANONICAL ARCHITECTURE AUDIT
+
+PURPOSE
+=======
+V11.7.0 establishes the production source architecture that V12 will build on without attempting a high-risk all-at-once rewrite of the proven V11.5.3 gameplay implementation.
+
+ARCHITECTURAL DECISION
+======================
+Realmforge now uses a strangler-style refactor:
+1. The proven V11.5.3 behaviour is frozen behind a compatibility layer.
+2. Clean canonical contracts exist for Core, Platform, Data, Systems and UI.
+3. New V12 development targets those contracts instead of adding historical v12_x.js wrappers.
+4. Existing systems can be reimplemented behind the same contracts one at a time, with regression testing, until the compatibility layer can be removed entirely.
+
+This is intentionally safer than manually rewriting a mature 1.2 MB accumulated runtime in one release.
+
+ACTIVE SHIPPED RUNTIME
+======================
+The browser now loads six JavaScript files:
+- js/legacy/base/data.js
+- js/legacy/base/state.js
+- js/legacy/base/ui.js
+- js/legacy/base/main.js
+- js/legacy/compat_v1153.js
+- js/dist/canonical_v11_7.js
+
+The first five files are the frozen compatibility implementation. The sixth is a generated production bundle built from the readable canonical source modules.
+
+COMPATIBILITY PROOF
+===================
+The four files under js/legacy/base are byte-identical to V11.6.1's proven data.js/state.js/ui.js/main.js files.
+js/legacy/compat_v1153.js is byte-identical to V11.6.1's proven realmforge_runtime_v11_6_1.js.
+No gameplay code was edited while moving it behind the legacy boundary.
+
+CANONICAL SOURCE MODULES
+========================
+16 canonical modules are currently registered:
+- core.bootstrap
+- platform.browser
+- core.state
+- core.migrations
+- data.catalog
+- systems.inventory
+- systems.equipment
+- systems.travel
+- systems.combat
+- systems.research
+- systems.quests
+- systems.crafting
+- systems.dungeons
+- systems.commerce
+- ui.shell
+- core.finalize
+
+Most gameplay systems are presently marked canonical-facade: callers get a stable clean API, while the implementation delegates to the frozen compatibility baseline. This is deliberate. It lets V12 use a coherent architecture now without risking save/gameplay parity.
+
+NEW PRODUCTION RULES
+====================
+- New content definitions register through RF.Catalog.
+- New schema migrations register through RF.Core.Migrations.
+- New gameplay systems live under js/systems/.
+- New platform/native behaviour lives under js/platform/.
+- New interface ownership lives under js/ui/.
+- Do not add new v12_x.js monkey-patch files around older global functions.
+- Game version and save schema remain separate.
+
+BUILD SURFACE
+=============
+Readable canonical source remains split into modules for maintainability.
+A generated bundle, js/dist/canonical_v11_7.js, is what index.html ships.
+CANONICAL_BUNDLE_PROVENANCE_V11_7.txt records the exact source hashes used to create it.
+
+SAVE COMPATIBILITY
+==================
+Application version: 11.7.0
+Save schema: 11.5.3
+No campaign-state migration is introduced by V11.7.0.
+
+VALIDATION
+==========
+- Full source JS syntax validation: PASS — 121 JavaScript files, 0 syntax failures.
+- Frozen base file byte comparison against V11.6.1: PASS — 4/4 identical.
+- Frozen compatibility runtime byte comparison against V11.6.1: PASS — identical.
+- Canonical source bundle syntax: PASS.
+- Canonical module registration: PASS — 16/16 modules registered.
+- Current late-version namespaces available after boot: PASS (V10.38, V10.50, V10.54, V11.5, V11.5.1, V11.5.2, V11.5.3 sampled).
+- Current navigation metadata: PASS — Equipment, Tool Belt, Skills, Magic and Pack present; global Shop absent.
+- Modern Pack-grid implementation present: PASS.
+- Wayfinder progressHint function present and returns narrative guidance: PASS.
+- V11.5 Equipment slot manager present: PASS.
+- New-game compatibility sample: PASS — main/off/head/chest/legs/boots/ring1/ring2 slots retained and Tool Belt present.
+- Save schema remains 11.5.3: PASS.
+
+HISTORICAL NOTE
+===============
+The synthetic harness still observes the known old V10.9 modalHTML error inside the frozen historical patch sequence. V11.6.1 intentionally preserved separate-patch error isolation, so later patches continue loading exactly as the proven game does. This historical debt is now quarantined inside the compatibility layer and can be eliminated when the UI/modal system is migrated behind its canonical contract rather than patched in place.
+
+NEXT EXTRACTION ORDER
+=====================
+1. Save/storage/migrations.
+2. Data registries/content definitions.
+3. Navigation/modal UI shell.
+4. Inventory + Equipment/Tool Belt.
+5. Travel + world progression/Wayfinder.
+6. Combat + dungeons.
+7. Gathering/crafting/Hunting.
+8. Quests/Sagas.
+
+V12 can begin against the canonical contracts before every legacy implementation is rewritten, but high-touch systems should be migrated as they receive major V12 work.

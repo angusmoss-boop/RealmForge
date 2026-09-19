@@ -1,5 +1,5 @@
-version=11.6.1
-title=Production Foundation Compatibility
-built=2026-09-19T03:16:00+01:00
-build_id=20260919-0316-bst
-notes=Corrects V11.6.0 runtime consolidation by preserving the original per-patch classic-script execution isolation. Restores all V11.5.3-era systems and UI while keeping a single consolidated runtime download. Save schema remains 11.5.3.
+version=11.7.0
+title=Canonical Architecture
+built=2026-09-19T03:28:00+01:00
+build_id=20260919-0328-bst
+notes=Production Foundation II. Quarantines the proven V11.5.3 compatibility runtime under js/legacy and introduces canonical Core, Platform, Data, Systems and UI module contracts for all future development. Gameplay/save schema intentionally remain unchanged at 11.5.3.

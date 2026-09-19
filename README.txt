@@ -1,27 +1,45 @@
-Realmforge: Wanderer's Rise — V11.6.0 Production Foundation I
+Realmforge: Wanderer's Rise — V11.7.0 Canonical Architecture
 
-CURRENT RUNTIME
-The active browser runtime now consists of five JavaScript files:
-  js/data.js
-  js/state.js
-  js/ui.js
-  js/main.js
-  js/realmforge_runtime_v11_6.js
+PRODUCTION FOUNDATION II
+V11.7.0 is an infrastructure-only refactor. It deliberately does not change gameplay or save data.
 
-The consolidated runtime contains the exact V11.5.3 active patch chain from V2 through V11.5.3 in the same order. Historical individual patch files remain in js/ for reference/debugging but are no longer loaded by index.html or precached by the service worker.
+ACTIVE ARCHITECTURE
+The shipped browser runtime loads six JavaScript files. Five reproduce the frozen V11.5.3 baseline and one generated bundle contains the canonical production modules.
+
+1. Frozen compatibility baseline (proven V11.5.3 behaviour)
+   js/legacy/base/data.js
+   js/legacy/base/state.js
+   js/legacy/base/ui.js
+   js/legacy/base/main.js
+   js/legacy/compat_v1153.js
+
+2. Canonical production source modules
+   js/core/bootstrap.js
+   js/platform/browser.js
+   js/core/state.js
+   js/core/migrations.js
+   js/data/catalog.js
+   js/systems/*.js
+   js/ui/shell.js
+   js/core/finalize.js
+
+WHY THE LEGACY LAYER STILL EXISTS
+A behaviour-identical rewrite of years of wrapper-based patches in one jump would be needlessly risky. V11.7 uses a strangler architecture: the stable V11.5.3 implementation is frozen behind explicit canonical contracts. New V12 code must be written against those contracts. Existing systems can then be migrated out of the compatibility layer one at a time with regression tests, until the legacy layer can be deleted safely.
+
+RULE GOING FORWARD
+Do not add new v12_x.js override patches around legacy global functions.
+New content/data goes through RF.Catalog.
+New save migrations go through RF.Core.Migrations.
+New system code lives under js/systems/.
+New platform-specific behaviour lives under js/platform/.
+New interface ownership lives under js/ui/.
 
 SAVE COMPATIBILITY
-Application version: 11.6.0
+Application version: 11.7.0
 Save schema: 11.5.3
-V11.6 is an infrastructure-only consolidation and intentionally does not migrate or rewrite valid campaign state.
+No gameplay-state migration is introduced.
 
-AUDIT
-See Realmforge_Production_Foundation_Audit_V11_6.txt for the source audit and next recommended production-foundation steps.
-See RUNTIME_PROVENANCE_V11_6.txt for the exact bundled patch order and SHA-256 hashes.
+See REALMFORGE_ARCHITECTURE_V11_7.md for the module ownership map and migration plan.
 
-HISTORY
-The canonical release history is maintained in Realmforge_Development_Log_V1_to_V11_6_0.txt when distributed with the release.
-
-
-V11.6.1 COMPATIBILITY CORRECTION
-V11.6.0's direct source concatenation changed browser error-isolation semantics and could stop later historical patches from running. V11.6.1 embeds the same 93 active patches in one downloaded runtime but executes them as separate classic-script elements in their original order. This preserves V11.5.3 behaviour while maintaining the reduced deployment surface.
+PRODUCTION BUNDLE
+The readable canonical source modules are generated into `js/dist/canonical_v11_7.js` for the shipped build. See CANONICAL_BUNDLE_PROVENANCE_V11_7.txt for exact source hashes and bundle provenance.

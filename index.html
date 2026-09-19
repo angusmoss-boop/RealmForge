@@ -5,17 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#16130f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Realmforge V11.6.1: Wanderer's Rise - Production Foundation Compatibility</title>
+  <title>Realmforge V11.7.0: Wanderer's Rise - Canonical Architecture</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app"></div>
-  <script defer src="js/data.js"></script>
-  <script defer src="js/state.js"></script>
-  <script defer src="js/ui.js"></script>
-  <script defer src="js/main.js"></script>
-  <!-- V11.6.1 Production Foundation: consolidated download with isolated classic-script execution preserving V11.5.3 semantics. -->
-  <script defer src="js/realmforge_runtime_v11_6_1.js"></script>
+
+  <!-- Frozen compatibility baseline reproducing the proven V11.5.3 behaviour. -->
+  <script defer src="js/legacy/base/data.js"></script>
+  <script defer src="js/legacy/base/state.js"></script>
+  <script defer src="js/legacy/base/ui.js"></script>
+  <script defer src="js/legacy/base/main.js"></script>
+  <script defer src="js/legacy/compat_v1153.js"></script>
+
+  <!-- Generated production bundle built from the canonical source modules. -->
+  <script defer src="js/dist/canonical_v11_7.js"></script>
 </body>
 </html>
