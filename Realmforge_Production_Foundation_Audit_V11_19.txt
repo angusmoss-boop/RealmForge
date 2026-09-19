@@ -1,0 +1,167 @@
+REALMFORGE V11.19.0 — PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.18.0 Canonical Interface & Codex
+Target: V11.19.0 Canonical App Shell & Developer
+Save schema: 11.5.3 (unchanged)
+
+AUDIT CONCLUSION
+The safest AAB-facing extraction boundary was the remaining campaign/startup shell plus V10.33 Developer/Build Beacon infrastructure. V9.5 UI is already separated from persistence by the V11.8 Save Core extraction. V10.1 has a clean startup/front-door prefix followed by unrelated gathering/pickpocket gameplay. V10.33 is a coherent Developer/build stage. These can move without absorbing Travel, Gathering, Crime or save ownership.
+
+EXTRACTION SCOPE
+App Shell whole stage:
+- js/v9_5.js
+
+App Shell mixed fragment:
+- js/v10_1.js startup/front-door portion only
+
+Developer/Build whole stage:
+- js/v10_33.js
+
+SOURCE MOVED
+- 2 complete historical stages
+- 1 precise mixed-stage fragment
+- Exact historical source lifted: 30,425 bytes
+
+COMPATIBILITY RUNTIME SIZE
+V11.18: 344,736 bytes
+V11.19: 314,471 bytes
+Reduction: 30,265 bytes (8.8%)
+The active compatibility runtime is now below 315 KB, down from roughly 1.19 MB at the beginning of the production-foundation refactor.
+
+ACTIVE RUNTIME
+9/9 production JavaScript references present and service-worker precached:
+1. js/data/base_content.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_19.js
+5. js/dist/data_core_v11_19.js
+6. js/legacy/base/main.js
+7. js/dist/systems_core_v11_19.js
+8. js/legacy/compat_gameplay_app_shell_trimmed_v1153.js
+9. js/dist/canonical_v11_19.js
+
+OWNERSHIP RESULT
+- ui.appShell: canonical; V9.5 whole stage + V10.1 startup fragment installed.
+- ui.developer: canonical; V10.33 whole stage installed.
+- platform.browser: canonical and expanded for build-info, Back/history and service-worker transport.
+- ui.focusClock remains the semantic owner of modal/select clock and Back behavior; browser mechanics now pass through RF.Platform.
+- Existing V11.18 UI owners and all canonical gameplay owners remain intact.
+
+PLATFORM / AAB READINESS
+The following shell operations now have tested adapter seams:
+- Save-export clipboard copy.
+- Service-worker registration.
+- Deployed version/build-info retrieval.
+- Back/popstate subscription.
+- pushState / replaceState guard operations.
+
+This release intentionally does NOT add Capacitor or generate an AAB. The goal is to make a later Capacitor adapter thin and replaceable rather than embedding native assumptions inside gameplay systems.
+
+ORDER-SAFETY REVIEW
+- V9.5 campaign/options UI still executes at V9.5 and consumes the same V95-compatible canonical campaign APIs.
+- V10.1 startup/front-door code still executes before the untouched V10.1 gathering/pickpocket remainder.
+- V10.33 Developer code still executes at V10.33, preserving its relationship with V10.16 travel recovery and later UI layers.
+- V10.38 and later navigation stages still replace/enrich the older V9.5 navigation model at the same chronological boundaries.
+- Travel retains Clock Sentinel and emergency travel ownership.
+- Gathering retains gathering behavior; Crime retains pickpocket behavior.
+
+PARITY / REGRESSION VALIDATION
+V11.18 -> V11.19 app-shell/system equivalence: 24/24 PASS, covering:
+- Campaign navigation model.
+- Options/Campaigns page output.
+- Developer page output.
+- Build parser/version comparison.
+- Build Beacon structure.
+- Startup main-menu structure.
+- Focus-clock capture behavior.
+- Final modern navigation HTML/model.
+- Equipment / Tool Belt / Magic entries and global Shop retirement.
+- Database sectors/entries.
+- Living Vista scene and final World output.
+- New App Shell / Developer ownership.
+- Platform bridge contract.
+- Existing UI/gameplay ownership.
+- Save schema/version.
+- Known V10.9 fake-DOM warning equivalence.
+
+SAVE COMPATIBILITY VALIDATION
+Three V11.18 fixtures were loaded through V11.19:
+1. Advanced established campaign with deliberate Pack overflow.
+2. Active travel campaign with route plan, partial progress and travel-Energy state.
+3. Active combat campaign with interrupted-clock snapshot and combat-category state.
+
+49/49 compatibility assertions passed, including:
+- Character level / XP / gold.
+- Pack and Bank.
+- All occupied Equipment slots.
+- Two identical Ring slots.
+- Non-empty Mining/Woodcutting/Fishing/Firemaking Tool Belt.
+- Skill levels and XP.
+- Field Research ranks/notes.
+- Quest state and progression flags.
+- Market state.
+- Dungeon history.
+- Crime/bounty/burglary cooldowns.
+- Exploration chest/excavation state.
+- Resource charges.
+- Property/home state and buffs.
+- Energy and recovery carry.
+- Active travel/route state.
+- Active combat/clock/category state.
+- Deliberate Pack overflow.
+- New canonical App Shell / Developer / Platform ownership contracts.
+
+PLATFORM BRIDGE HARNESS
+13/13 targeted assertions passed:
+- Base service-worker registration delegates through RF.Platform.
+- Save export clipboard delegates through RF.Platform.
+- Successful export still opens the same confirmation modal.
+- Build Beacon retrieval delegates through RF.Platform.fetchBuildInfo.
+- Current-build status remains correct.
+- V9.6 Back handler registers through RF.Platform.
+- Back guard history replacement/push delegates through RF.Platform.
+- Canonical Platform/AppShell/Developer ownership is registered.
+- Version and save schema remain correct.
+
+VALIDATION COUNTS
+- JavaScript files checked with node --check: 262
+- Syntax failures: 0
+- Retained executable Node regression harnesses: 30
+- Harness failures: 0
+- V11.19 runtime contract: PASS
+- V11.18 -> V11.19 app-shell/system equivalence: 24/24 PASS
+- V11.18 -> V11.19 save compatibility: 49/49 PASS
+- Platform bridge harness: 13/13 PASS
+- Active runtime references/precache: 9/9 PASS
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM `modalHTML` warning still appears identically in reference and candidate VM harnesses. It is not a V11.19 browser/runtime regression.
+
+WHAT REMAINS IN COMPATIBILITY
+The remaining ~314.5 KB is concentrated in genuinely mixed historical foundations. The largest current live stages include:
+- V4 (~38.7 KB): tactical combat + social/world foundations.
+- V7 (~27.0 KB): specialist systems with interleaved foundations.
+- V9 (~22.3 KB): world-map/combat/economy mixed foundation.
+- V9.2 (~20.8 KB): living roads/social/crime/content mixing.
+- V8.3 (~18.3 KB): deliberate-touch/travel/UI mixed repair.
+- V3 (~16.7 KB): perks/crime/dungeon/region progression mix.
+- V8.2 (~15.3 KB): Pack/mastery/combat mixed foundation.
+- V10 (~14.8 KB): Energy-era level-up/battle-summary/skilling UI foundations.
+- V9.3 (~13.9 KB): Quest layer already partly extracted, with category/Developer-era glue remaining.
+
+These should continue to be split by proven responsibility seams rather than removed wholesale.
+
+RECOMMENDED NEXT EXTRACTION
+V11.20 — Canonical Platform & Lifecycle.
+Audit the remaining active browser/lifecycle assumptions around visibility/focus/pageshow, offline catch-up/startup, import/export/browser prompts and shell-level navigation fallbacks. Route only platform mechanics behind RF.Platform while preserving Travel Clock Sentinel, Time/Energy and all gameplay ownership. After Samsung validation of that release, beginning the actual Capacitor Android wrapper/debug packaging becomes a much safer next milestone.
+
+FINAL UPDATE/PACKAGING GATE
+- GitHub update payload: 29 changed/new files versus the V11.18 golden source tree.
+- Fresh V11.18 source + only V11.19 GitHub Update ZIP: PASS.
+- Reconstructed update runtime contract: PASS.
+- Reconstructed update parity suite: 24/24 PASS.
+- Reconstructed update save suite: 49/49 PASS.
+- Reconstructed update platform bridge: 13/13 PASS.
+- Generated save/data/systems/finalisation bundles reproduce byte-for-byte from the source orders recorded in bundle provenance: PASS.
+- GitHub Update ZIP integrity: PASS.
+- Full Current Source ZIP integrity: PASS.

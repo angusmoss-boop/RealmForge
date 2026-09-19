@@ -1,0 +1,43 @@
+REALMFORGE V11.19.0 — SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.18.0
+Save schema: 11.5.3 (unchanged)
+
+CANONICAL APP SHELL WHOLE STAGE
+- js/v9_5.js -> ui.appShell
+  Campaign/options/navigation UI only. Persistence ownership had already moved to canonical Save Core in V11.8.
+  Exact transformed source: 8,250 bytes.
+
+CANONICAL APP SHELL MIXED FRAGMENT
+- js/v10_1.js -> ui.appShell fragment `v10_1-app-shell`
+  Exact startup/front-door slice through the historical main-menu installation.
+  Repaired gathering and pickpocket gameplay from the same stage remains in compatibility at its original boundary.
+  Exact extracted fragment: 3,938 bytes.
+
+CANONICAL DEVELOPER / BUILD WHOLE STAGE
+- js/v10_33.js -> ui.developer
+  Build Beacon, Developer-state/binding repair, Developer confirmations, focused-control render stability and recovery controls.
+  Exact transformed stage source: 18,237 bytes.
+
+SOURCE MOVED
+- 2 complete historical stages.
+- 1 precise mixed-stage fragment.
+- Exact extracted historical source: 30,425 bytes.
+- Compatibility runtime reduction after installer markers: 30,265 bytes.
+
+PLATFORM BOUNDARY CHANGES
+- `js/platform/browser.js` adds canonical browser implementations for build-info retrieval, current URL, push/replace history and Back/popstate subscription.
+- `js/legacy/base/main.js` now delegates save-export clipboard copying and service-worker registration to `RF.Platform.active`.
+- Canonical `ui.focusClock` retains V9.6 Back/clock behavior but delegates browser history/popstate operations through `RF.Platform.active` when present.
+- Canonical `ui.developer` retains the exact V10.33 stage, then replaces only its deployed-build transport with `RF.Platform.active.fetchBuildInfo` while preserving V10.33 status/version semantics.
+
+ORDER / DEPENDENCY NOTES
+- V9.5 still executes at the V9.5 historical boundary.
+- V10.1 App Shell installs before the untouched V10.1 gathering/pickpocket remainder, exactly where the startup block previously executed.
+- V10.33 still executes at the V10.33 historical boundary after V10.16 travel recovery and before later UI/gameplay stages that expect its Developer/build contracts.
+- V10.38 and later navigation owners still supersede the older V9.5 navigation model at their established boundaries.
+- Canonical Save Core remains the only persistence/campaign storage owner; App Shell calls its existing V9.5-compatible campaign facade.
+- Travel remains the owner of Clock Sentinel and emergency travel recovery implementation. Developer only exposes those established controls.
+
+METHOD
+Whole-stage and fragment source was lifted from the transformed V11.18 compatibility runtime. Compatibility entries were replaced with tiny synchronous canonical installer calls. The historical code executes at the same chronological position. The only intentional implementation redirection is browser-native shell transport through `RF.Platform`, covered by targeted parity/bridge tests.
