@@ -1,0 +1,63 @@
+REALMFORGE V11.22.0 — SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.21.0
+Save schema: 11.5.3 (unchanged)
+
+ENCOUNTER FRAGMENTS
+Destination: js/systems/encounters.js
+- v9_1-inspect-ui — inspect-first Nearby Creatures presentation and enemy inspection entry point, 2,858 chars.
+- v9_1-inspect-bind — inspect/fight/observe/leave binding wrapper, 579 chars.
+
+COMBAT FRAGMENTS
+Destination: js/systems/combat.js
+- v8_3-cadence-motion — cooldown disabled-state/cadence and restrained combat impact presentation, 4,621 chars.
+- v9_1-parry-focus — combat training focus and integrated Parry foundation, 6,787 chars.
+- v9_2-defeat-xp — partial XP loss on defeat while attained levels remain, 777 chars.
+
+TRAVEL FRAGMENT
+Destination: js/systems/travel.js
+- v8_3-travel-repair — historical stalled-travel state repair/watch fragment, 742 chars.
+
+ITEM BROWSER FRAGMENTS
+Destination: js/ui/item_browser.js
+- v8_3-deliberate-item-ui — inspect-first Shop/private-trade/Crafting details and confirmations, 11,687 chars.
+- v9_2-category-ui — item category classification/tabs and categorized Inventory/Shop ancestry, 4,583 chars.
+- v9_3-filter-ui — dropdown filters and filtered Inventory/Shop/Crafting ancestry, 5,114 chars.
+- v9_3-detail-bank-ui — item/Bank detail and requirement presentation ancestry, 1,938 chars.
+
+CRIME PRESENTATION FRAGMENTS
+Destination: js/systems/crime.js
+- v9_2-crime-modal-ui — pickpocket/burglary modal presentation, 3,045 chars.
+- v9_2-crime-bind-ui — crime interaction binding wrapper, 1,040 chars.
+- v9_2-reedmere-crime-ui — Reedmere crime-panel presentation, 670 chars.
+
+DEVELOPER FRAGMENTS
+Destination: js/ui/developer.js
+- v9_3-developer-shell — original Developer page/nav shell, 2,907 chars.
+- v9_3-developer-actions-bind — original Developer actions/binding ancestry, 2,711 chars.
+
+TOTAL EXACT SOURCE TRANSFERRED
+50,059 characters.
+
+METHOD
+- Every fragment was cut from the transformed V11.21 active compatibility runtime, not inferred from filenames or stale documentation.
+- Exact classic-script source is stored in canonical owners.
+- Compatibility retains guarded installer calls at the original chronological positions.
+- Canonical owners execute those exact bodies synchronously only when their historical marker is reached.
+- No extracted source body was semantically rewritten.
+
+DELIBERATE SEAMS
+- V9.1 weather/time scene fragment remains ui.presentation-owned from V11.21.
+- Modern tactical Combat remains systems.combat.
+- Modern Pack/Vault remains systems.inventory; ui.itemBrowser is historical presentation ancestry only.
+- Commerce and Crafting gameplay remain their existing canonical owners.
+- V9.3 Developer binding slice remains atomic even though it contains one historical category-filter listener.
+- V9.2 migration/version tail stays in chronological compatibility.
+
+COMPATIBILITY RESULT
+V11.21: 284,029 bytes
+V11.22: 235,853 bytes
+Reduction: 48,176 bytes
+
+ACTIVE COMPATIBILITY SHA-256
+2795f5da345284d85e76d719b07243d6560b2c7b536d7ce5d40016bd597ab7a1

@@ -1,5 +1,5 @@
-version=11.23.0
-title=Canonical Character, Progression & Vault Ancestry
-built=2026-09-19T20:51:00+01:00
-build_id=20260919-v1123-character-progression-vault
-notes=Character/perk progression, V8.2 Pack/Bank/Mastery ancestry, V10 milestones, V10.10 Vault and V10.12 sorting/stability now execute from canonical domain owners. Save schema remains 11.5.3.
+version=11.22.0
+title=Canonical Encounters & Interface Foundations
+built=2026-09-19T20:05:00+01:00
+build_id=20260919-v1122-encounters-interface
+notes=V9.1 encounter inspection and combat foundations, V8.3 residual travel/deliberate-touch UI, V9.2 defeat/crime/category presentation and V9.3 filter/developer ancestry now execute from canonical owners. Save schema remains 11.5.3.

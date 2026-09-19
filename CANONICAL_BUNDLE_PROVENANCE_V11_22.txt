@@ -1,0 +1,75 @@
+REALMFORGE V11.22.0 — CANONICAL BUNDLE PROVENANCE
+
+Runtime bundles are generated concatenations of readable canonical source files.
+
+save_core_v11_22.js sha256 58ed596b165a34d5e871b92da287c73d905eab7788d224a39dcbdbcb51d46ea2
+bytes 25426
+
+data_core_v11_22.js sha256 216582d33956ef6c61c079ee2fafa9681376dfaa536ef7e5c005a4cf8e72d33b
+bytes 133342
+
+systems_core_v11_22.js sha256 7e3b0e09d4a384ef1517a59911ce4cc10feb593637f4c6296a6ca7adcebcdc81
+bytes 933005
+
+canonical_v11_22.js sha256 7a024dd470676307fd1a49842153086d4b1e066acfe8f97d9a793f0751c60449
+bytes 18337
+
+compat_gameplay_encounter_interface_trimmed_v1153.js sha256 2795f5da345284d85e76d719b07243d6560b2c7b536d7ce5d40016bd597ab7a1
+bytes 235853
+
+SAVE / PLATFORM / LIFECYCLE CORE SOURCE ORDER
+- js/core/bootstrap.js | sha256 16653ccaa973a762cccf30868724adec23d67227d6055a86ec81af5601a40119 | 1,216 bytes
+- js/platform/browser.js | sha256 1ebe8b52c2e2e343ccc6e8025287bf0a765ff8b8a421a6f482744f1ace074c8e | 3,890 bytes
+- js/core/migrations.js | sha256 e4bbad3c6b9cae4b5efddb09e13e5f14f803b162fc4f01b53e28358f559bb029 | 6,074 bytes
+- js/core/storage.js | sha256 67aed73486577cb34bd67ca95b8853c35bdbf0d28f32e558621a35321b856365 | 894 bytes
+- js/core/campaigns.js | sha256 e591e106744a5e961b016a48e157125c200b97ee899a6a719367536caa2fb575 | 7,190 bytes
+- js/core/state.js | sha256 22eac05bd885d7d211395ff4291738b28aec45b9997c1736f003da612c5de60c | 2,819 bytes
+- js/core/lifecycle.js | sha256 40c2bb656e22f4dae7204ad566535c05cfab5b2a9007816c00b9c408e6c7247b | 3,343 bytes
+
+DATA CORE SOURCE ORDER
+- js/data/catalog.js | sha256 e08abe2cfec1654b8b87353425fc504293936297a9aed90cbdd459f0ad09aa2b | 2,628 bytes
+- js/data/content_blocks_v11_9.js | sha256 dee4c9e9707127f0c10557e27598f70e3df8de8fea7f1de5f0298ffd78deaf3e | 95,401 bytes
+- js/data/config_registry.js | sha256 6379439478078f7e27f44f354e3c11aa2cad7fd941fbb82d33546ea3b609cfd4 | 1,151 bytes
+- js/data/world_config_v11_10.js | sha256 42b51c6d940db80ce5d452881bd6916e6928230c8059a88456c72284f35f2926 | 34,162 bytes
+
+SYSTEMS + UI CORE SOURCE ORDER
+- js/systems/fieldcraft.js | sha256 e6d53729a14bc939869d71601404d55cb4c4a6ad50e5d1e7394346e303efad03 | 52,887 bytes
+- js/systems/world.js | sha256 ee591de6735943f926edce59e7cc3113236b4c45689bfa23102d1a2d7bc1b5fe | 15,169 bytes
+- js/systems/social.js | sha256 78e0f086a8e77b048bb6ba970640911eca6be0b9ddb6f3d94464cf3e06a20cba | 20,211 bytes
+- js/systems/encounters.js | sha256 6d20911eed9f9b3d2b4d3c3e964326d3da9a428333711480bb9e9165629f8d8a | 4,996 bytes
+- js/systems/property.js | sha256 198ac678faa2f37821d984b4ae7b7ad63fb732546a7f12220b22460b4b4bac08 | 18,870 bytes
+- js/systems/gathering.js | sha256 04d6c0a90ec728ae144ba718fc45c7c18e163cb704c50d47158e22be635e2bce | 9,773 bytes
+- js/systems/fishing.js | sha256 29f4dd0aa786c645323884af99cbeb2dcfed9467a1d35b4d22d97a3f49586c82 | 539 bytes
+- js/systems/hunting.js | sha256 4f0dd594b34e16c18a79dd5065c9f7ad4e19d3cb895ed630a6788438630af56e | 448 bytes
+- js/systems/cooking.js | sha256 82668fef406e7d7128f6a039c342bf78fddd37903d784e0e1548037c1b691eff | 1,029 bytes
+- js/ui/app_shell.js | sha256 970de689cdebb0177e136d9d5f7cdbd8fa0918cb55c79b391f0657778ca3f73e | 14,220 bytes
+- js/ui/developer.js | sha256 94588197c5344122ab5b53d8cbeb73be738b8ca3d02692c6e0fb36d40f801de3 | 28,831 bytes
+- js/ui/database.js | sha256 00ade7f453286035c2f1cb2b022ce125cd40244c4b5a1f45ddb540e8eb0765d7 | 35,237 bytes
+- js/ui/navigation.js | sha256 996b1b7c8a1f65b708a317269d3d931d0a74e4f6f97c38c8a4388e116d1edcad | 7,376 bytes
+- js/ui/presentation.js | sha256 e394060dcb502dab77167b2bf73e3e15f631c3a78893cfdaee921cece3cd9764 | 41,789 bytes
+- js/ui/overlays.js | sha256 f3f0dbad09c896ee6916df0411caa0a9c838472741ca65c59dd8afe1bdbf1de0 | 8,394 bytes
+- js/ui/focus_clock.js | sha256 19dc3871eaec2d229a09c5cb9ef03aeca673229e98acf2a3d150b3c740639fe5 | 8,847 bytes
+- js/ui/item_browser.js | sha256 8a99dc742792acf3c17ce87c188f249ef3aa0b88d112d4eacbed9ddd36eb23fe | 25,544 bytes
+- js/systems/time_energy.js | sha256 d042613dff89ace44694d0bfc6ccaf7f4fd08ba35691ab2bbd362311d5b50e8c | 30,101 bytes
+- js/systems/exploration.js | sha256 b4318a5da1940b880588252b676dde54bbce3b36819486c52cd58b42c6f08cd7 | 37,481 bytes
+- js/systems/locks.js | sha256 c77fb5ca5daf072ec02be4839035cdea77fc829485a42a12254ea94113eadf78 | 56,176 bytes
+- js/systems/crime.js | sha256 c0a74a1936851acc6b8ed742868a4ae2f1fa7ba1ae39a3779a0df304bb781170 | 83,253 bytes
+- js/systems/commerce.js | sha256 bfeeb443730fef10eef8a1ace4a704814aa5270faa481a509efacbe916bf53b4 | 24,145 bytes
+- js/systems/dungeons.js | sha256 f52bd7dbe0326a6e39f6b55c8e86624b236e14a39ff739a8fa5f2c6001c45211 | 25,841 bytes
+- js/systems/travel.js | sha256 edf08163421d63be86a073a9c68679793eb399cd402299017960d0e22ce59796 | 57,684 bytes
+- js/systems/quests.js | sha256 9124d0b239a1301b72cf73e0c6ab7a8438fcfcf0f9578b2b1bc1fe7a5a998e04 | 7,149 bytes
+- js/systems/wayfinder.js | sha256 b1477f8db5c336b46b2b8492250e66676497ede0d8dc15e43b5f21c3b462237c | 12,860 bytes
+- js/systems/inventory.js | sha256 fa50423716a7beba4ad6e520fd490761d226b33e2784e896fc3f1f8e07e2ae0f | 63,508 bytes
+- js/systems/equipment.js | sha256 71e3545485376ed4fe4325af02c24bcd5a11661bccb0becd0a4d96a9b0592e65 | 70,621 bytes
+- js/systems/combat.js | sha256 4aa998de78c60e276114b9e8da5913b473a085f36b973d74c971117ac521f30a | 71,299 bytes
+- js/systems/research.js | sha256 e5701e21589f2cba010a520fee92e25b3e046b6115b626819321e87f93025de9 | 35,929 bytes
+- js/systems/crafting.js | sha256 b4d31dc7ad12d9be96c6e5c03f2f04c079ed0798911b20b9a677d4142af50cfb | 42,062 bytes
+- js/systems/skills.js | sha256 54c893971eb0ea0c74558c8e76e2723bfc52f8f56f05c7d084a13a30277c654e | 20,736 bytes
+
+FINALISATION BUNDLE SOURCE ORDER
+- js/core/save_boot.js | sha256 1af2520a081c3bd06c5943a2f13edc531677acdd49ba08f20ed3d03b713025d8 | 805 bytes
+- js/data/finalize.js | sha256 4c8567d49dd106e919e59a0119ad7bc5fc4d74339bbc584d4feb476a5a9a23ab | 714 bytes
+- js/data/config_finalize.js | sha256 46fc9933995a2e6f3970e1ba3553b5deb04a0596344f47c373e58be25a164329 | 2,451 bytes
+- js/ui/shell.js | sha256 2911cfb8c0f3439cec0534c0e8c1c29e7d51306bb4e017ec0a01c0349d0197ca | 804 bytes
+- js/core/system_ownership_v11_22.js | sha256 042d79ca864433b78b5f79bb6f5fc0d30c639377fd22d2b4b909b0821ec88c07 | 11,734 bytes
+- js/core/finalize.js | sha256 d179c090dd54a8cf421fd769da11e1472844c7c1cf0f56dff3f75489e80a2435 | 1,829 bytes

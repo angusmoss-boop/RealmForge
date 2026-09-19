@@ -1,0 +1,132 @@
+REALMFORGE V11.22.0 — PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.21.0 Canonical World & Social Foundations
+Target: V11.22.0 Canonical Encounters & Interface Foundations
+Save schema: 11.5.3 (unchanged)
+
+AUDIT TARGET
+Trace residual Encounter, combat-adjacent, Travel-repair and inspect/filter/detail UI responsibilities in the mixed V8.3/V9.1/V9.2/V9.3 stages. Extract only coherent ownership seams and preserve already-canonical Combat, Travel, Crime, Developer, Inventory, Commerce and Crafting authority.
+
+EXTRACTION RESULT
+New canonical systems.encounters:
+- v9_1-inspect-ui: 2,858 chars.
+- v9_1-inspect-bind: 579 chars.
+
+Canonical systems.combat additions:
+- v8_3-cadence-motion: 4,621 chars.
+- v9_1-parry-focus: 6,787 chars.
+- v9_2-defeat-xp: 777 chars.
+
+Canonical systems.travel addition:
+- v8_3-travel-repair: 742 chars.
+
+New canonical ui.itemBrowser:
+- v8_3-deliberate-item-ui: 11,687 chars.
+- v9_2-category-ui: 4,583 chars.
+- v9_3-filter-ui: 5,114 chars.
+- v9_3-detail-bank-ui: 1,938 chars.
+
+Canonical systems.crime additions:
+- v9_2-crime-modal-ui: 3,045 chars.
+- v9_2-crime-bind-ui: 1,040 chars.
+- v9_2-reedmere-crime-ui: 670 chars.
+
+Canonical ui.developer additions:
+- v9_3-developer-shell: 2,907 chars.
+- v9_3-developer-actions-bind: 2,711 chars.
+
+Total exact historical source transferred: 50,059 chars.
+
+COMPATIBILITY RUNTIME SIZE
+V11.21: 284,029 bytes
+V11.22: 235,853 bytes
+Reduction: 48,176 bytes
+Reduction from V11.21 compatibility: 16.96%
+
+The transformed residual sizes of the four directly attacked stages are now:
+- V8.3: 1,775 chars.
+- V9.1: 1,556 chars.
+- V9.2: 2,472 chars.
+- V9.3: 2,065 chars.
+
+OWNERSHIP SAFETY
+- systems.encounters owns selection/inspection presentation, not tactical battle resolution.
+- systems.combat remains sole tactical Combat owner.
+- systems.travel owns V8.3 repair plus later route/overlay/Clock Sentinel stages.
+- ui.itemBrowser owns historical presentation ancestry only; modern Inventory/Vault, Commerce and Crafting remain authoritative.
+- systems.crime owns crime state/actions plus its residual V9.2 presentation glue.
+- ui.developer owns both V9.3 ancestry and V10.33 hardening.
+- World/Social/Presentation ownership from V11.21 is preserved.
+
+ACTIVE RUNTIME
+9/9 active production JavaScript references are expected and service-worker precached:
+1. js/data/base_content.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_22.js
+5. js/dist/data_core_v11_22.js
+6. js/legacy/base/main.js
+7. js/dist/systems_core_v11_22.js
+8. js/legacy/compat_gameplay_encounter_interface_trimmed_v1153.js
+9. js/dist/canonical_v11_22.js
+
+PARITY / REGRESSION VALIDATION
+- V11.21 -> V11.22 equivalence: 43/43 PASS.
+- Dedicated residual-foundations equivalence: 18/18 PASS.
+- Encounter nearby HTML/IDs and inspect modal: PASS.
+- V9.1 focus/Parry foundation state: PASS.
+- V8.3 stalled-travel repair return/state: PASS.
+- V9.2 category/requirement helper parity: PASS.
+- V9.2 crime modal parity: PASS.
+- V9.3 Developer page parity: PASS.
+- Known V10.9 fake-DOM warning equivalence: PASS.
+
+SAVE COMPATIBILITY VALIDATION
+56/56 assertions PASS across established, active-travel and active-combat fixtures. Coverage includes Equipment, identical Ring I/Ring II, populated Mining/Woodcutting/Fishing/Firemaking Tool Belt, Pack/Bank, deliberate Pack overflow, skills/XP, research, quests, markets, dungeon history, crime/cooldowns, exploration/resources, property/buffs, Energy, route plans/travel Energy and active combat/clock/category state.
+
+VALIDATION COUNTS
+- JavaScript files checked with node --check: 299
+- Syntax failures: 0
+- Executable Node regression harnesses: 45
+- Harness failures: 0
+- V11.22 runtime contract: PASS
+- V11.21 -> V11.22 parity: 43/43 PASS
+- Save compatibility: 56/56 PASS
+- Residual-foundations targeted parity: 18/18 PASS
+
+TEST ARCHIVE REPAIR
+`tests/runtime_contract_v117.js` still referenced an obsolete absolute scratch directory. V11.22 changes that historical harness to resolve its frozen project fixtures relative to the repository, making the retained V11.7 contract test portable. No production runtime behavior is changed by this test-only repair.
+
+KNOWN HARNESS WARNING
+The V10.9 fake-DOM `modalHTML` warning occurs identically in V11.21 reference and V11.22 candidate VM runtimes. It remains a historical harness warning, not a browser regression.
+
+WHAT REMAINS IN COMPATIBILITY
+Active compatibility is now 235,853 bytes. Largest transformed stages include:
+- V4: 28,273 chars.
+- V7: 26,812 chars.
+- V9: 22,247 chars.
+- V3: 16,650 chars.
+- V8.2: 15,264 chars.
+- V10: 14,762 chars.
+- V10.12: 11,563 chars.
+- V11.4: 9,665 chars.
+- V10.10: 9,360 chars.
+
+These remain cross-domain historical foundations and must continue to be split by proven ownership rather than removed wholesale.
+
+RECOMMENDED NEXT EXTRACTION
+V11.23 — audit Character / Progression and legacy Pack/Bank ancestry. Focus on V3 perk/character foundations, V10 creator/skill/level-up presentation and safe UI/mastery seams in V8.2/V10.10/V10.12, without re-owning modern Inventory, Equipment, Crafting or Combat.
+
+FINAL UPDATE / PACKAGING GATE
+- GitHub update pack contains 30 changed/new files relative to the V11.21.0 full-source baseline; no baseline file deletion is required.
+- Fresh V11.21.0 Full Current Source + only the V11.22.0 GitHub Update Pack: PASS.
+- Reconstructed-install V11.22 runtime contract: PASS.
+- Reconstructed-install V11.21 -> V11.22 parity: 43/43 PASS.
+- Reconstructed-install advanced/active-state save compatibility: 56/56 PASS.
+- Reconstructed-install residual-foundations suite: 18/18 PASS.
+- Reconstructed-install packaged JavaScript syntax: 299 files, 0 failures.
+- Active runtime and service-worker precache references: 9/9 PASS.
+- All four V11.22 production bundles reproduce byte-for-byte from their documented canonical source order: PASS.
+- GitHub update ZIP archive integrity: PASS.
+- Full Current Source ZIP archive integrity: PASS.
+
