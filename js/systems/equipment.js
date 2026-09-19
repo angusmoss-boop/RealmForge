@@ -38,3 +38,23 @@
   };
   RF.Systems.Equipment=RF.Modules.register('systems.equipment',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(sources).length,extractedIn:'11.13.0'});
 })();
+
+
+/* Realmforge V11.23.0 historical fragment extension: Equipment. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Equipment;if(!api)throw new Error('Equipment canonical owner missing before V11.23 fragment extension.');
+  const extraSources={"v3-bulwark-armor":"const v3Armor=RF.armor;RF.armor=function(s){let slots=['head','chest','legs','boots','ring1','ring2'];let a=slots.reduce((n,k)=>n+(RF.DATA.items[s.equipment[k]]?.armor||0),0);return a+RF.perkRank(s,'bulwark')*2};\n","v3-equipment-ui":"RF.UI.characterEquipment=function(s){return ['main','head','chest','legs','boots','ring1','ring2'].map(slot=>{let id=s.equipment[slot],it=id?RF.DATA.items[id]:null;return `<div class=\"row\"><div class=\"icon\">${it?.icon||'▫️'}</div><div class=\"meta\"><b>${slot.toUpperCase()}</b><small>${it?.name||'Empty slot'}</small></div></div>`}).join('')};\n// Replace equipment section inside character output with expanded slots.\nconst v3Char2=RF.UI.character.bind(RF.UI);RF.UI.character=function(s){let html=v3Char2(s);let start='<section class=\"card\"><h3>Equipment</h3><div class=\"list\">',idx=html.indexOf(start);if(idx>=0){let end=html.indexOf('</div></section>',idx);if(end>=0)html=html.slice(0,idx)+start+RF.UI.characterEquipment(s)+html.slice(end)}return html};\n","v8_2-equipment-foundation":"RF.isEquipped=(s,id)=>Object.values(s.equipment||{}).includes(id);\nRF.equippedSlot=(s,id)=>Object.entries(s.equipment||{}).find(([,x])=>x===id)?.[0]||null;\nRF.itemRequirement=function(it){\n  if(!it?.slot)return null;\n  if(it.slot==='main'){\n    if(it.ranged)return {skill:'archery',level:Math.max(1,Math.ceil((it.damage||1)*.55))};\n    return {skill:'attack',level:Math.max(1,Math.ceil((it.damage||1)*.42))};\n  }\n  return {skill:'defence',level:Math.max(1,Math.ceil((it.armor||1)*.72))};\n};\nRF.canEquipItem=function(s,id){let it=RF.DATA.items[id],r=RF.itemRequirement(it);return !!it?.slot&&(!r||(s.skills[r.skill]?.level||1)>=r.level)};\n","v8_2-equipment-actions":"RF.unequip=function(id){const s=RF.state,slot=RF.equippedSlot(s,id);if(!slot)return;s.equipment[slot]=null;RF.log(s,`Unequipped ${RF.DATA.items[id]?.name||id}.`);RF.save(s);RF.UI.render(s)};\nconst v82EquipBase=RF.equip;\nRF.equip=function(id){let s=RF.state,it=RF.DATA.items[id],req=RF.itemRequirement(it);if(!RF.canEquipItem(s,id)){RF.UI.modal={type:'message',title:'Requirement Not Met',text:`Requires ${RF.DATA.skills[req.skill]?.name||req.skill} level ${req.level}.`};RF.UI.render(s);return;}v82EquipBase(id);};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-equipment-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.equipment/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

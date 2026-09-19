@@ -946,3 +946,23 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+
+/* Realmforge V11.23.0 historical fragment extension: Travel. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Travel;if(!api)throw new Error('Travel canonical owner missing before V11.23 fragment extension.');
+  const extraSources={"v3-trailwise-travel":"const v3Travel=RF.travel;RF.travel=function(id){let s=RF.state,min=RF.DATA.locations[s.location]?.neighbors?.[id];if(min&&RF.perkRank(s,'trailwise')){let dest=RF.DATA.locations[id];if(dest?.lockedFlag&&!s.flags[dest.lockedFlag])return v3Travel(id);let adjusted=Math.max(2,Math.round(min*(1-RF.perkRank(s,'trailwise')*.05)));return RF.startActivity('travel',`Travelling to ${dest.name}`,adjusted,{target:id,from:s.location})}return v3Travel(id)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-travel-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.travel/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
