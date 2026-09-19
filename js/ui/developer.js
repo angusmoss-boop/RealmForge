@@ -65,3 +65,23 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+
+/* Realmforge V11.23.0 historical fragment extension: Developer. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Views.Developer;if(!api)throw new Error('Developer canonical owner missing before V11.23 fragment extension.');
+  const extraSources={"v10-dev-energy":"// Dev convenience for the new resource.\nconst v10DevBase=RF.UI.dev?.bind(RF.UI);if(v10DevBase)RF.UI.dev=function(s){let h=v10DevBase(s);return h.replace('<h3>Skill XP</h3>',`<h3>Energy</h3><div class=\"devGrid\"><button data-v10-dev-energy=\"full\">Full Energy</button><button data-v10-dev-energy=\"empty\">Empty Energy</button></div><h3>Skill XP</h3>`)};\nconst v10Bind2Base=RF.UI.bind.bind(RF.UI);RF.UI.bind=function(s){v10Bind2Base(s);document.querySelectorAll('[data-v10-dev-energy]').forEach(b=>b.onclick=()=>{s.player.energy=b.dataset.v10DevEnergy==='full'?(s.player.maxEnergy||100):0;RF.save(s);RF.UI.render(s)})};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-developer-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///ui.developer/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
