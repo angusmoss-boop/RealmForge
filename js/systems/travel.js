@@ -927,3 +927,22 @@
   };
   RF.Systems.Travel=RF.Modules.register('systems.travel',api,{owner:'systems',status:'canonical',historicalStages:['v9-routing','v10.16','v10.17','v10.20','v11.2.2']});
 })();
+
+/* V11.22.0 historical fragment extension: Travel. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Travel;if(!api)throw new Error('Travel canonical owner missing before V11.22 fragment extension.');
+  const extraSources={"v8_3-travel-repair":"const v83TravelBase=RF.travel;\nRF.travel=function(id){\n  const s=RF.state;if(s){s.v83=s.v83||{};}\n  const out=v83TravelBase(id);\n  if(s?.activity?.type==='travel' && s.speed===0 && !s.v83.manualPause && !RF.UI.modal && !s.combat && !RF.actionGame){\n    s.speed=1;s.paused=false;\n  }\n  return out;\n};\nRF.repairTravelIfStalled=function(){\n  const s=RF.state;if(!s?.activity||s.activity.type!=='travel')return false;\n  if(s.speed===0&&!s.v83?.manualPause&&!RF.UI.modal&&!s.combat&&!RF.actionGame){\n    s.speed=1;s.paused=false;RF.log(s,'The journey resumes at 1× after a stalled travel state was cleared.','good');RF.save(s);RF.UI.render(s);return true;\n  }\n  return false;\n};\nRF.v83TravelWatch=setInterval(()=>RF.repairTravelIfStalled(),600);\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-travel-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.travel/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
