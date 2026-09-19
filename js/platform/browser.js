@@ -24,6 +24,19 @@
       document.addEventListener('visibilitychange', fn);
       return () => document.removeEventListener('visibilitychange', fn);
     },
+    async fetchBuildInfo(path = './version.txt') {
+      if (typeof fetch !== 'function') throw new Error('Fetch unavailable');
+      const res = await fetch(path, { cache: 'no-store' });
+      return { ok: !!res.ok, status: res.status, text: await res.text(), lastModified: res.headers?.get?.('last-modified') || '' };
+    },
+    currentUrl() { try { return location.href; } catch { return ''; } },
+    replaceHistoryState(state, url) { try { history.replaceState(state, '', url || location.href); return true; } catch { return false; } },
+    pushHistoryState(state, url) { try { history.pushState(state, '', url || location.href); return true; } catch { return false; } },
+    onBackNavigation(handler) {
+      if (typeof window === 'undefined') return () => {};
+      window.addEventListener('popstate', handler);
+      return () => window.removeEventListener('popstate', handler);
+    },
     registerServiceWorker(path = './sw.js') {
       if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return Promise.resolve(null);
       return navigator.serviceWorker.register(path);
