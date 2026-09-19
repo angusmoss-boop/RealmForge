@@ -1,0 +1,97 @@
+REALMFORGE V11.15.0 — PRODUCTION FOUNDATION X AUDIT
+
+Scope
+-----
+Canonical extraction of the legacy fieldcraft foundations and establishment of clean Gathering, Fishing, Hunting and Cooking extension surfaces before V12 content expansion.
+
+Compatibility reduction
+-----------------------
+V11.14 active compatibility: 690,619 bytes
+V11.15 active compatibility: 627,695 bytes
+Removed from compatibility: 62,924 bytes
+Whole historical stages moved: 3
+V7 fieldcraft-only fragments moved: 3
+Historical timeline ordering preserved through canonical installer markers.
+
+Canonical Fieldcraft substrate
+------------------------------
+js/systems/fieldcraft.js now owns the proven production-stage representation of:
+- V5 Hearth & Harvest
+- V6 Hands On
+- V10.24 Hearth & Home
+
+It also owns the V7 fieldcraft-only fragments:
+- rare skilling
+- marsh cooking
+- camp extras
+
+The V5/V6 implementation is intentionally preserved rather than rewritten wholesale because it interleaves several mature, order-sensitive fieldcraft behaviours. Compatibility now delegates those historical boundaries to the canonical owner.
+
+Canonical domain APIs
+---------------------
+js/systems/gathering.js
+- resource definitions and location-resource access
+- resource-state access
+- gathering start/tap/finish
+- equipped-tool lookup
+- rare skilling-find access
+
+js/systems/fishing.js
+- fishing start/cast/reel/escape/reset
+- active fishing state
+- equipped fishing rod lookup
+
+js/systems/hunting.js
+- hunt start/track/strike/failure
+- active hunt state
+
+js/systems/cooking.js
+- camp/campfire availability
+- camp cooking and cooking timing
+- fire lighting/resting hooks
+- Greenvale home-kitchen access inherited from V10.24
+
+Deliberate seams
+----------------
+V10.24 contains property/rest behaviour as well as Cooking and therefore remains intact inside canonical Fieldcraft for execution-order safety. This does not make Fieldcraft the long-term owner of future property development.
+
+Non-fieldcraft V7 crime/exploration/social behaviour remains in compatibility for later extraction.
+
+Save / migration contract
+-------------------------
+Application version: 11.15.0
+Save schema: 11.5.3
+No player-state migration is required.
+Existing occupied Equipment and Tool Belt assignments are preserved.
+Existing Pack and Bank contents are preserved.
+Existing resource-state entries are preserved; missing location-resource entries may be lazily initialized by normal runtime rendering.
+Existing camp, buffs, fieldcraft stats, V7 rare finds/formulas, home state, skill XP/levels, progression flags and dungeon history remain valid.
+Pack overflow remains lossless and blocks time/travel until corrected.
+
+Validation completed
+--------------------
+PASS — 208 JavaScript production/test files pass syntax validation with 0 failures.
+PASS — V11.14 ↔ V11.15 resource-definition equivalence.
+PASS — location-resource table equivalence.
+PASS — camp-recipe equivalence.
+PASS — active Tool Belt tool resolution equivalence.
+PASS — active gathering start/finish equivalence.
+PASS — fishing resolution equivalence.
+PASS — hunting resolution equivalence.
+PASS — camp-cooking resolution equivalence.
+PASS — V7 rare-skilling result equivalence.
+PASS — V10.24 home recipe-needs / Pack+Bank ingredient equivalence.
+PASS — V10.24 home-cooking transaction equivalence.
+PASS — V10.24 home panel normalized-output equivalence.
+PASS — canonical ownership verifier for Fieldcraft, Gathering, Fishing, Hunting and Cooking.
+PASS — advanced V11.14 campaign loads into V11.15 with all existing occupied loadouts and fieldcraft state preserved.
+PASS — runtime contract V11.15.
+PASS — all retained executable Node regression harnesses.
+
+Known harness-only warning
+--------------------------
+The historical V10.9 `modalHTML` / `modalHtml` mismatch still emits the same error in the simplified Node fake-DOM harness for both reference and candidate runtimes. It is not a V11.15 behavioural difference and has not reproduced in the Samsung/browser runtime.
+
+Result
+------
+V11.15 is suitable for Samsung/browser sanity testing as Production Foundation X.

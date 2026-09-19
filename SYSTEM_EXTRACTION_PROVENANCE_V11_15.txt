@@ -1,0 +1,34 @@
+REALMFORGE V11.15.0 — FIELDCRAFT FOUNDATION EXTRACTION PROVENANCE
+
+CANONICAL FIELDCRAFT SOURCE
+js/systems/fieldcraft.js
+
+WHOLE HISTORICAL STAGES MOVED FROM ACTIVE COMPATIBILITY
+- js/v5.js       — Hearth & Harvest
+- js/v6.js       — Hands On
+- js/v10_24.js   — Hearth & Home
+
+V7 FIELDCRAFT-ONLY FRAGMENTS MOVED
+- v7-rare-skilling
+- v7-marsh-cooking
+- v7-camp-extras
+
+CANONICAL DOMAIN API SOURCES
+- js/systems/gathering.js
+- js/systems/fishing.js
+- js/systems/hunting.js
+- js/systems/cooking.js
+
+ACTIVE COMPATIBILITY
+js/legacy/compat_gameplay_fieldcraft_trimmed_v1153.js
+
+PROVENANCE CONTRACT
+The moved stage source is the exact production-stage representation inherited from V11.14 after earlier Save Core and Content Core transformations. It is retained inside the canonical Fieldcraft owner and invoked by installer markers at the original historical boundaries.
+
+V5 and V6 are intentionally moved whole instead of rewritten line-by-line because their gathering, fishing, hunting, cooking, firemaking, activity-result and UI hooks are interdependent and execution-order-sensitive. Clean canonical domain APIs now sit above them and are the supported extension surface.
+
+V10.24 is also moved whole because its Cooking implementation is intertwined with Greenvale home/property/rest behaviour. Future property/rest implementation should be separated into a dedicated canonical owner rather than expanded inside the historical stage.
+
+DELIBERATE NON-EXTRACTIONS
+- Non-fieldcraft V7 crime/exploration/social blocks remain in compatibility.
+- Older legacy/base bootstrap primitives remain for a later retirement pass.

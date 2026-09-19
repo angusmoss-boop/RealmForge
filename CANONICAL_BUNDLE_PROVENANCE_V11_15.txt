@@ -1,0 +1,53 @@
+REALMFORGE V11.15.0 — CANONICAL BUNDLE PROVENANCE
+
+BUNDLE: js/dist/save_core_v11_15.js
+SHA256: e67e7786a8e23b7f14d1bee11ad1eaf677e767448b9a65a392495bc017af1b56
+BYTES: 19982
+SOURCES:
+  e7815e3b5af3316bf113d6548afddc5ac000820d84f311a32108e93ae803d52b      1215  js/core/bootstrap.js
+  9a17a70e43cb1530b119401b00b3ebea9d83b3f913dcd02bf7627a776f4c7a7a      1563  js/platform/browser.js
+  e4bbad3c6b9cae4b5efddb09e13e5f14f803b162fc4f01b53e28358f559bb029      6074  js/core/migrations.js
+  67aed73486577cb34bd67ca95b8853c35bdbf0d28f32e558621a35321b856365       894  js/core/storage.js
+  e591e106744a5e961b016a48e157125c200b97ee899a6a719367536caa2fb575      7190  js/core/campaigns.js
+  364e1325346da1b9d8f880e8ff1ff8e7abd3a61de8a2ddaa0d354b8439b01810      2759  js/core/state.js
+
+BUNDLE: js/dist/data_core_v11_15.js
+SHA256: fd4e3d382e40cd985865019ea64cc6bf02743b5d924b7b8166b8f0b6cc5711f1
+BYTES: 133593
+SOURCES:
+  e08abe2cfec1654b8b87353425fc504293936297a9aed90cbdd459f0ad09aa2b      2628  js/data/catalog.js
+  dee4c9e9707127f0c10557e27598f70e3df8de8fea7f1de5f0298ffd78deaf3e     95401  js/data/content_blocks_v11_9.js
+  6379439478078f7e27f44f354e3c11aa2cad7fd941fbb82d33546ea3b609cfd4      1151  js/data/config_registry.js
+  42b51c6d940db80ce5d452881bd6916e6928230c8059a88456c72284f35f2926     34162  js/data/world_config_v11_10.js
+
+BUNDLE: js/dist/systems_core_v11_15.js
+SHA256: e9a0bdb8ece2de1727c2a9f6e1b05eb90e11dd585d365e55464fa3d3b0ddb6f5
+BYTES: 486046
+SOURCES:
+  d31b55f6537bfec9ba02586fe2c024efe2161824b8a81bf99bfa0bc447e84db9     66736  js/systems/fieldcraft.js
+  0ad77ed27d94d75e3f85bff0c08294dfe3c9cb4e71dd2aa6415416cc9d076dc9       747  js/systems/gathering.js
+  29f4dd0aa786c645323884af99cbeb2dcfed9467a1d35b4d22d97a3f49586c82       539  js/systems/fishing.js
+  4f0dd594b34e16c18a79dd5065c9f7ad4e19d3cb895ed630a6788438630af56e       448  js/systems/hunting.js
+  193306404e5d3ec992fdf5d2f90138ebdc62aba997f7e271255338d52af54534       902  js/systems/cooking.js
+  bfeeb443730fef10eef8a1ace4a704814aa5270faa481a509efacbe916bf53b4     24145  js/systems/commerce.js
+  f52bd7dbe0326a6e39f6b55c8e86624b236e14a39ff739a8fa5f2c6001c45211     25841  js/systems/dungeons.js
+  c5dc52389988292eea5d98fc7ee3cb1513b801274346eb2c88c7531ad6431dbc     55624  js/systems/travel.js
+  9124d0b239a1301b72cf73e0c6ab7a8438fcfcf0f9578b2b1bc1fe7a5a998e04      7149  js/systems/quests.js
+  b1477f8db5c336b46b2b8492250e66676497ede0d8dc15e43b5f21c3b462237c     12860  js/systems/wayfinder.js
+  173869b1f06401da84fd5055edeaa8f307e8668be23430f921235cad14b964ee     63497  js/systems/inventory.js
+  250dbe43b9770c8fe04beed174e3b7cd7bda8c579640d135a2a190aea73f108e     70610  js/systems/equipment.js
+  f6c48cbd70737f68b612b58db73bbf4fea2bd9948939f1d5649bbff14026bda0     57492  js/systems/combat.js
+  e5701e21589f2cba010a520fee92e25b3e046b6115b626819321e87f93025de9     35929  js/systems/research.js
+  b4d31dc7ad12d9be96c6e5c03f2f04c079ed0798911b20b9a677d4142af50cfb     42062  js/systems/crafting.js
+  54c893971eb0ea0c74558c8e76e2723bfc52f8f56f05c7d084a13a30277c654e     20736  js/systems/skills.js
+
+BUNDLE: js/dist/canonical_v11_15.js
+SHA256: 05e7c203149461dc80ebf4786e25593b53f89f3a291ada6a54dfec1c427b0676
+BYTES: 12124
+SOURCES:
+  1af2520a081c3bd06c5943a2f13edc531677acdd49ba08f20ed3d03b713025d8       805  js/core/save_boot.js
+  4c8567d49dd106e919e59a0119ad7bc5fc4d74339bbc584d4feb476a5a9a23ab       714  js/data/finalize.js
+  46fc9933995a2e6f3970e1ba3553b5deb04a0596344f47c373e58be25a164329      2451  js/data/config_finalize.js
+  2911cfb8c0f3439cec0534c0e8c1c29e7d51306bb4e017ec0a01c0349d0197ca       804  js/ui/shell.js
+  31eedc92146adf7d89534f00519f3c691daf7f79ecc73d7b6b829e11b485b6be      5744  js/core/system_ownership_v11_15.js
+  c882f698eb5228d5e493a93f531aa0e8bf8477ad998dd5f31cb8f9a60e383ee7      1294  js/core/finalize.js
