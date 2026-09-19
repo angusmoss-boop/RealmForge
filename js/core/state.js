@@ -30,9 +30,9 @@
     C.createSlot(state,`${base} • Campaign ${existing+1}`);if(RF.UI){RF.UI.tab='world';RF.UI.modal=null;RF.UI.render(state)};return state;
   };
   RF.importPrompt=function(){
-    const txt=prompt('Paste your Realmforge save backup:');if(!txt)return;
+    const txt=RF.Platform?.active?.promptText?.('Paste your Realmforge save backup:','');if(!txt)return;
     try{C.saveNow();const state=RF.importSave(txt),id=C.createSlot(state,`${state.player?.name||'Imported'} • Imported`);C.loadSlot(id);RF.UI.modal={type:'message',title:'Backup Imported',text:'Imported as a separate campaign slot. Your existing campaigns were not overwritten.'};RF.UI.render(RF.state)}
-    catch(err){console.warn(err);alert('That save could not be read. No existing campaign was changed.')}
+    catch(err){console.warn(err);RF.Platform?.active?.alertMessage?.('That save could not be read. No existing campaign was changed.')}
   };
 
   const api={
