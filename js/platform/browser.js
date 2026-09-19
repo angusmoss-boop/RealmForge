@@ -13,7 +13,25 @@
     kind: 'browser',
     storage: safeStorage,
     now: () => Date.now(),
+    monotonicNow: () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()),
     online: () => typeof navigator === 'undefined' ? true : navigator.onLine !== false,
+    promptText(message, value = '') { try { return typeof prompt === 'function' ? prompt(String(message), String(value ?? '')) : null; } catch { return null; } },
+    alertMessage(message) { try { if (typeof alert === 'function') alert(String(message)); return true; } catch { return false; } },
+    vibrate(ms = 18) { try { return !!navigator?.vibrate?.(Math.max(0, Number(ms) || 0)); } catch { return false; } },
+    isVisible() { try { return typeof document === 'undefined' || document.visibilityState !== 'hidden'; } catch { return true; } },
+    onResume(handler) {
+      if (typeof window === 'undefined') return () => {};
+      const disposers = [];
+      const add = (target, name, fn) => { target?.addEventListener?.(name, fn, { passive: true }); disposers.push(() => target?.removeEventListener?.(name, fn)); };
+      const visibility = () => { if (api.isVisible()) handler('visibilitychange'); };
+      const pageshow = () => handler('pageshow');
+      const focus = () => handler('focus');
+      // Keep the historical Clock Sentinel event targets/semantics while exposing one adapter seam.
+      add(window, 'visibilitychange', visibility);
+      add(window, 'pageshow', pageshow);
+      add(window, 'focus', focus);
+      return () => disposers.splice(0).forEach(fn => { try { fn(); } catch {} });
+    },
     copyText: async text => {
       if (navigator?.clipboard?.writeText) { await navigator.clipboard.writeText(String(text)); return true; }
       return false;
