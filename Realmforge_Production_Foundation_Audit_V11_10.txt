@@ -1,0 +1,33 @@
+REALMFORGE V11.10.0 — PRODUCTION FOUNDATION AUDIT
+
+Target: static world/gameplay configuration
+
+RESULT
+- Canonical RF.Config registry: ACTIVE
+- Configuration payloads extracted: 19
+- Source bytes moved from active gameplay compatibility: 32,299
+- Active gameplay compatibility size: 1,105,848 -> 1,074,126 bytes (31,722 bytes smaller)
+- Save schema: unchanged at 11.5.3
+
+EXTRACTED AREAS
+- Exploration/chest/locality configuration
+- Crime/burglary site + balance configuration
+- Bank/inn/facility geography
+- Local market definitions and finite stock tables
+- Equipment stat balance table
+- Base and expanded dungeon definitions
+- Fourteen regional ecosystems
+- V11.4 regional entity and dungeon-gear specification payloads
+
+OWNERSHIP
+- Static config: data.config / RF.Config
+- Content: data.catalog / RF.Catalog
+- Persistence: core.campaigns
+- Migration ordering: core.migrations
+
+VALIDATION CONTRACT
+- V11.9 and V11.10 final RF.DATA + live configuration snapshots must be equivalent.
+- Markets: 10 definitions.
+- Ecosystems: 14 locations × 8 species.
+- Dungeons: 8 definitions with valid bosses/rewards/materials.
+- Existing V11.9 campaign state must load unchanged.

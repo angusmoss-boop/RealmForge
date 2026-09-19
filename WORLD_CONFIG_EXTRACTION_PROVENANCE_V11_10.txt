@@ -1,0 +1,31 @@
+REALMFORGE V11.10.0 — WORLD CONFIG EXTRACTION PROVENANCE
+
+Extracted configs: 19
+Extracted literal bytes: 32299
+Compatibility shrink: 31722 bytes
+
+exploration.chests                        528 bytes  js/v10_25.js
+exploration.extraEnemies                  315 bytes  js/v10_27.js
+exploration.localExtras                   534 bytes  js/v10_27.js
+exploration.gearPools                     752 bytes  js/v10_27.js
+crime.greenvaleBurglarySites             2568 bytes  js/v10_30.js
+crime.greenvaleBurglaryBalance           1310 bytes  js/v10_31.js
+services.banks                            147 bytes  js/v10_47.js
+commerce.markets                         4407 bytes  js/v10_54.js
+equipment.statBalance                    1264 bytes  js/v10_55.js
+dungeons.base                            1017 bytes  js/v11.js
+services.innLocations                      36 bytes  js/v11_1.js
+services.specialFacilities                160 bytes  js/v11_1.js
+dungeons.v114EntitySpecs                 9829 bytes  js/v11_4.js
+world.ecosystems                         2102 bytes  js/v11_4.js
+dungeons.v114GearSpecs                   4097 bytes  js/v11_4.js
+dungeons.v114Additions                   2617 bytes  js/v11_4.js
+dungeons.cryptOverride                    175 bytes  js/v11_4.js
+dungeons.emberOverride                    176 bytes  js/v11_4.js
+dungeons.bossHomes                        265 bytes  js/v11_4.js
+
+Active generated files:
+6379439478078f7e27f44f354e3c11aa2cad7fd941fbb82d33546ea3b609cfd4      1151 bytes  js/data/config_registry.js
+42b51c6d940db80ce5d452881bd6916e6928230c8059a88456c72284f35f2926     34162 bytes  js/data/world_config_v11_10.js
+6429ea0222f4e3fa37cdf3667cf0601611a4837aa7e85213e1773430599ea752   1074126 bytes  js/legacy/compat_gameplay_config_trimmed_v1153.js
+8dfbc6e7225a1442779c66fc91087ded01fc9d2bf886a1f5115fbab5f9649485    133663 bytes  js/dist/data_core_v11_10.js
