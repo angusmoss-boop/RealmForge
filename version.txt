@@ -1,5 +1,5 @@
-version=11.21.0
-title=Canonical World & Social Foundations
-built=2026-09-19T19:16:00+01:00
-build_id=20260919-v1121-world-social
-notes=V2 Living World, V4 social/dialogue/contracts, V9.2 deeper dialogue/ecology and V9.1 weather-scene foundations now execute from canonical World/Social/Presentation owners. Save schema remains 11.5.3.
+version=11.23.0
+title=Canonical Character, Progression & Vault Ancestry
+built=2026-09-19T20:51:00+01:00
+build_id=20260919-v1123-character-progression-vault
+notes=Character/perk progression, V8.2 Pack/Bank/Mastery ancestry, V10 milestones, V10.10 Vault and V10.12 sorting/stability now execute from canonical domain owners. Save schema remains 11.5.3.

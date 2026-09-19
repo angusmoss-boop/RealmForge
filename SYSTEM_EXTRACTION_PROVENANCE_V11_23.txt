@@ -1,0 +1,94 @@
+REALMFORGE V11.23.0 - SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.22.0
+Save schema: 11.5.3 (unchanged)
+
+CHARACTER / PROGRESSION
+Destination: js/systems/character.js
+- v3-perk-core - 855 chars
+- v3-perk-modifiers - 420 chars
+- v3-character-perks-ui - 1,634 chars
+- v10-character-creator - 1,555 chars
+- v10-progression-queue - 628 chars
+- v10-progression-render-queue - 261 chars
+Subtotal: 5,353 chars
+
+EQUIPMENT
+Destination: js/systems/equipment.js
+- v3-bulwark-armor - 213 chars
+- v3-equipment-ui - 755 chars
+- v8_2-equipment-foundation - 638 chars
+- v8_2-equipment-actions - 515 chars
+Subtotal: 2,121 chars
+
+TRAVEL
+Destination: js/systems/travel.js
+- v3-trailwise-travel - 446 chars
+
+COMBAT
+Destination: js/systems/combat.js
+- v3-combat-techniques - 1,683 chars
+- v3-combat-win-perks - 702 chars
+- v3-combat-ui - 1,381 chars
+- v8_2-combat-feedback - 563 chars
+- v10-battle-summary - 2,329 chars
+Subtotal: 6,658 chars
+
+ITEM BROWSER
+Destination: js/ui/item_browser.js
+- v3-inventory-rarity-ui - 349 chars
+- v10_12-sort-stability-core - 1,914 chars
+- v10_12-shop-ui - 2,034 chars
+Subtotal: 4,297 chars
+
+INVENTORY / VAULT
+Destination: js/systems/inventory.js
+Fragments:
+- v8_2-pack-foundation - 302 chars
+- v8_2-pack-migration-intake-items - 1,527 chars
+- v8_2-bank-actions - 1,055 chars
+- v8_2-pack-bank-ui - 4,963 chars
+- v8_2-pack-bank-bind - 1,884 chars
+- v10_12-pack-ui - 1,550 chars
+- v10_12-bank-ui - 2,949 chars
+- v10_12-world-bank-stability - 485 chars
+Fragment subtotal: 14,715 chars
+Whole historical stage:
+- js/v10_10.js - 9,360 chars
+Inventory total: 24,075 chars
+
+GATHERING
+Destination: js/systems/gathering.js
+- v8_2-mastery-work - 2,225 chars
+- v8_2-mastery-ui - 976 chars
+- v10-instant-harvest - 818 chars
+Subtotal: 4,019 chars
+
+SKILLS
+Destination: js/systems/skills.js
+- v10-skills-ui - 2,263 chars
+- v10_12-skills-crafting-ui - 2,500 chars
+Subtotal: 4,763 chars
+
+DEVELOPER
+Destination: js/ui/developer.js
+- v10-dev-energy - 616 chars
+
+TOTAL EXACT SOURCE TRANSFERRED
+52,348 characters
+
+METHOD
+- Every source slice was taken from the active transformed V11.22 compatibility runtime.
+- Canonical modules store the exact historical classic-script body.
+- Compatibility retains a guarded installer at the exact old execution position.
+- Installers execute synchronously, preserving wrapper/dependency order.
+- V10.10 is preserved as one exact stage because its bank geography, World injection, split-vault renderer, scroll state and binding wrapper form one coherent historical unit.
+- No extracted historical source body was semantically rewritten.
+
+COMPATIBILITY RESULT
+V11.22: 235,853 bytes
+V11.23: 189,383 bytes
+Reduction: 46,470 bytes
+
+ACTIVE COMPATIBILITY SHA-256
+a90679f9542e527a2af2adf9b77c0222eea761064c7a58910b04a5b09d867540

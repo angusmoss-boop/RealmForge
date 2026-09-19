@@ -1,29 +1,38 @@
-Realmforge: Wanderer's Rise — V11.21.0 Canonical World & Social Foundations
+Realmforge: Wanderer's Rise — V11.23.0 Canonical Character, Progression & Vault Ancestry
 
-PRODUCTION RUNTIME
-Realmforge remains an HTML/CSS/JavaScript PWA with a compact nine-file live production chain. Readable canonical source stays under js/core, js/data, js/platform, js/systems and js/ui.
+Production architecture release. Gameplay balance/content is intentionally unchanged.
+Save schema remains 11.5.3.
 
-Active runtime order:
+ACTIVE PRODUCTION RUNTIME
 1. js/data/base_content.js
 2. js/legacy/base/state.js
 3. js/legacy/base/ui.js
-4. js/dist/save_core_v11_21.js
-5. js/dist/data_core_v11_21.js
+4. js/dist/save_core_v11_23.js
+5. js/dist/data_core_v11_23.js
 6. js/legacy/base/main.js
-7. js/dist/systems_core_v11_21.js
-8. js/legacy/compat_gameplay_world_social_trimmed_v1153.js
-9. js/dist/canonical_v11_21.js
+7. js/dist/systems_core_v11_23.js
+8. js/legacy/compat_gameplay_character_progression_trimmed_v1153.js
+9. js/dist/canonical_v11_23.js
 
-V11.21 WORLD / SOCIAL FOUNDATION
-- systems.world owns the exact historical V2 Living World stage plus V9.2 encounter-ecology enrichment.
-- systems.social owns V4 relationships/passers/dialogue/contracts and the V9.2 multi-stage dialogue foundation through exact chronological fragment installers.
-- ui.presentation now also owns the V9.1 weather/time-responsive world-scene bridge.
-- Existing Combat, Travel, Crime, Property, Research and other canonical owners remain unchanged.
-- No gameplay redesign or persistent-state migration is introduced.
+V11.23 CHARACTER / PROGRESSION / VAULT FOUNDATION
+- New canonical systems.character owns historical V3 perk/progression and V10 creator/milestone ancestry.
+- Canonical Inventory owns the V8.2 Pack/Bank foundations, complete V10.10 Greenvale Vault stage and V10.12 Pack/Bank stability fragments.
+- Canonical Equipment, Gathering, Combat, Travel, Skills, Item Browser and Developer absorb their own audited V3/V8.2/V10/V10.12 ancestry.
+- Historical execution order is preserved through tiny synchronous installer markers in compatibility.
+- Existing gameplay semantics and save state are intentionally unchanged.
 
-Application version: 11.21.0
-Save schema: 11.5.3
+APPLICATION VERSION
+11.23.0
 
-Existing campaigns remain compatible. Valid Equipment and Tool Belt items are never deleted or retroactively unequipped. Ring I and Ring II remain independent physical slots. Deliberate Pack overflow remains lossless and continues to block time/travel until resolved.
+SAVE SCHEMA
+11.5.3
 
-See REALMFORGE_ARCHITECTURE_V11_21.md, Realmforge_Production_Foundation_Audit_V11_21.txt, SYSTEM_EXTRACTION_PROVENANCE_V11_21.txt and CANONICAL_BUNDLE_PROVENANCE_V11_21.txt for the production-foundation record.
+KEY DOCUMENTS
+- REALMFORGE_ARCHITECTURE_V11_23.md
+- Realmforge_Production_Foundation_Audit_V11_23.txt
+- SYSTEM_EXTRACTION_PROVENANCE_V11_23.txt
+- CANONICAL_BUNDLE_PROVENANCE_V11_23.txt
+- Realmforge_Development_Log_V1_to_V11_23_0.txt
+
+PRODUCTION RULE
+New work belongs in canonical Core/Data/Systems/UI modules. Do not resume historical version-patch monkey-patching.
