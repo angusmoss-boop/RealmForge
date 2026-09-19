@@ -1,0 +1,1797 @@
+/* Realmforge V11.13.0 — Canonical Gameplay Systems Core */
+
+/* ===== js/systems/commerce.js ===== */
+/* Realmforge V11.11.0 — Canonical Commerce implementation.
+   Mature V10.54 market behaviour moved out of the compatibility runtime.
+   Installed at the original V10.54 execution point so every later patch sees the same RF.V1054 contract. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  let installed=false;
+  function installHistoricalV1054() {
+    if(installed) return RF.V1054;
+    installed=true;
+    RF.V1054=RF.V1054||{};
+    const V=RF.V1054;
+    V.version='10.54.0';
+    V.escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    V.cap=s=>RF.packCapacity?RF.packCapacity(s):(RF.V82?.PACK_CAP||28);
+
+    // Regional market-only additions. Requirements remain derived by the existing equipment system,
+    // so players may purchase them early but cannot equip them until the relevant skill is high enough.
+    Object.assign(RF.DATA.items,{
+      greenvale_jerkin:{name:'Greenvale Jerkin',icon:'🦺',type:'armor',value:78,armor:4,slot:'chest',rarity:'Uncommon',desc:'Layered leather made by Greenvale saddlers. +4 armour.'},
+      millers_pie:{name:"Miller's Savoury Pie",icon:'🥧',type:'food',value:18,heal:24,desc:'Hot pastry packed with root vegetables and minced meat. Restores 24 health.'},
+      crossroads_cutlass:{name:'Roadwarden Cutlass',icon:'🗡️',type:'weapon',value:120,damage:9,slot:'main',rarity:'Uncommon',desc:'A short road blade built for cramped wagon fights. +9 melee damage.'},
+      wayfarer_coat:{name:'Wayfarer Field Coat',icon:'🧥',type:'armor',value:155,armor:6,slot:'chest',rarity:'Uncommon',desc:'Waxed travelling layers with hidden reinforcement. +6 armour.'},
+      watch_spear:{name:'Eastwatch Spear',icon:'🔱',type:'weapon',value:175,damage:12,slot:'main',rarity:'Uncommon',desc:'A disciplined guard spear with a dark iron head. +12 melee damage.'},
+      miners_helm:{name:'Pitwarden Helm',icon:'⛑️',type:'armor',value:130,armor:5,slot:'head',rarity:'Uncommon',desc:'A reinforced mining helm adapted for ugly tunnel fights. +5 armour.'},
+      ironridge_warhammer:{name:'Ironridge Warhammer',icon:'🔨',type:'weapon',value:360,damage:18,slot:'main',rarity:'Rare',desc:'A forge-heavy hammer balanced just enough for battle. +18 melee damage.'},
+      ironridge_kite_shield:{name:'Ironridge Kite Shield',icon:'🛡️',type:'armor',value:295,armor:9,slot:'off',rarity:'Rare',desc:'Riveted Ironridge plate with a tall fighting profile. +9 armour.'},
+      quarry_maul:{name:'Redstone Maul',icon:'🔨',type:'weapon',value:250,damage:14,slot:'main',rarity:'Uncommon',desc:'A quarry hammer whose working face has seen more stone than skulls. +14 melee damage.'},
+      reedmere_spear:{name:'Reedmere Marsh Spear',icon:'🔱',type:'weapon',value:225,damage:13,slot:'main',rarity:'Uncommon',desc:'A long ash-and-reed spear used from narrow stilt walkways. +13 melee damage.'},
+      mirewatch_bow:{name:'Mirewatch Warbow',icon:'🏹',type:'weapon',value:340,damage:16,slot:'main',ranged:true,rarity:'Rare',desc:'A heavy ranger bow sealed against fen rain. +16 ranged damage.'},
+      mirewatch_hood:{name:'Mirewatch Ranger Hood',icon:'🥷',type:'armor',value:220,armor:7,slot:'head',rarity:'Rare',desc:'Layered hood, leather cap and hidden mail used by Mirewatch rangers. +7 armour.'}
+    });
+
+    // Stock rows: [item id, minimum daily stock, maximum daily stock, local buy-price multiplier].
+    // Markets exist only at places where a permanent stall, quartermaster or work commissary makes sense.
+    V.MARKETS=RF.Config.clone("commerce.markets");
+
+    V.hash=function(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+    V.qtyFor=function(s,loc,id,min,max){if(max<=min)return min;const seed=V.hash(`${s?.seed||'rf'}|${s?.day||1}|${loc}|${id}`);return min+(seed%(max-min+1))};
+    V.market=function(loc){return V.MARKETS[loc]||null};
+    V.stockSpec=function(loc,id){return V.market(loc)?.stock?.find(x=>x[0]===id)||null};
+    V.ensureStock=function(s,loc=s?.location){
+      const def=V.market(loc);if(!s||!def)return null;
+      s.v1054=s.v1054||{};s.v1054.markets=s.v1054.markets||{};
+      let rec=s.v1054.markets[loc];
+      if(!rec||rec.day!==s.day){
+        const stock={};
+        def.stock.forEach(([id,min,max])=>{if(RF.DATA.items[id])stock[id]=V.qtyFor(s,loc,id,min,max)});
+        rec={day:s.day,stock};s.v1054.markets[loc]=rec;
+      }
+      return rec;
+    };
+    V.localBuyMult=function(loc,id){const spec=V.stockSpec(loc,id);return Math.max(.5,Number(spec?.[3])||1)};
+    V.buyPrice=function(s,loc,id){const base=RF.marketPrice?RF.marketPrice(s,id,true):Math.max(1,Math.round((RF.DATA.items[id]?.value||1)*1.25));return Math.max(1,Math.round(base*(V.market(loc)?.buy||1)*V.localBuyMult(loc,id)))};
+    V.sellPrice=function(s,loc,id){const base=RF.marketPrice?RF.marketPrice(s,id,false):Math.max(1,Math.floor((RF.DATA.items[id]?.value||1)*.55));const cat=RF.v92Category?.(RF.DATA.items[id])||'other',def=V.market(loc),demand=def?.demand?.[cat]??1;return Math.max(1,Math.round(base*(def?.sell||1)*demand))};
+    V.sortedIds=function(ids){return [...ids].sort((a,b)=>{const ca=RF.v92Category?.(RF.DATA.items[a])||'other',cb=RF.v92Category?.(RF.DATA.items[b])||'other';const cats=(RF.v92Cats||[]).map(x=>x[0]);const d=(cats.indexOf(ca)+1||99)-(cats.indexOf(cb)+1||99);if(d)return d;return (RF.DATA.items[a]?.name||a).localeCompare(RF.DATA.items[b]?.name||b)})};
+    V.buyMax=function(s,loc,id){const rec=V.ensureStock(s,loc),stock=Math.max(0,Number(rec?.stock?.[id])||0),price=V.buyPrice(s,loc,id);if(stock<1||price<1)return 0;const byGold=Math.floor((s.gold||0)/price);if(byGold<1)return 0;const canReceive=(s.inventory?.[id]||0)>0||RF.packUsed(s)<V.cap(s)||RF.isBankTown?.(s);return canReceive?Math.min(stock,byGold):0};
+    V.sellMax=(s,id)=>Math.max(0,Number(s?.inventory?.[id])||0);
+    V.quality=it=>it?.rarity||'Common';
+    V.req=function(s,id){return RF.v93Req?.(s,id)||''};
+
+    V.migrate=function(s){
+      if(!s)return s;
+      s.version='10.54.0';s.v1054=s.v1054||{};s.v1054.markets=s.v1054.markets||{};s.v1054.view=s.v1054.view||'buy';
+      s.v93=s.v93||{};s.v93.marketCategory=s.v93.marketCategory||'all';
+      Object.keys(V.MARKETS).forEach(id=>{if(RF.DATA.locations?.[id])RF.DATA.locations[id].market=true});
+      s.stats=s.stats||{};if(s.stats.marketTrades==null)s.stats.marketTrades=0;
+      return s;
+    };
+    /* V11.8: legacy save/migration wrapper extracted to canonical core. */
+
+    // Shop is no longer a global app tab. Commerce lives in the World at actual market locations.
+    if(RF.V95?.navItems)RF.V95.navItems=RF.V95.navItems.filter(x=>x[0]!=='shop');
+    if(RF.V1038){RF.V1038.items=(RF.V1038.items||[]).filter(x=>x.id!=='shop');if(RF.V1038.meta)delete RF.V1038.meta.shop}
+    if(RF.UI.tab==='shop')RF.UI.tab='world';
+
+    RF.openMarket=function(){
+      const s=RF.state,def=V.market(s?.location);if(!s||!def)return;
+      V.migrate(s);V.ensureStock(s,s.location);s.v1054.view=s.v1054.view==='sell'?'sell':'buy';
+      RF.UI.modal={type:'v1054Market'};RF.save?.(s);RF.UI.render(s);
+    };
+    V.closeMarket=function(){RF.UI.modal=null;RF.UI.render(RF.state)};
+    V.openDetail=function(mode,id){if(RF.UI.modal?.type!=='v1054Market')return;RF.UI.modal.detail={mode:mode==='sell'?'sell':'buy',id};RF.UI.modal.notice='';RF.UI.render(RF.state)};
+    V.closeDetail=function(){if(RF.UI.modal?.type==='v1054Market'){delete RF.UI.modal.detail;RF.UI.modal.notice='';RF.UI.render(RF.state)}};
+
+    V.trade=function(mode,id,qty){
+      const s=RF.state,loc=s?.location,def=V.market(loc),it=RF.DATA.items?.[id];if(!s||!def||!it)return;
+      qty=Math.max(1,Math.floor(Number(qty)||1));
+      if(mode==='buy'){
+        const rec=V.ensureStock(s,loc),price=V.buyPrice(s,loc,id),max=V.buyMax(s,loc,id);qty=Math.min(qty,max);
+        if(qty<1){RF.UI.modal.notice='You cannot buy that amount right now.';return RF.UI.render(s)}
+        const result=RF.addItem(s,id,qty);if(result===false){RF.UI.modal.notice='Your Pack cannot take that purchase.';return RF.UI.render(s)}
+        const cost=price*qty;s.gold-=cost;rec.stock[id]=Math.max(0,(rec.stock[id]||0)-qty);RF.addXp?.(s,'trading',Math.max(4,Math.round(4*Math.sqrt(qty))));s.stats.marketTrades+=qty;
+        RF.log?.(s,`Bought ${qty} × ${it.name} from ${def.name} for ${cost}g.${result==='banked'?' Sent to your Bank because the Pack was full.':''}`,'good');
+        RF.UI.modal.notice=`Bought ${qty} × ${it.name} for ${cost}g${result==='banked'?' • sent to Bank':''}.`;
+      }else{
+        const price=V.sellPrice(s,loc,id),max=V.sellMax(s,id);qty=Math.min(qty,max);
+        if(qty<1){RF.UI.modal.notice='You do not have that amount in your Pack.';return RF.UI.render(s)}
+        if(!RF.takeItem(s,id,qty)){RF.UI.modal.notice='That sale could not be completed.';return RF.UI.render(s)}
+        const gain=price*qty;s.gold+=gain;s.stats.goldEarned=(s.stats.goldEarned||0)+gain;s.stats.marketTrades+=qty;RF.addXp?.(s,'trading',Math.max(3,Math.round(3*Math.sqrt(qty))));
+        RF.log?.(s,`Sold ${qty} × ${it.name} to ${def.name} for ${gain}g.`,'good');RF.UI.modal.notice=`Sold ${qty} × ${it.name} for ${gain}g.`;
+      }
+      RF.save?.(s);RF.UI.render(s);
+    };
+
+    V.marketTile=function(s,loc,mode,id){
+      const it=RF.DATA.items[id];if(!it)return'';
+      const buy=mode==='buy',rec=V.ensureStock(s,loc),qty=buy?Math.max(0,rec.stock[id]||0):V.sellMax(s,id),price=buy?V.buyPrice(s,loc,id):V.sellPrice(s,loc,id),soldout=qty<1;
+      return `<button type="button" class="v1054MarketTile ${soldout?'soldout':''}" data-v1054-item="${V.escape(id)}" data-v1054-mode="${mode}" ${soldout?'aria-disabled="true"':''}>
+        <div class="v1054ItemIcon">${it.icon||'📦'}</div>
+        <div class="v1054ItemName">${V.escape(it.name)}</div>
+        <div class="v1054ItemQuality">${V.escape(V.quality(it))}</div>
+        <div class="v1054ItemFoot"><span>×${qty}</span><b>${price}g</b></div>
+      </button>`;
+    };
+    V.detailStats=function(it){const a=[];if(it.damage)a.push(`⚔️ ${it.damage} damage`);if(it.armor)a.push(`🛡️ ${it.armor} armour`);if(it.heal)a.push(`❤️ ${it.heal} HP`);if(it.stamina)a.push(`⚡ ${it.stamina} stamina`);if(it.tool)a.push(`🧰 ${RF.v103ToolLabel?.(it.tool)||it.tool} • Tier ${it.tier||1}`);if(it.power!=null)a.push(`⚙️ Work power ${it.power}`);return a};
+    V.detailHtml=function(s,loc,d){
+      if(!d)return'';const mode=d.mode==='sell'?'sell':'buy',id=d.id,it=RF.DATA.items[id];if(!it)return'';
+      const buy=mode==='buy',price=buy?V.buyPrice(s,loc,id):V.sellPrice(s,loc,id),max=buy?V.buyMax(s,loc,id):V.sellMax(s,id),rec=V.ensureStock(s,loc),available=buy?Math.max(0,rec.stock[id]||0):V.sellMax(s,id),req=V.req(s,id),stats=V.detailStats(it),action=buy?'Buy':'Sell';
+      return `<div class="v1054DetailBack"><div class="v1054DetailModal">
+        <div class="v1054DetailHero"><div class="v1054DetailIcon">${it.icon||'📦'}</div><div><span class="eyebrow">${action.toUpperCase()} • ${V.escape(V.quality(it))}</span><h2>${V.escape(it.name)}</h2></div></div>
+        <div class="v1054DetailDesc">${V.escape(it.desc||'No description recorded.')}</div>
+        ${stats.length?`<div class="v1054DetailStats">${stats.map(x=>`<span>${V.escape(x)}</span>`).join('')}</div>`:''}
+        ${req?`<div class="v1054Requirement"><b>Requirement to equip:</b> ${V.escape(req)}<small>You may purchase this item regardless of your current level.</small></div>`:''}
+        <div class="v1054TradeSummary"><span>${buy?'Unit price':'Unit offer'} <b>${price}g</b></span><span>${buy?'In stock':'In Pack'} <b>×${available}</b></span><span>Gold <b>${s.gold}g</b></span></div>
+        ${RF.UI.modal?.notice?`<div class="v1054TradeNotice">${V.escape(RF.UI.modal.notice)}</div>`:''}
+        <label class="v1054QtyLabel">Amount<input data-v1054-qty type="number" inputmode="numeric" min="1" max="${Math.max(1,max)}" value="1"></label>
+        <div class="v1054DetailActions"><button type="button" data-v1054-trade-one="${mode}" data-id="${V.escape(id)}" ${max<1?'disabled':''}>${action} 1 • ${price}g</button><button type="button" data-v1054-trade-x="${mode}" data-id="${V.escape(id)}" ${max<1?'disabled':''}>${action} X</button><button type="button" class="close" data-v1054-detail-close>Close</button></div>
+      </div></div>`;
+    };
+    V.modalHtml=function(s){
+      const loc=s.location,def=V.market(loc);if(!def)return'';const rec=V.ensureStock(s,loc),view=s.v1054.view==='sell'?'sell':'buy',cat=s.v93.marketCategory||'all';
+      let ids;if(view==='buy')ids=def.stock.map(x=>x[0]).filter(id=>RF.DATA.items[id]);else ids=Object.entries(s.inventory||{}).filter(([id,q])=>(+q||0)>0&&RF.DATA.items[id]?.value>0).map(x=>x[0]);
+      ids=V.sortedIds(ids).filter(id=>cat==='all'||RF.v92Category(RF.DATA.items[id])===cat);
+      const tiles=ids.map(id=>V.marketTile(s,loc,view,id)).join('');
+      const tick=s.world?.market||{food:1,metal:1,wood:1};
+      return `<div class="modalBack"><div class="modal v1054MarketModal">
+        <div class="v1054MarketHead"><div><span class="eyebrow">${V.escape((RF.DATA.locations[loc]?.name||loc).toUpperCase())} • TIER ${def.tier}</span><h2>${def.icon} ${V.escape(def.name)}</h2><div class="sub">Finite local stock • restocks each dawn</div></div><button class="v1054MarketClose" type="button" data-v1054-close aria-label="Close Market">✕</button></div>
+        <div class="v1054MarketTicker"><span>🍞 ×${(+tick.food||1).toFixed(2)}</span><span>⚒️ ×${(+tick.metal||1).toFixed(2)}</span><span>🪵 ×${(+tick.wood||1).toFixed(2)}</span><span>🪙 ${s.gold}g</span></div>
+        <div class="v1054TradeTabs"><button type="button" class="${view==='buy'?'active':''}" data-v1054-view="buy"><span>🛒 Buy</span><b>${Object.values(rec.stock).reduce((a,b)=>a+(+b||0),0)} units</b></button><button type="button" class="${view==='sell'?'active':''}" data-v1054-view="sell"><span>💰 Sell</span><b>${Object.values(s.inventory||{}).reduce((a,b)=>a+(+b||0),0)} carried</b></button></div>
+        ${RF.v93Select('market',cat)}
+        <div class="v1054MarketGridWrap"><div class="v1054MarketGrid">${tiles||`<div class="v1054MarketEmpty">${view==='buy'?'No wares in this category.':'Nothing saleable in this category.'}</div>`}</div></div>
+        ${V.detailHtml(s,loc,RF.UI.modal?.detail)}
+      </div></div>`;
+    };
+
+    // World markets sit beside other physical services such as the Bank, not in the global navigator.
+    const worldBase=RF.UI.world.bind(RF.UI);
+    RF.UI.world=function(s){
+      let h=worldBase(s),def=V.market(s?.location);if(!def)return h;
+      h=h.replace(/<section class="card v1054MarketSection">[\s\S]*?<\/section>/g,'');
+      const disabled=(s.activity||s.combat)?'disabled':'';
+      const section=`<section class="card v1054MarketSection"><h3>Market</h3><button class="action v1054MarketButton" data-open-market ${disabled}><span class="emoji">${def.icon}</span><b>${V.escape(def.name)}</b><small>Buy & sell local goods • finite daily stock</small></button></section>`;
+      const bankMarker='<section class="card v1014BankSection';const travelMarker='<section class="card"><h3>Travel</h3>';
+      if(h.includes(bankMarker))h=h.replace(bankMarker,section+bankMarker);else if(h.includes(travelMarker))h=h.replace(travelMarker,section+travelMarker);else h+=section;
+      return h;
+    };
+
+    const modalBase=RF.UI.modalHtml.bind(RF.UI);
+    RF.UI.modalHtml=function(s){if(this.modal?.type==='v1054Market')return V.modalHtml(s);return modalBase(s)};
+
+    const bindBase=RF.UI.bind.bind(RF.UI);
+    RF.UI.bind=function(s){
+      bindBase(s);
+      document.querySelectorAll('[data-open-market]').forEach(b=>b.onclick=()=>RF.openMarket());
+      document.querySelectorAll('[data-v1054-close]').forEach(b=>b.onclick=()=>V.closeMarket());
+      document.querySelectorAll('[data-v1054-view]').forEach(b=>b.onclick=()=>{s.v1054.view=b.dataset.v1054View==='sell'?'sell':'buy';if(RF.UI.modal?.type==='v1054Market'){delete RF.UI.modal.detail;RF.UI.modal.notice=''}RF.save?.(s);RF.UI.render(s)});
+      document.querySelectorAll('[data-v1054-item]').forEach(b=>b.onclick=()=>V.openDetail(b.dataset.v1054Mode,b.dataset.v1054Item));
+      document.querySelectorAll('[data-v1054-detail-close]').forEach(b=>b.onclick=()=>V.closeDetail());
+      document.querySelectorAll('[data-v1054-trade-one]').forEach(b=>b.onclick=()=>V.trade(b.dataset.v1054TradeOne,b.dataset.id,1));
+      document.querySelectorAll('[data-v1054-trade-x]').forEach(b=>b.onclick=()=>V.trade(b.dataset.v1054TradeX,b.dataset.id,document.querySelector('[data-v1054-qty]')?.value));
+    };
+
+    const st=document.createElement('style');st.id='v1054-local-markets-style';st.textContent=`
+    .v1054MarketSection{padding-bottom:14px}.v1054MarketButton{margin:0!important;width:100%!important}.v1054MarketButton .emoji{font-size:30px}
+    .v1054MarketModal{position:relative;width:min(760px,100%);height:min(91dvh,900px);max-height:91dvh;display:grid;grid-template-rows:auto auto auto auto minmax(0,1fr);gap:10px;overflow:hidden;padding:16px 12px 12px}
+    .v1054MarketHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.v1054MarketHead h2{margin:2px 0 0;color:#f1d496;font-size:25px}.v1054MarketHead .sub{margin-top:4px;color:#b7a78a}.v1054MarketClose{width:42px;height:42px;border-radius:13px;border:1px solid rgba(214,173,96,.28);background:linear-gradient(180deg,rgba(52,38,22,.85),rgba(25,19,13,.95));color:#edd6a0;font-size:20px;display:grid;place-items:center;flex:0 0 auto}
+    .v1054MarketTicker{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}.v1054MarketTicker::-webkit-scrollbar{display:none}.v1054MarketTicker span{flex:0 0 auto;border:1px solid rgba(198,158,83,.22);border-radius:999px;background:#17110d;padding:6px 9px;color:#cfbf9f;font-size:10px}
+    .v1054TradeTabs{display:grid;grid-template-columns:1fr 1fr;gap:9px}.v1054TradeTabs button{appearance:none;border:1px solid rgba(201,159,84,.24);border-radius:15px;background:linear-gradient(180deg,rgba(46,34,21,.76),rgba(20,15,10,.95));padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#e5d1a3}.v1054TradeTabs button span{font-weight:850}.v1054TradeTabs button b{font-size:10px;color:#ad9c80}.v1054TradeTabs button.active{border-color:#c69d59;background:linear-gradient(180deg,rgba(96,67,29,.95),rgba(40,28,17,.98));box-shadow:0 0 0 1px rgba(198,157,89,.16) inset}
+    .v1054MarketModal .v1046CatGrid{margin:0}
+    .v1054MarketGridWrap{min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border:1px solid rgba(198,158,83,.18);border-radius:18px;background:linear-gradient(180deg,rgba(13,10,8,.28),rgba(9,7,6,.42));padding:8px}.v1054MarketGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-content:start}.v1054MarketTile{appearance:none;min-width:0;min-height:112px;padding:9px 7px 8px;border-radius:15px;border:1px solid rgba(201,159,84,.18);background:linear-gradient(180deg,rgba(43,32,21,.92),rgba(18,13,10,.98));color:#f3e1bb;text-align:left;display:flex;flex-direction:column;gap:5px;box-shadow:inset 0 1px rgba(255,255,255,.035)}.v1054MarketTile:active{transform:scale(.98);border-color:#a97c3e}.v1054MarketTile.soldout{opacity:.43;filter:saturate(.55)}
+    .v1054ItemIcon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01));border:1px solid rgba(223,183,104,.14)}.v1054ItemName{font-size:10.5px;font-weight:850;line-height:1.14;min-height:24px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.v1054ItemQuality{font-size:7.5px;text-transform:uppercase;letter-spacing:.07em;color:#9f8f75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v1054ItemFoot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#efd59d}.v1054ItemFoot b{font-size:10px;color:#d7b870}.v1054MarketEmpty{grid-column:1/-1;padding:30px 12px;text-align:center;color:#ad9e87;font-size:12px}
+    .v1054DetailBack{position:absolute;inset:0;z-index:35;background:#080604d8;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:14px}.v1054DetailModal{width:min(440px,100%);max-height:88%;overflow:auto;border:1px solid #775c38;border-radius:19px;background:linear-gradient(180deg,#21190f,#15110d);box-shadow:0 22px 60px #000b;padding:16px}.v1054DetailHero{display:flex;align-items:center;gap:12px}.v1054DetailIcon{width:58px;height:58px;display:grid;place-items:center;border-radius:16px;font-size:34px;background:#2a2117;border:1px solid #6b5438}.v1054DetailHero h2{margin:2px 0 0;color:#f0d99f;font-size:24px}.v1054DetailDesc{margin:10px 0 12px;color:#c4b79f;line-height:1.42;font-size:12px}.v1054DetailStats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.v1054DetailStats span{border:1px solid #4a3928;border-radius:999px;padding:5px 7px;background:#18120e;color:#d8c8a8;font-size:9px}.v1054Requirement{border:1px solid #57452e;border-radius:11px;padding:9px 10px;margin-bottom:10px;color:#d2c09c;font-size:10px;line-height:1.35}.v1054Requirement b{color:#eed39a}.v1054Requirement small{display:block;color:#9f917b;margin-top:3px}.v1054TradeSummary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.v1054TradeSummary span{border:1px solid #443526;border-radius:10px;background:#120e0b;padding:7px 6px;text-align:center;color:#9f917b;font-size:8px}.v1054TradeSummary b{display:block;color:#edd6a0;font-size:11px;margin-top:2px}.v1054TradeNotice{margin-top:9px;border:1px solid #5f4b2f;background:#1d170f;border-radius:10px;padding:8px 9px;color:#d9c39a;font-size:10px}.v1054QtyLabel{display:grid;gap:5px;margin-top:10px;color:#c2b59d;font-size:10px}.v1054QtyLabel input{height:42px;border-radius:11px;border:1px solid #59442b;background:#0e0b09;color:#f1dfb7;padding:0 11px;font:inherit}.v1054DetailActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}.v1054DetailActions button{min-height:44px;border-radius:11px;border:1px solid rgba(216,173,87,.42);background:linear-gradient(180deg,rgba(100,71,31,.92),rgba(61,42,21,.95));color:#f6e7c1;font-weight:800;font-size:10px}.v1054DetailActions button.close{background:linear-gradient(180deg,rgba(83,57,40,.94),rgba(48,34,25,.98))}.v1054DetailActions button:disabled{opacity:.34}
+    @media(max-width:430px){.v1054MarketModal{height:92dvh;max-height:92dvh;padding:12px 8px 9px;gap:8px}.v1054MarketHead h2{font-size:22px}.v1054MarketGrid{gap:7px}.v1054MarketTile{min-height:105px;padding:8px 6px 7px;border-radius:14px}.v1054ItemIcon{width:34px;height:34px;font-size:22px}.v1054ItemName{font-size:10px;min-height:22px}.v1054ItemQuality{font-size:7px}.v1054ItemFoot{font-size:10px}.v1054DetailModal{padding:14px}.v1054DetailActions{gap:6px}.v1054DetailActions button{font-size:9.5px}}
+    `;
+    document.head.appendChild(st);
+
+    if(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}
+    return RF.V1054;
+  }
+  const api={
+    installHistoricalV1054,
+    get installed(){return installed;},
+    namespace:()=>RF.V1054||null,
+    open:(...args)=>RF.V1054?.open?RF.V1054.open(...args):RF.openMarket?.(...args),
+    trade:(...args)=>RF.V1054?.trade?.(...args),
+    marketDefinition:id=>RF.Config?.get('commerce.markets')?.[id]||null,
+    marketDefinitions:()=>RF.Config?.clone('commerce.markets')||{},
+    buyPrice:(...args)=>RF.V1054?.buyPrice?.(...args),
+    sellPrice:(...args)=>RF.V1054?.sellPrice?.(...args),
+    ensureStock:(...args)=>RF.V1054?.ensureStock?.(...args),
+    bankDefinition:id=>RF.Config?.get('services.banks')?.[id]||null,
+    bankOpen:(...args)=>RF.openBank?.(...args),
+    bankDeposit:(...args)=>RF.bankDeposit?.(...args),
+    bankWithdraw:(...args)=>RF.bankWithdraw?.(...args)
+  };
+  RF.Systems.Commerce=RF.Modules.register('systems.commerce',api,{owner:'systems',status:'canonical',implementation:'v10.54-equivalent',configOwner:'data.config'});
+})();
+
+/* ===== js/systems/dungeons.js ===== */
+/* Realmforge V11.11.0 — Canonical Dungeon implementation.
+   Mature V11.0 gauntlet behaviour moved out of the compatibility runtime.
+   Installed at the original V11.0 execution point; V11.3/V11.4 historical enrichments continue to target RF.V1062. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  let installed=false;
+  function installHistoricalV1062() {
+    if(installed) return RF.V1062;
+    installed=true;
+    RF.V1062=RF.V1062||{};
+    const V=RF.V1062;
+    V.version='11.0.0';
+    V.WAVES=8;
+    V.escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    // New dungeon bosses and reward gear. Equipment requirements remain derived from the same
+    // global item-requirement rules as every other piece of gear, so old/new characters stay aligned.
+    Object.assign(RF.DATA.items,{
+      regent_falchion:{name:'Regent Falchion',icon:'🗡️',type:'weapon',slot:'main',value:445,damage:14,armor:3,rarity:'Epic',desc:'A pale hooked blade taken from the ruler of the lower crypt. +14 damage • +3 armour.'},
+      bonewall_buckler:{name:'Bonewall Buckler',icon:'🛡️',type:'armor',slot:'off',value:390,damage:2,armor:8,rarity:'Rare',desc:'Layered grave-iron and ossified plate. +2 damage • +8 armour.'},
+      ossuary_coif:{name:'Ossuary Coif',icon:'💀',type:'armor',slot:'head',value:335,damage:2,armor:7,rarity:'Rare',desc:'A funerary helm reinforced with blackened chain. +2 damage • +7 armour.'},
+      tombwarden_greaves:{name:'Tombwarden Greaves',icon:'👖',type:'armor',slot:'legs',value:360,damage:2,armor:8,rarity:'Rare',desc:'Heavy greaves engraved with the split-crown seal. +2 damage • +8 armour.'},
+
+      cindermaw_blade:{name:'Cindermaw Blade',icon:'🔥',type:'weapon',slot:'main',value:690,damage:19,armor:4,rarity:'Epic',desc:'A volcanic greatblade whose edge glows after a hard strike. +19 damage • +4 armour.'},
+      emberplate_cuirass:{name:'Emberplate Cuirass',icon:'🛡️',type:'armor',slot:'chest',value:735,damage:3,armor:13,rarity:'Epic',desc:'Interlocking forge-plate cooled in mineral steam. +3 damage • +13 armour.'},
+      magma_guard:{name:'Magma Guard',icon:'🔰',type:'armor',slot:'off',value:575,damage:4,armor:10,rarity:'Rare',desc:'A heat-scarred shield built from dense Emberdeep slag-steel. +4 damage • +10 armour.'},
+      cinderstep_boots:{name:'Cinderstep Boots',icon:'🥾',type:'armor',slot:'boots',value:520,damage:3,armor:9,rarity:'Rare',desc:'Forge boots insulated for cracked lava shelves. +3 damage • +9 armour.'}
+    });
+
+    Object.assign(RF.DATA.enemies,{
+      ossuary_regent:{name:'Ossuary Regent',icon:'☠️',level:12,hp:305,damage:[14,25],armor:9,xp:860,gold:[115,175],temperament:'boss',moves:['stone_guard','royal_gaze','rend','drowned_grip'],drops:[['crypt_sigil',1,1],['steel_bar',.45,1]],desc:'An ancient grave-lord clad in layered remains and crown-marked iron.'},
+      cindermaw_tyrant:{name:'Cindermaw Tyrant',icon:'🐲',level:17,hp:380,damage:[17,30],armor:11,xp:1260,gold:[150,235],temperament:'boss',moves:['ember_breath','flame_pounce','tail_sweep','war_cry'],drops:[['ember_shard',1,2],['steel_bar',.5,1]],desc:'A furnace-scaled predator that has claimed the deepest stable chambers of Emberdeep.'}
+    });
+
+    V.DUNGEONS=RF.Config.clone("dungeons.base");
+
+    // The V3 locations are the game's two explicit delve/dungeon locations. The old Delve action
+    // is retired from their action rows so the new dedicated Dungeon card owns this interaction.
+    Object.keys(V.DUNGEONS).forEach(id=>{
+      const l=RF.DATA.locations?.[id];if(!l)return;
+      l.dungeon=true;
+      if(Array.isArray(l.actions))l.actions=l.actions.filter(a=>a!=='delve');
+    });
+    if(RF.V94?.bossHomes){RF.V94.bossHomes.ossuary_regent=['crypt'];RF.V94.bossHomes.cindermaw_tyrant=['ember_cave']}
+
+    V.def=loc=>V.DUNGEONS[loc]||null;
+    V.record=function(s,loc){s.v1062=s.v1062||{};s.v1062.records=s.v1062.records||{};return s.v1062.records[loc]||(s.v1062.records[loc]={attempts:0,clears:0,bestHp:null})};
+    V.active=s=>s?.v1062?.active||null;
+    V.isDungeonCombat=s=>!!(s?.combat?.v1062Dungeon&&V.active(s));
+    V.clock=function(s){
+      if(RF.V1026?.captureClock)return RF.V1026.captureClock(s);
+      return {speed:+s?.speed||0,paused:!!s?.paused||(+s?.speed||0)===0,boostRemaining:0};
+    };
+    V.pause=function(s){if(!s)return;s.speed=0;s.paused=true;if(s.v8)s.v8.boostUntil=0};
+    V.restoreClock=function(s,clock){
+      if(!s||!clock||RF.isOverEncumbered?.(s))return V.pause(s);
+      if(RF.V1026?.restoreClock)return RF.V1026.restoreClock(s,clock);
+      s.speed=clock.paused?0:(clock.speed||1);s.paused=s.speed===0;
+    };
+    V.random=function(seed){
+      if(RF.seedHash&&RF.seedRand)return RF.seedRand(RF.seedHash(seed));
+      let x=0;for(let i=0;i<seed.length;i++)x=(Math.imul(x,31)+seed.charCodeAt(i))>>>0;
+      return ()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296};
+    };
+    V.sequence=function(s,loc,attempt){
+      const d=V.def(loc),bag=[];d.pool.forEach(([id,w])=>{if(RF.DATA.enemies[id])for(let i=0;i<w;i++)bag.push(id)});
+      const rnd=V.random(`${s?.seed||'rf'}|dungeon|${loc}|${s?.day||1}|${attempt}|${Date.now()}`),out=[];
+      for(let i=0;i<V.WAVES;i++){
+        let pick=bag[Math.floor(rnd()*bag.length)]||d.pool[0][0];
+        // Avoid three identical rooms in a row while keeping the sequence genuinely random.
+        if(i>1&&out[i-1]===pick&&out[i-2]===pick){const alt=bag.filter(x=>x!==pick);if(alt.length)pick=alt[Math.floor(rnd()*alt.length)]}
+        out.push(pick);
+      }
+      return out;
+    };
+    V.snapshot=function(s){
+      return {gold:+s.gold||0,playerXp:+s.player?.xp||0,inventory:{...(s.inventory||{})},skills:Object.fromEntries(Object.entries(s.skills||{}).map(([id,x])=>[id,+x.xp||0])),hp:+s.player?.hp||0};
+    };
+    V.itemDiff=function(s,start){
+      const out=[];Object.entries(s.inventory||{}).forEach(([id,q])=>{const n=(+q||0)-(+start.inventory?.[id]||0);if(n>0&&RF.DATA.items?.[id])out.push([id,n])});return out;
+    };
+    V.skillDiff=function(s,start){return Object.entries(s.skills||{}).map(([id,x])=>[id,(+x.xp||0)-(+start.skills?.[id]||0)]).filter(([,n])=>n>0)};
+    V.siphonQueue=function(a){
+      if(!a||!RF.V10?.queue?.length)return;
+      a.pendingQueue=a.pendingQueue||[];a.pendingQueue.push(...RF.V10.queue.splice(0));
+    };
+    V.releaseQueue=function(a){if(a?.pendingQueue?.length&&RF.V10?.queue)RF.V10.queue.push(...a.pendingQueue)};
+    V.identifyBoss=function(s,id){s.v7=s.v7||{};s.v7.research=s.v7.research||{};s.v7.research[id]={level:3,notes:0};};
+    V.runLabel=function(a){if(!a)return'';return a.phase==='boss'||a.phase==='bossIntro'?'Boss':`Wave ${Math.max(1,Math.min(V.WAVES,+a.wave||1))}/${V.WAVES}`};
+
+    V.open=function(){
+      const s=RF.state,d=V.def(s?.location);if(!s||!d)return;
+      if(s.combat||s.activity)return;
+      if(RF.isOverEncumbered?.(s))return RF.V1056?.warn?.(s,'Pack must be sorted before entering a dungeon');
+      const a=V.active(s);
+      RF.UI.modal={type:'v1062DungeonLobby',loc:s.location,resume:!!a&&a.loc===s.location};RF.UI.render(s);
+    };
+    V.start=function(loc){
+      const s=RF.state,d=V.def(loc);if(!s||!d||s.location!==loc||s.combat||s.activity)return;
+      if(RF.isOverEncumbered?.(s))return RF.V1056?.warn?.(s,'Pack must be sorted before entering a dungeon');
+      const rec=V.record(s,loc);rec.attempts++;
+      const clock=V.clock(s);
+      const a={loc,wave:1,phase:'wave',sequence:V.sequence(s,loc,rec.attempts),startedDay:s.day,startedMinute:s.minute,clock,snapshot:V.snapshot(s),metrics:{turns:0,damageTaken:0,parries:0,perfectParries:0},pendingQueue:[],gearAwarded:[]};
+      s.v1062.active=a;V.siphonQueue(a);V.pause(s);RF.UI.modal=null;RF.save?.(s);V.startWave(s);
+    };
+    V.startWave=function(s=RF.state){
+      const a=V.active(s),d=a&&V.def(a.loc);if(!a||!d||s.combat)return;
+      const idx=Math.max(0,Math.min(V.WAVES-1,(+a.wave||1)-1)),id=a.sequence[idx];
+      a.phase='wave';V.pause(s);RF.UI.modal=null;RF.startBattle(id,{forced:true,dungeon:true});
+      if(s.combat){s.combat.v1062Dungeon={loc:a.loc,wave:a.wave,boss:false};RF.save?.(s);RF.UI.render?.(s)}
+    };
+    V.showBoss=function(s=RF.state){
+      const a=V.active(s),d=a&&V.def(a.loc);if(!a||!d)return;
+      a.phase='bossIntro';V.identifyBoss(s,d.boss);V.pause(s);RF.UI.modal={type:'v1062BossIntro',loc:a.loc};RF.save?.(s);RF.UI.render(s);
+    };
+    V.startBoss=function(s=RF.state){
+      const a=V.active(s),d=a&&V.def(a.loc);if(!a||!d||s.combat)return;
+      a.phase='boss';V.pause(s);RF.UI.modal=null;RF.startBattle(d.boss,{forced:true,dungeon:true,boss:true});
+      if(s.combat){s.combat.v1062Dungeon={loc:a.loc,wave:V.WAVES+1,boss:true};RF.save?.(s);RF.UI.render?.(s)}
+    };
+    V.addCompletionRewards=function(s,a){
+      const d=V.def(a.loc),rec=V.record(s,a.loc),first=rec.clears===0,count=first?2:1;
+      s.gold=(+s.gold||0)+d.bonusGold;s.stats=s.stats||{};s.stats.goldEarned=(s.stats.goldEarned||0)+d.bonusGold;
+      RF.addPlayerXp?.(s,d.bonusXp);
+      d.materials.forEach(([id,q])=>RF.addItem?.(s,id,q));
+      const pool=[...d.rewards],rnd=V.random(`${s?.seed||'rf'}|reward|${a.loc}|${rec.clears}|${Date.now()}`);
+      for(let i=0;i<count&&pool.length;i++){
+        const n=Math.floor(rnd()*pool.length),id=pool.splice(n,1)[0];RF.addItem?.(s,id,1);a.gearAwarded.push(id);
+      }
+      rec.clears++;rec.bestHp=rec.bestHp==null?Math.ceil(s.player.hp):Math.max(rec.bestHp,Math.ceil(s.player.hp));
+      s.stats.dungeonsCleared=(s.stats.dungeonsCleared||0)+1;s.flags=s.flags||{};s.flags[d.flag]=true;
+      // Keep the legacy dungeon status objects meaningful for older UI/quests without changing loadouts.
+      s.dungeons=s.dungeons||{};
+      if(a.loc==='crypt'){s.dungeons.crypt=s.dungeons.crypt||{};s.dungeons.crypt.cleared=true}
+      if(a.loc==='ember_cave'){s.dungeons.ember=s.dungeons.ember||{};s.dungeons.ember.cleared=true}
+      V.siphonQueue(a);
+    };
+    V.finishBoss=function(s,a){
+      V.addCompletionRewards(s,a);
+      const start=a.snapshot,summary={
+        loc:a.loc,gold:(+s.gold||0)-(+start.gold||0),playerXp:(+s.player?.xp||0)-(+start.playerXp||0),skills:V.skillDiff(s,start),loot:V.itemDiff(s,start),
+        turns:a.metrics.turns||0,damageTaken:a.metrics.damageTaken||0,parries:a.metrics.parries||0,perfectParries:a.metrics.perfectParries||0,hpLeft:Math.ceil(s.player.hp),gear:[...(a.gearAwarded||[])]
+      };
+      a.summary=summary;a.phase='cleared';V.pause(s);RF.UI.modal={type:'v1062DungeonCleared',loc:a.loc};RF.save?.(s);RF.UI.render(s);
+    };
+    V.completeAndExit=function(){
+      const s=RF.state,a=V.active(s);if(!s||!a)return;
+      const clock=a.clock;V.releaseQueue(a);s.v1062.active=null;RF.UI.modal=null;V.restoreClock(s,clock);RF.save?.(s);RF.UI.render(s);
+    };
+    V.abandon=function(reason='The dungeon run ends here.'){
+      const s=RF.state,a=V.active(s);if(!s||!a)return;
+      const d=V.def(a.loc),clock=a.clock,progress=Math.max(0,(+a.wave||1)-1);V.releaseQueue(a);s.v1062.active=null;V.pause(s);s.v1062.resumeClock=clock;
+      RF.UI.modal={type:'v1062DungeonAbandoned',name:d?.name||'Dungeon',progress,reason};RF.save?.(s);RF.UI.render(s);
+    };
+    V.closeAbandoned=function(){const s=RF.state,clock=s?.v1062?.resumeClock;if(s?.v1062)delete s.v1062.resumeClock;RF.UI.modal=null;V.restoreClock(s,clock);RF.save?.(s);RF.UI.render(s)};
+
+    // Preserve all existing save/loadout state. V11.0 only adds dungeon records/active-run data.
+    V.migrate=function(s){
+      if(!s)return s;
+      s.v1062=s.v1062||{};s.v1062.records=s.v1062.records||{};
+      Object.keys(V.DUNGEONS).forEach(loc=>V.record(s,loc));
+      s.version='11.0.0';
+      return s;
+    };
+    /* V11.8: legacy save/migration wrapper extracted to canonical core. */
+
+    // Legacy callers hitting the old Delve action are routed into the new dungeon lobby.
+    const actionBase=RF.action;
+    RF.action=function(a){if(a==='delve'&&V.def(RF.state?.location))return V.open();return actionBase.apply(this,arguments)};
+
+    // Dedicated World card, matching Bank/Market as a physical location interaction.
+    const worldBase=RF.UI.world.bind(RF.UI);
+    RF.UI.world=function(s){
+      let h=worldBase(s),d=V.def(s?.location);if(!d)return h;
+      h=h.replace(/<section class="card v1062DungeonSection">[\s\S]*?<\/section>/g,'');
+      const rec=V.record(s,s.location),a=V.active(s),active=a?.loc===s.location;
+      const status=active?`${V.runLabel(a)} in progress`:rec.clears?`${rec.clears} clear${rec.clears===1?'':'s'}`:'Uncleared';
+      const disabled=(s.activity||s.combat)?'disabled':'';
+      const section=`<section class="card v1062DungeonSection"><div class="questTitle"><h3>Dungeon</h3><span class="tag">LV ${d.level}</span></div><button class="action v1062DungeonButton" data-open-dungeon ${disabled}><span class="emoji">${d.icon}</span><b>${V.escape(d.name)}</b><small>${status} • 8 waves + boss</small></button></section>`;
+      const market='<section class="card v1054MarketSection';const bank='<section class="card v1014BankSection';const travel='<section class="card"><h3>Travel</h3>';
+      if(h.includes(market))h=h.replace(market,section+market);else if(h.includes(bank))h=h.replace(bank,section+bank);else if(h.includes(travel))h=h.replace(travel,section+travel);else h+=section;
+      return h;
+    };
+
+    // Live wave readout inside the fixed V10.60 combat frame.
+    const combatBase=RF.UI.combatPopup.bind(RF.UI);
+    RF.UI.combatPopup=function(s){
+      let h=combatBase(s),a=V.active(s);if(!h||!a||!s?.combat?.v1062Dungeon)return h;
+      const d=V.def(a.loc),label=s.combat.v1062Dungeon.boss?'BOSS':`WAVE ${a.wave}/${V.WAVES}`;
+      const strip=`<div class="v1062BattleProgress"><span>${d.icon} ${V.escape(d.name)}</span><b>${label}</b></div>`;
+      return h.replace('<div class="v1035Faceoff">',strip+'<div class="v1035Faceoff">');
+    };
+
+    // Convert each ordinary battle victory into a dungeon interstitial instead of showing nine
+    // separate battle summaries. The complete reward/XP picture is shown once after the boss.
+    const winBase=RF.winCombat;
+    RF.winCombat=function(){
+      const s0=RF.state,c0=s0?.combat,a0=V.active(s0),dungeon=!!(a0&&c0?.v1062Dungeon&&a0.loc===c0.v1062Dungeon.loc),boss=!!c0?.v1062Dungeon?.boss;
+      if(!dungeon)return winBase.apply(this,arguments);
+      const out=winBase.apply(this,arguments),s=RF.state,a=V.active(s);if(!s||!a)return out;
+      const bs=RF.UI.modal?.type==='v10BattleSummary'?RF.UI.modal:null;
+      if(bs){a.metrics.turns+=(+bs.turns||0);a.metrics.damageTaken+=(+bs.damageTaken||0);a.metrics.parries+=(+bs.parries||0);a.metrics.perfectParries+=(+bs.perfectParries||0)}
+      V.siphonQueue(a);V.pause(s);
+      if(boss){V.finishBoss(s,a);return out}
+      a.lastCompleted=a.wave;a.phase='between';RF.UI.modal={type:'v1062WaveComplete',loc:a.loc,wave:a.wave};RF.save?.(s);RF.UI.render(s);return out;
+    };
+
+    // Fleeing successfully abandons the run. A failed flee simply remains in the current room.
+    const fleeBase=RF.fleeV4;
+    if(fleeBase)RF.fleeV4=function(){
+      const before=V.isDungeonCombat(RF.state),out=fleeBase.apply(this,arguments);
+      if(before&&!RF.state?.combat&&V.active(RF.state))V.abandon('You escape the current chamber, but the dungeon run is broken.');
+      return out;
+    };
+    const loseBase=RF.loseV4Battle;
+    if(loseBase)RF.loseV4Battle=function(){
+      const s0=RF.state,a0=V.active(s0),was=!!(a0&&s0?.combat?.v1062Dungeon),pending=a0?.pendingQueue?[...a0.pendingQueue]:[];
+      const out=loseBase.apply(this,arguments),s=RF.state;
+      if(was&&s?.v1062){if(pending.length&&RF.V10?.queue)RF.V10.queue.push(...pending);const clock=a0?.clock;s.v1062.active=null;V.restoreClock(s,clock);RF.save?.(s)}
+      return out;
+    };
+
+    const modalBase=RF.UI.modalHtml.bind(RF.UI);
+    RF.UI.modalHtml=function(s){
+      const m=this.modal,d=m?.loc&&V.def(m.loc),a=V.active(s);
+      if(m?.type==='v1062DungeonLobby'&&d){const rec=V.record(s,m.loc),resume=m.resume&&a?.loc===m.loc;return `<div class="modalBack"><div class="modal v1062DungeonModal"><div class="v1062DungeonHero"><span>${d.icon}</span><div><span class="eyebrow">DUNGEON • LEVEL ${d.level}</span><h2>${V.escape(d.name)}</h2></div></div><p>${V.escape(d.desc)}</p><div class="v1062DungeonStats"><div><small>Structure</small><b>8 waves + boss</b></div><div><small>Clears</small><b>${rec.clears}</b></div><div><small>Best finish</small><b>${rec.bestHp==null?'—':`${rec.bestHp} HP`}</b></div></div>${resume?`<div class="notice good">Current run: ${V.runLabel(a)}.</div>`:''}<div class="choices">${resume?`<button class="choice" data-v1062-resume><b>Resume Run</b><small>Continue from the saved dungeon state.</small></button>`:`<button class="choice dangerChoice" data-v1062-start="${m.loc}"><b>Enter Dungeon</b><small>Health and supplies persist across every fight.</small></button>`}<button class="choice" data-v1062-close><b>Close</b></button></div></div></div>`}
+      if(m?.type==='v1062WaveComplete'&&d)return `<div class="modalBack"><div class="modal resultModal v1062Interlude"><div class="resultIcon">⚔️</div><span class="eyebrow">${V.escape(d.name.toUpperCase())}</span><h2>Wave ${m.wave} Complete</h2><div class="itemDesc">The chamber falls quiet. ${m.wave<V.WAVES?'There is no way out but deeper.':'Something much larger waits beyond the final door.'}</div><div class="v1062WavePips">${Array.from({length:V.WAVES},(_,i)=>`<i class="${i<m.wave?'done':''}"></i>`).join('')}<b>👑</b></div><button class="startBtn" data-v1062-next>${m.wave<V.WAVES?`Continue to Wave ${m.wave+1}`:'Approach the Boss'}</button></div></div>`;
+      if(m?.type==='v1062BossIntro'&&d){const e=RF.DATA.enemies[d.boss];return `<div class="modalBack"><div class="modal resultModal v1062BossIntro"><div class="resultIcon">${e.icon}</div><span class="eyebrow">FINAL ENCOUNTER</span><h2>Boss — ${V.escape(e.name)}</h2><div class="itemDesc">The final chamber opens. The dungeon's ruler steps forward.</div><div class="v1062BossFacts"><span>Lv ${e.level}</span><span>⚔️ ${RF.V1049?.attackRating?.(e)||Math.round((e.damage[0]+e.damage[1])/2)} attack</span><span>🛡️ ${e.armor} armour</span></div><button class="startBtn" data-v1062-boss>Face the Boss</button></div></div>`}
+      if(m?.type==='v1062DungeonCleared'&&d)return `<div class="modalBack"><div class="modal resultModal v1062Cleared"><div class="resultIcon">🏆</div><span class="eyebrow">DUNGEON CLEARED</span><h2>${d.icon} ${V.escape(d.name)}</h2><div class="itemDesc">Nine fights end with the dungeon ruler defeated. The surviving hoard is yours.</div><button class="startBtn" data-v1062-summary>View Dungeon Summary</button></div></div>`;
+      if(m?.type==='v1062DungeonSummary'&&d&&m.summary){const x=m.summary;return `<div class="modalBack"><div class="modal battleSummary v1062Summary"><div class="resultIcon">📜</div><span class="eyebrow">DUNGEON SUMMARY • LEVEL ${d.level}</span><h2>${d.icon} ${V.escape(d.name)}</h2><div class="statsGrid"><div class="statbox"><span>Encounters</span><b>8 + Boss</b></div><div class="statbox"><span>Turns</span><b>${x.turns}</b></div><div class="statbox"><span>HP remaining</span><b>${x.hpLeft}</b></div><div class="statbox"><span>Damage taken</span><b>${Math.round(x.damageTaken)}</b></div></div><h3>Total Rewards</h3><div class="resultGains">${x.gold>0?`<div><span>🪙</span><b>+${x.gold} gold</b></div>`:''}${x.playerXp>0?`<div><span>🌟</span><b>+${x.playerXp} Character XP</b></div>`:''}${x.skills.map(([id,n])=>`<div><span>${RF.DATA.skills?.[id]?.icon||'✨'}</span><b>+${Math.round(n)} ${V.escape(RF.DATA.skills?.[id]?.name||id)} XP</b></div>`).join('')}${x.loot.map(([id,n])=>`<div><span>${RF.DATA.items[id]?.icon||'🎁'}</span><b>${V.escape(RF.DATA.items[id]?.name||id)} ×${n}</b></div>`).join('')||'<div><span>▫️</span><b>No item rewards</b></div>'}</div>${x.gear?.length?`<div class="v1062GearBanner">Guaranteed dungeon gear: ${x.gear.map(id=>`${RF.DATA.items[id]?.icon||'🎁'} ${V.escape(RF.DATA.items[id]?.name||id)}`).join(' • ')}</div>`:''}${RF.isOverEncumbered?.(s)?`<div class="notice bad">⚠️ Rewards pushed your Pack over capacity. Sort the Pack before time or travel can resume.</div>`:''}<button class="startBtn" data-v1062-finish>Finish</button></div></div>`}
+      if(m?.type==='v1062DungeonAbandoned')return `<div class="modalBack"><div class="modal resultModal"><div class="resultIcon">🚪</div><span class="eyebrow">DUNGEON RUN ENDED</span><h2>${V.escape(m.name)}</h2><div class="itemDesc">${V.escape(m.reason)} You cleared ${m.progress}/${V.WAVES} normal waves before leaving.</div><button class="startBtn" data-v1062-abandon-close>Return to World</button></div></div>`;
+      return modalBase(s);
+    };
+
+    const bindBase=RF.UI.bind.bind(RF.UI);
+    RF.UI.bind=function(s){
+      bindBase(s);
+      document.querySelectorAll('[data-open-dungeon]').forEach(b=>b.onclick=()=>V.open());
+      document.querySelectorAll('[data-v1062-close]').forEach(b=>b.onclick=()=>{RF.UI.modal=null;RF.UI.render(s)});
+      document.querySelectorAll('[data-v1062-start]').forEach(b=>b.onclick=()=>V.start(b.dataset.v1062Start));
+      document.querySelectorAll('[data-v1062-next]').forEach(b=>b.onclick=()=>{const a=V.active(s);if(!a)return;if(a.lastCompleted>=V.WAVES)V.showBoss(s);else{a.wave=a.lastCompleted+1;V.startWave(s)}});
+      document.querySelectorAll('[data-v1062-boss]').forEach(b=>b.onclick=()=>V.startBoss(s));
+      document.querySelectorAll('[data-v1062-summary]').forEach(b=>b.onclick=()=>{const a=V.active(s);if(!a?.summary)return;RF.UI.modal={type:'v1062DungeonSummary',loc:a.loc,summary:a.summary};RF.UI.render(s)});
+      document.querySelectorAll('[data-v1062-finish]').forEach(b=>b.onclick=()=>V.completeAndExit());
+      document.querySelectorAll('[data-v1062-abandon-close]').forEach(b=>b.onclick=()=>V.closeAbandoned());
+      document.querySelectorAll('[data-v1062-resume]').forEach(b=>b.onclick=()=>{const a=V.active(s);if(!a)return;if(a.phase==='between'){RF.UI.modal={type:'v1062WaveComplete',loc:a.loc,wave:a.lastCompleted||a.wave};RF.UI.render(s)}else if(a.phase==='bossIntro')V.showBoss(s);else if(a.phase==='cleared'){RF.UI.modal={type:'v1062DungeonCleared',loc:a.loc};RF.UI.render(s)}else if(a.phase==='boss')V.startBoss(s);else V.startWave(s)});
+    };
+
+    const st=document.createElement('style');st.id='v1062-dungeon-gauntlets-style';st.textContent=`
+    .v1062DungeonSection{padding-bottom:14px}.v1062DungeonButton{margin:0!important;width:100%!important}.v1062DungeonButton .emoji{font-size:30px}
+    .v1062DungeonModal{width:min(470px,100%)}.v1062DungeonHero{display:flex;align-items:center;gap:13px}.v1062DungeonHero>span{width:62px;height:62px;border-radius:17px;display:grid;place-items:center;font-size:38px;background:#2a2016;border:1px solid #654d32}.v1062DungeonHero h2{margin:2px 0 0;color:#efd39a;font-size:26px}.v1062DungeonModal>p{color:#b8aa92;line-height:1.5;font-size:12px}.v1062DungeonStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}.v1062DungeonStats>div{border:1px solid #443527;background:#15100d;border-radius:12px;padding:9px;text-align:center}.v1062DungeonStats small{display:block;color:#897d6c;font-size:8px}.v1062DungeonStats b{display:block;color:#e8d2a3;margin-top:3px;font-size:11px}
+    .v1062WavePips{display:flex;align-items:center;justify-content:center;gap:5px;margin:14px 0}.v1062WavePips i{width:17px;height:6px;border-radius:999px;background:#32291f;border:1px solid #54412b}.v1062WavePips i.done{background:#c39147;border-color:#dfb568}.v1062WavePips b{font-size:17px;margin-left:3px}.v1062BossFacts{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin:12px 0 16px}.v1062BossFacts span{border:1px solid #52402c;border-radius:999px;background:#17110d;padding:6px 9px;color:#d9c29a;font-size:9px}.v1062GearBanner{margin:10px 0;border:1px solid #72552f;border-radius:11px;background:#241a10;padding:9px 10px;color:#efd49e;font-size:10px;line-height:1.4}.v1062Summary .resultGains{max-height:31vh!important}
+    .v1062BattleProgress{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:5px 0 8px;border:1px solid #654c2d;border-radius:10px;background:linear-gradient(90deg,#21170e,#17110d);padding:7px 9px;color:#c9b38c;font-size:8px;font-weight:800;letter-spacing:.04em}.v1062BattleProgress b{color:#f2d89e;font-size:9px;text-transform:uppercase}
+    @media(max-width:390px){.v1062DungeonHero h2{font-size:23px}.v1062DungeonStats{gap:5px}.v1062DungeonStats>div{padding:7px 5px}.v1062WavePips{gap:4px}.v1062WavePips i{width:14px}}
+    `;
+    document.head.appendChild(st);
+
+    if(RF.state){
+      V.migrate(RF.state);RF.save?.(RF.state);
+      setTimeout(()=>{
+        const s=RF.state,a=V.active(s);
+        // If the app was closed between rooms, make the saved run resumable instead of losing it.
+        if(a&&!s.combat&&!RF.UI.modal&&a.loc===s.location)RF.UI.modal={type:'v1062DungeonLobby',loc:a.loc,resume:true};
+        if(s&&!RF.V101?.mainMenu)RF.UI.render(s);
+      },0);
+    }
+    return RF.V1062;
+  }
+  const api={
+    installHistoricalV1062,
+    get installed(){return installed;},
+    namespace:()=>RF.V1062||null,
+    open:(...args)=>RF.V1062?.open?.(...args),
+    start:(...args)=>RF.V1062?.start?.(...args),
+    definition:id=>RF.V1062?.DUNGEONS?.[id]||null,
+    definitions:()=>RF.V1062?.DUNGEONS||{},
+    baseConfig:()=>RF.Config?.clone('dungeons.base')||{},
+    ecosystem:id=>RF.Config?.get('world.ecosystems')?.[id]||null,
+    activeRun:state=>state?.v1062?.active||null,
+    records:state=>state?.v1062?.records||{}
+  };
+  RF.Systems.Dungeons=RF.Modules.register('systems.dungeons',api,{owner:'systems',status:'canonical',implementation:'v11.0-equivalent',configOwner:'data.config'});
+})();
+
+/* ===== js/systems/travel.js ===== */
+/* Realmforge V11.12.0 — Canonical Travel & World Routing.
+   Owns mature routing, journey, overlay and clock-recovery behaviour formerly housed in
+   the historical compatibility runtime. Historical installers run at their original boundaries. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  const installed=new Set();
+  function once(key,fn){if(installed.has(key))return;installed.add(key);return fn();}
+  function installHistoricalV9Routing(){return once('v9-routing',()=>{
+    // ---------- World map / routing ----------
+    RF.v9LocationUnlocked=function(s,id){let l=RF.DATA.locations[id];if(!l)return false;if(l.lockedFlag&&!s.flags[l.lockedFlag])return false;if(l.lockedSkill){let [sk,lv]=Object.entries(l.lockedSkill)[0];if((s.skills[sk]?.level||1)<lv)return false}return true};
+    RF.v9Route=function(s,start,dest,allowLocked=false){if(start===dest)return {path:[start],minutes:0};let q=[[start,[start],0]],seen=new Set([start]);while(q.length){let [cur,path,min]=q.shift(),l=RF.DATA.locations[cur];for(let [n,cost] of Object.entries(l?.neighbors||{})){if(seen.has(n))continue;if(!allowLocked&&!RF.v9LocationUnlocked(s,n))continue;let np=[...path,n],nm=min+cost;if(n===dest)return {path:np,minutes:nm};seen.add(n);q.push([n,np,nm])}}return null};
+    RF.v9LockText=function(s,id){let l=RF.DATA.locations[id];if(!l)return'';if(l.lockedFlag&&!s.flags[l.lockedFlag])return `Requires world progress: ${l.lockedFlag.replace(/_/g,' ')}`;if(l.lockedSkill){let [sk,lv]=Object.entries(l.lockedSkill)[0];if((s.skills[sk]?.level||1)<lv)return `Requires ${RF.DATA.skills[sk]?.name||sk} Lv ${lv}`}return''};
+    RF.UI.worldMap=function(s){let groups={};Object.entries(RF.DATA.locations).forEach(([id,l])=>(groups[l.region||'Other']=groups[l.region||'Other']||[]).push([id,l]));let chosen=s.v9?.mapDest,route=chosen?RF.v9Route(s,s.location,chosen,false):null,lockedRoute=chosen&&!route?RF.v9Route(s,s.location,chosen,true):null;let routeCard='';if(chosen){let d=RF.DATA.locations[chosen],lock=RF.v9LockText(s,chosen);routeCard=`<section class="card routePlanner"><span class="eyebrow">ROUTE PLANNER</span><h2>${d.icon} ${d.name}</h2>${route?`<div class="routeChain">${route.path.map((id,i)=>`<span class="routeStop ${id===s.location?'here':''}">${RF.DATA.locations[id].icon} ${RF.DATA.locations[id].name}</span>${i<route.path.length-1?'<b>›</b>':''}`).join('')}</div><div class="sub">Estimated road time: ${route.minutes} game min${route.path.length>1?` • Next stop: <b>${RF.DATA.locations[route.path[1]].name}</b>`:''}</div>${route.path.length>1?`<button class="action primary" data-travel="${route.path[1]}" style="width:100%;margin-top:10px"><b>Travel next leg → ${RF.DATA.locations[route.path[1]].name}</b><small>${RF.DATA.locations[s.location].neighbors[route.path[1]]} min</small></button>`:'<div class="notice good">You are already here.</div>'}`:`<div class="notice">No currently usable route.${lock?` ${lock}.`:''}${lockedRoute?` Potential route: ${lockedRoute.path.map(id=>RF.DATA.locations[id].name).join(' → ')}.`:''}</div>`}</section>`}let cards=Object.entries(groups).map(([region,arr])=>`<section class="card"><div class="questTitle"><h3>${region}</h3><span class="tag">${arr.length} PLACES</span></div><div class="mapList">${arr.map(([id,l])=>{let unlocked=RF.v9LocationUnlocked(s,id),visited=!!s.visited[id],r=unlocked?RF.v9Route(s,s.location,id,false):null,req=RF.v9LockText(s,id);return `<button class="mapPlace ${id===s.location?'here':''} ${!unlocked?'locked':''}" data-map-dest="${id}"><span class="mapPlaceIcon">${l.icon}</span><span><b>${l.name}</b><small>${id===s.location?'YOU ARE HERE':!unlocked?`🔒 ${req||'Undiscovered route'}`:r?`${r.minutes} min • ${Math.max(0,r.path.length-1)} road leg${r.path.length-1===1?'':'s'}`:visited?'No known route from here':'Route not yet known'}</small></span><span class="chev">›</span></button>`}).join('')}</div></section>`).join('');return `<section class="card mapIntro"><h2>🗺️ World Map</h2><div class="sub">Choose any location to plan a route. Realmforge shows every road junction you must pass through rather than pretending distant locations are adjacent.</div></section>${routeCard}${cards}`};
+    const v9NavBase=RF.UI.nav.bind(RF.UI);RF.UI.nav=function(){let n=[['world','🌍','WORLD'],['map','🗺️','MAP'],['character','🧍','CHAR'],['skills','📊','SKILLS'],['inventory','🎒','PACK'],['quests','📜','QUESTS'],['shop','🪙','SHOP']];return `<nav class="bottomnav"><div class="bottomInner v9nav">${n.map(x=>`<button class="navbtn ${this.tab===x[0]?'active':''}" data-tab="${x[0]}"><span>${x[1]}</span>${x[2]}</button>`).join('')}</div></nav>`};
+    const v9PageBase=RF.UI.page.bind(RF.UI);RF.UI.page=function(s){if(this.tab==='map')return this.worldMap(s);return v9PageBase(s)};
+  });}
+  function installHistoricalV1016(){return once('js/v10_16.js',()=>{
+    window.RF=window.RF||{};
+    RF.VERSION='10.16.0';
+    RF.V1016=RF.V1016||{lastTickError:'',lastTickErrorAt:0};
+
+    /* Realmforge V10.16 — Travel Recovery
+       - Harden the world tick so one subsystem error cannot kill the RAF loop.
+       - Travel/activity progress advances independently of world-pulse/event errors.
+       - Repair malformed/stalled saved travel state on campaign load.
+       - Developer Teleport always cancels an active journey first.
+       - Turn Back saves immediately and clears travel pause debris.
+       - Invisible/unsupported stale modals can no longer freeze the world clock.
+    */
+
+    RF.V1016.resetUIPause=function(s){
+      if(!s)return;
+      if(RF.V96){
+        RF.V96.modalPaused=false;RF.V96.modalResume=null;RF.V96.selectPaused=false;RF.V96.selectResume=null;RF.V96.modalWasOpen=false;
+      }
+      if(s.v83)s.v83.manualPause=false;
+    };
+
+    RF.V1016.modalMarkup=function(s){
+      if(!RF.UI?.modal)return '';
+      try{return String(RF.UI.modalHtml?.(s)||'').trim()}catch(e){return '__ERROR__'}
+    };
+    RF.V1016.clearGhostModal=function(s){
+      const m=RF.UI?.modal;if(!m)return false;
+      // Active minigame shells without an action object are stale and must be discarded.
+      if((m.type==='v6Action'||m.type==='v7Action')&&!RF.actionGame){
+        RF.UI.modal=null;RF.V1016.resetUIPause(s);return true;
+      }
+      const html=RF.V1016.modalMarkup(s);
+      if(html===''){
+        RF.UI.modal=null;RF.V1016.resetUIPause(s);return true;
+      }
+      return false;
+    };
+
+    RF.V1016.sanitiseTravel=function(s,{resume=true}={}){
+      if(!s?.activity||s.activity.type!=='travel')return false;
+      const a=s.activity;
+      let dirty=false;
+      const dur=Number(a.duration),prog=Number(a.progress);
+      if(!Number.isFinite(dur)||dur<=0){a.duration=1;dirty=true}else if(a.duration!==dur){a.duration=dur;dirty=true}
+      if(!Number.isFinite(prog)||prog<0){a.progress=0;dirty=true}else if(a.progress!==prog){a.progress=prog;dirty=true}
+      if(a.progress>a.duration){a.progress=a.duration;dirty=true}
+      if(!a.from||!RF.DATA.locations?.[a.from]){a.from=s.location;dirty=true}
+      if(!a.target||!RF.DATA.locations?.[a.target]){
+        RF.log?.(s,'A corrupted journey was cancelled safely.','bad');
+        s.activity=null;dirty=true;
+      }
+      if(resume&&s.activity?.type==='travel'){
+        // Campaign loading is an explicit resume action. Do not preserve an accidental UI pause.
+        if(![1,2].includes(+s.speed)){s.speed=1;dirty=true}
+        if(s.paused){s.paused=false;dirty=true}
+        if(s.v83?.manualPause){s.v83.manualPause=false;dirty=true}
+        RF.V1016.resetUIPause(s);
+      }
+      return dirty;
+    };
+
+    RF.V1016.repairCampaign=function(s){
+      if(!s)return s;
+      s.version='10.16.0';
+      RF.V1016.clearGhostModal(s);
+      if(RF.V1016.sanitiseTravel(s,{resume:true})){
+        try{RF.save?.(s)}catch(_){}
+      }
+      return s;
+    };
+
+    // Ensure multi-slot loads and migrations repair an already-stuck journey immediately.
+    /* V11.8: legacy save/migration wrapper extracted to canonical core. */
+
+    RF.V1016.reportTickError=function(err,where='world tick'){
+      const msg=`${where}: ${err?.message||err||'unknown error'}`;
+      const now=Date.now();
+      if(msg!==RF.V1016.lastTickError||now-RF.V1016.lastTickErrorAt>10000){
+        RF.V1016.lastTickError=msg;RF.V1016.lastTickErrorAt=now;
+        console.warn('[Realmforge travel recovery]',msg,err);
+        const s=RF.state;
+        if(s){
+          // Keep this to one compact log entry rather than spamming every animation frame.
+          RF.log?.(s,'The world simulation stumbled, but Realmforge recovered without stopping your journey.','bad');
+          try{RF.save?.(s)}catch(_){}
+        }
+      }
+    };
+
+    // Hardened master ticker. Crucially, requestAnimationFrame is scheduled in finally,
+    // so an exception in world events/NPC pulses can never permanently kill time/travel.
+    RF.tick=function(now){
+      try{
+        const s=RF.state;
+        if(!s){RF.lastTick=now;return}
+        let dt=(now-(RF.lastTick||now))/1000;
+        if(!Number.isFinite(dt)||dt<0)dt=0;
+        dt=Math.min(.25,dt);RF.lastTick=now;
+
+        RF.V1016.clearGhostModal(s);
+        const blocked=!!RF.UI.modal;
+        if(s.speed>0&&!blocked){
+          const gameSec=dt*s.speed;
+
+          // Advance active timers FIRST. If a later simulation hook throws, the road still moves.
+          if(s.activity){
+            const a=s.activity;
+            let p=Number(a.progress),d=Number(a.duration);
+            if(!Number.isFinite(p)||p<0)p=0;
+            if(!Number.isFinite(d)||d<=0)d=1;
+            a.progress=Math.min(d,p+gameSec);a.duration=d;
+          }
+
+          // World clock, NPC pulses, road-event checks etc. are allowed to fail safely.
+          try{
+            RF.advanceWorld(gameSec*(RF.V102?.worldMinutesPerSecond??.32));
+          }catch(err){RF.V1016.reportTickError(err,'world simulation')}
+
+          // A road event may have opened a modal during advanceWorld. Resolve completion only
+          // when the player is not currently answering that interruption.
+          if(s.activity&&s.activity.progress>=s.activity.duration&&!RF.UI.modal){
+            const a=s.activity;
+            try{
+              if(a.type==='travel')RF.finishTravel(a);
+              else if(a.type==='craft')RF.finishCraft(a);
+              else RF.finishActivity(a);
+            }catch(err){
+              RF.V1016.reportTickError(err,`${a.type||'activity'} completion`);
+              // Never leave a completed activity blocking the campaign forever.
+              if(RF.state?.activity===a)RF.state.activity=null;
+            }
+          }
+
+          RF.autoSave=(RF.autoSave||0)+dt;RF.renderAcc=(RF.renderAcc||0)+dt;
+          if(RF.autoSave>8){try{RF.save(s)}catch(err){console.warn(err)}RF.autoSave=0}
+          if(RF.renderAcc>.18){try{RF.UI.render(s)}catch(err){RF.V1016.reportTickError(err,'UI render')}RF.renderAcc=0}
+        }
+      }catch(err){RF.V1016.reportTickError(err,'master tick')}
+      finally{requestAnimationFrame(RF.tick)}
+    };
+
+    // Turn Back must actually persist, and it also clears stale pause state.
+    const v1016CancelBase=RF.cancelActivity;
+    RF.cancelActivity=function(){
+      const s=RF.state,a=s?.activity;
+      if(a?.type!=='travel')return v1016CancelBase?.apply(RF,arguments);
+      s.activity=null;
+      if(a.from&&RF.DATA.locations?.[a.from])s.location=a.from;
+      s.speed=1;s.paused=false;RF.V1016.resetUIPause(s);
+      RF.log?.(s,`You turn back${a.from&&RF.DATA.locations[a.from]?` to ${RF.DATA.locations[a.from].name}`:''}.`);
+      RF.save?.(s);RF.UI.render(s);
+    };
+
+    RF.V1016.forceTeleport=function(id){
+      const s=RF.state;if(!s||!RF.DATA.locations?.[id])return false;
+      try{RF.clearActionTimer?.()}catch(_){}
+      RF.actionGame=null;s.activity=null;s.combat=null;RF.UI.modal=null;
+      RF.V1016.resetUIPause(s);
+      s.location=id;s.visited=s.visited||{};s.visited[id]=true;s.speed=1;s.paused=false;
+      RF.log?.(s,`DEV emergency teleport: ${RF.DATA.locations[id].name}.`,'important');
+      RF.save?.(s);RF.UI.render(s);return true;
+    };
+
+    // Developer escape hatch: override the old teleport binder after all earlier handlers run.
+    const v1016BindBase=RF.UI.bind.bind(RF.UI);
+    RF.UI.bind=function(s){
+      v1016BindBase(s);
+      const tp=document.querySelector('[data-dev="teleport"]');
+      if(tp)tp.onclick=()=>{
+        const id=document.querySelector('[data-dev-location]')?.value;
+        if(id)RF.V1016.forceTeleport(id);
+      };
+      document.querySelector('[data-v1016-recover-travel]')?.addEventListener('click',()=>{
+        const ss=RF.state;if(!ss)return;
+        if(ss.activity?.type==='travel')RF.cancelActivity();
+        else {RF.V1016.resetUIPause(ss);ss.speed=1;ss.paused=false;RF.save?.(ss);RF.UI.render(ss)}
+      });
+    };
+
+    // Add a visible rescue button to Developer utilities.
+    const v1016DevBase=RF.UI.dev?.bind(RF.UI);
+    if(v1016DevBase)RF.UI.dev=function(s){
+      let h=v1016DevBase(s);
+      const btn=`<button data-v1016-recover-travel>${s.activity?.type==='travel'?'Cancel / Recover Current Journey':'Reset Travel / Clock State'}</button>`;
+      if(h.includes('Utilities</h3><div class="devGrid">'))h=h.replace('Utilities</h3><div class="devGrid">',`Utilities</h3><div class="devGrid">${btn}`);
+      else h=h.replace('</section>',`<h3>Travel Recovery</h3><div class="devGrid">${btn}</div></section>`);
+      return h;
+    };
+
+    // Lightweight watchdog for impossible pause debris. It does not advance travel itself;
+    // the hardened ticker remains the single source of progress.
+    RF.V1016.watchdog=setInterval(()=>{
+      const s=RF.state;if(!s||RF.V101?.mainMenu)return;
+      let dirty=RF.V1016.clearGhostModal(s);
+      if(s.activity?.type==='travel'){
+        dirty=RF.V1016.sanitiseTravel(s,{resume:false})||dirty;
+        if(s.speed===0&&!s.paused&&!RF.UI.modal&&!s.combat&&!RF.actionGame){s.speed=1;dirty=true}
+      }
+      if(dirty){try{RF.save?.(s)}catch(_){};try{RF.UI.render(s)}catch(_){}}
+    },1000);
+
+    if(RF.state){RF.V1016.repairCampaign(RF.state);try{RF.save?.(RF.state)}catch(_){}}
+  });}
+  function installHistoricalV1017(){return once('js/v10_17.js',()=>{
+    window.RF=window.RF||{};
+    RF.VERSION='10.17.0';
+    RF.V1017=RF.V1017||{};
+
+    /* Realmforge V10.17 — Travel Overlay
+       - Travel is presented in a dedicated non-pausing overlay rather than inline on World.
+       - Road events/dialogue pause the journey above the overlay, then restore the prior speed.
+       - Travel-started combat suspends the journey and restores it after victory / successful flee.
+       - Defeat abandons a suspended journey because the player is carried to safety.
+       - The overlay owns its own Pause / 1x / 2x controls and Turn Back action.
+    */
+
+    (()=>{
+      const old=document.getElementById('v1017-style');if(old)old.remove();
+      const st=document.createElement('style');st.id='v1017-style';st.textContent=`
+        .v1017TravelBack{
+          position:fixed;z-index:48;inset:0;
+          display:grid;place-items:center;
+          padding:calc(16px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
+          background:rgba(5,4,3,.74);backdrop-filter:blur(5px);
+          touch-action:manipulation;
+        }
+        .v1017TravelModal{
+          width:min(660px,100%);max-height:min(84dvh,760px);overflow:auto;
+          box-sizing:border-box;padding:18px;
+          border:1px solid rgba(200,157,82,.58);border-radius:22px;
+          background:linear-gradient(180deg,rgba(42,30,18,.99),rgba(18,14,10,.995));
+          box-shadow:0 28px 80px rgba(0,0,0,.68),inset 0 1px rgba(255,255,255,.04);
+          overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+        }
+        .v1017TravelHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+        .v1017TravelHead h2{margin:2px 0 2px;font-family:Georgia,serif;color:#f1d392;font-size:25px;line-height:1.1}
+        .v1017TravelWeather{white-space:nowrap;border:1px solid rgba(210,172,99,.28);border-radius:999px;padding:5px 9px;color:#d9c7a5;font-size:12px;background:rgba(255,255,255,.035)}
+        .v1017Route{margin:13px 0 10px;padding:10px 12px;border:1px solid rgba(210,172,99,.18);border-radius:14px;background:rgba(0,0,0,.16);font-size:13px;color:#cbb99a;line-height:1.4}
+        .v1017Route b{color:#f2dfb5}
+        .v1017Road{position:relative;height:54px;margin:8px 2px 8px;overflow:hidden}
+        .v1017Road:before{content:'';position:absolute;left:0;right:0;top:31px;height:5px;border-radius:99px;background:linear-gradient(90deg,#403526,#7b6341,#403526);box-shadow:0 1px rgba(255,255,255,.06)}
+        .v1017Road:after{content:'';position:absolute;left:0;right:0;top:23px;border-top:1px dashed rgba(239,210,147,.16)}
+        .v1017Walker{position:absolute;top:5px;width:32px;height:38px;line-height:38px;text-align:center;font-size:27px;transform:translateX(-50%) scaleX(-1);transform-origin:center;transition:left .18s linear;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+        .v1017TravelBar{height:10px;border-radius:99px;overflow:hidden;background:#211b14;border:1px solid rgba(208,169,91,.18)}
+        .v1017TravelBar>div{height:100%;background:linear-gradient(90deg,#9b7131,#efd084);transition:width .18s linear}
+        .v1017TravelStats{display:flex;justify-content:space-between;gap:12px;margin-top:7px;color:#c9b896;font-size:12px}
+        .v1017Ambient{margin:13px 0 10px;padding:11px 12px;border-left:3px solid rgba(214,170,82,.55);background:rgba(255,255,255,.025);border-radius:0 10px 10px 0;color:#c5b392;font-size:13px;line-height:1.45;font-style:italic}
+        .v1017SpeedRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+        .v1017Speed{min-height:44px;border-radius:12px;border:1px solid rgba(192,151,78,.32);background:#21180f;color:#d9c6a3;font:inherit;font-weight:800}
+        .v1017Speed.active{border-color:#d3a34a;color:#ffdb8b;background:linear-gradient(180deg,#493017,#291b10);box-shadow:inset 0 0 0 1px rgba(255,219,139,.08)}
+        .v1017Speed:disabled{opacity:.42}
+        .v1017BoostNote{text-align:center;font-size:11px;color:#a99779;margin:-4px 0 10px}
+        .v1017TurnBack{width:100%;min-height:48px;border-radius:13px;border:1px solid rgba(202,153,81,.35);background:#2a1d12;color:#f0d7a6;font:inherit;font-weight:800}
+        .v1017TravelHint{text-align:center;color:#998b73;font-size:11px;line-height:1.35;margin-top:10px}
+        @media(max-width:420px){.v1017TravelModal{padding:15px}.v1017TravelHead h2{font-size:22px}.v1017Walker{font-size:25px}}
+        @media(prefers-reduced-motion:reduce){.v1017Walker,.v1017TravelBar>div{transition:none!important}}
+      `;document.head.appendChild(st);
+    })();
+
+    RF.V1017.ensure=function(s){
+      if(!s)return null;
+      s.v1017=s.v1017||{};
+      return s.v1017;
+    };
+    RF.V1017.cloneActivity=function(a){
+      if(!a)return null;
+      try{return JSON.parse(JSON.stringify(a))}catch(_){return {...a}}
+    };
+    RF.V1017.captureRunningClock=function(s){
+      // If an event popup already paused the world, its stored resume state is the truthful clock.
+      const mr=RF.V96?.modalResume;
+      if(mr)return {speed:mr.speed||1,paused:!!mr.paused,boostRemaining:Math.max(0,mr.boostRemaining||0)};
+      if(typeof RF.v96CaptureClock==='function')return RF.v96CaptureClock(s);
+      const speed=[0,1,2].includes(+s?.speed)?+s.speed:1;
+      return {speed,paused:speed===0||!!s?.paused,boostRemaining:speed===2&&s?.v8?Math.max(0,(s.v8.boostUntil||0)-Date.now()):0};
+    };
+    RF.V1017.applyTravelClock=function(s,snap){
+      if(!s||!snap)return;
+      let speed=snap.paused?0:(snap.speed||1);if(![0,1,2].includes(speed))speed=1;
+      // A normal popup owns the pause. Update what it will resume to without unpausing behind it.
+      if(RF.UI.modal&&RF.V96){
+        RF.V96.modalResume={speed,paused:speed===0,boostRemaining:snap.boostRemaining||0};
+        RF.V96.modalPaused=true;RF.V96.modalWasOpen=true;
+        s.speed=0;s.paused=true;return;
+      }
+      s.speed=speed;s.paused=speed===0;
+      if(speed>0&&RF.V96)RF.V96.lastNonZeroSpeed=speed;
+      if(s.v8){
+        if(speed===2){const left=Math.max(1000,snap.boostRemaining||RF.V8?.boostMs||30000);s.v8.boostUntil=Date.now()+left;}
+        else s.v8.boostUntil=0;
+      }
+    };
+    RF.V1017.travelRecord=function(s){
+      if(s?.activity?.type==='travel')return s.activity;
+      if(s?.combat&&s?.v1017?.suspendedTravel?.activity)return s.v1017.suspendedTravel.activity;
+      return null;
+    };
+    RF.V1017.ambient=function(s,a){
+      const hour=Math.floor((s.minute||0)/60)%24,w=s.weather||'Clear',region=RF.DATA.locations?.[a?.from]?.region||RF.DATA.locations?.[s.location]?.region||'the road';
+      if(w==='Storm')return 'Thunder rolls beyond the road. Every flash briefly redraws the landscape in hard silver.';
+      if(w==='Rain')return 'Rain whispers against the road and beads along your travelling gear.';
+      if(w==='Fog')return 'The road ahead dissolves into fog; landmarks arrive later than expected.';
+      if(hour<5)return `The ${region} road is almost black at this hour, save for the occasional distant lantern.`;
+      if(hour<8)return 'Dawn gathers slowly along the road while the world wakes around you.';
+      if(hour>=20)return 'Evening settles across the road. Windows and campfires begin to glow in the distance.';
+      return 'Boots, weather and road dust mark the steady rhythm of the journey.';
+    };
+    RF.V1017.overlayHtml=function(s){
+      const a=RF.V1017.travelRecord(s);if(!a)return '';
+      const from=RF.DATA.locations?.[a.from]||RF.DATA.locations?.[s.location],to=RF.DATA.locations?.[a.target];
+      const duration=Math.max(.001,Number(a.duration)||1),progress=Math.max(0,Math.min(duration,Number(a.progress)||0)),pct=Math.max(0,Math.min(100,100*progress/duration));
+      const remaining=Math.max(0,duration-progress),speed=+s.speed||0,realRemain=s.combat?remaining:(speed>0?remaining/speed:remaining);
+      const boostCd=typeof RF.boostCooldownRemaining==='function'?RF.boostCooldownRemaining(s):0;
+      const boost=typeof RF.boostRemaining==='function'?RF.boostRemaining(s):0;
+      const paused=s.combat?'Interrupted by combat':RF.UI.modal?'Journey interrupted':speed===0?'Paused':`${speed}× travel`;
+      const remLabel=s.combat||RF.UI.modal?`${Math.ceil(remaining)} sec of road left`:speed===0?`${Math.ceil(remaining)} sec remaining`:`≈ ${Math.ceil(realRemain)} sec remaining`;
+      const twoLabel=boostCd?`${Math.ceil(boostCd/1000)}s`:'2×';
+      return `<div class="v1017TravelBack" data-v1017-travel-overlay>
+        <section class="v1017TravelModal" role="dialog" aria-label="Travelling to ${to?.name||'destination'}">
+          <div class="v1017TravelHead"><div><span class="eyebrow">ON THE ROAD</span><h2>🛤️ Travelling to ${to?.name||'your destination'}</h2><div class="sub">${paused}</div></div><div class="v1017TravelWeather">${RF.UI.weatherIcon?.(s.weather)||'☀️'} ${s.weather}</div></div>
+          <div class="v1017Route"><b>${from?.icon||'📍'} ${from?.name||'Origin'}</b> &nbsp;→&nbsp; <b>${to?.icon||'📍'} ${to?.name||'Destination'}</b><br>${RF.UI.fmtTime?.(s)||''}</div>
+          <div class="v1017Road"><div class="v1017Walker" style="left:${Math.max(3,Math.min(97,pct))}%">🚶</div></div>
+          <div class="v1017TravelBar"><div style="width:${pct}%"></div></div>
+          <div class="v1017TravelStats"><span>${Math.round(pct)}% complete</span><span>${remLabel}</span></div>
+          <div class="v1017Ambient">${RF.V1017.ambient(s,a)}</div>
+          <div class="v1017SpeedRow">
+            <button class="v1017Speed ${speed===0&&!s.combat&&!RF.UI.modal?'active':''}" data-v1017-speed="0" ${s.combat||RF.UI.modal?'disabled':''}>Ⅱ Pause</button>
+            <button class="v1017Speed ${speed===1?'active':''}" data-v1017-speed="1" ${s.combat||RF.UI.modal?'disabled':''}>1×</button>
+            <button class="v1017Speed ${speed===2?'active':''}" data-v1017-speed="2" ${s.combat||RF.UI.modal||boostCd?'disabled':''}>${twoLabel}</button>
+          </div>
+          ${speed===2&&boost?`<div class="v1017BoostNote">2× burst • ${Math.ceil(boost/1000)}s remaining</div>`:boostCd?`<div class="v1017BoostNote">2× recovering • ${Math.ceil(boostCd/1000)}s</div>`:''}
+          <button class="v1017TurnBack" data-v1017-turnback ${s.combat||RF.UI.modal?'disabled':''}>Turn back</button>
+          <div class="v1017TravelHint">Road events can interrupt the journey. Decisions and battles pause your route, then return you here at the same progress.</div>
+        </section>
+      </div>`;
+    };
+    RF.V1017.mountOverlay=function(s){
+      const a=RF.V1017.travelRecord(s);if(!a||RF.V101?.mainMenu)return;
+      const root=document.getElementById('app');if(!root)return;
+      root.insertAdjacentHTML('beforeend',RF.V1017.overlayHtml(s));
+      root.querySelectorAll('[data-v1017-speed]').forEach(b=>b.onclick=()=>RF.setSpeed(+b.dataset.v1017Speed));
+      const turn=root.querySelector('[data-v1017-turnback]');if(turn)turn.onclick=()=>RF.cancelActivity();
+    };
+
+    // Travel is no longer drawn as an inline World card. Other activities keep their normal panels.
+    const v1017ActivityBase=RF.UI.activity.bind(RF.UI);
+    RF.UI.activity=function(s){if(s?.activity?.type==='travel')return '';return v1017ActivityBase(s)};
+
+    // Final render wrapper: base game renders first (including any event/combat overlay), then the
+    // Travel Overlay is inserted at z48 so ordinary popups/battles at z60 naturally sit above it.
+    const v1017RenderBase=RF.UI.render.bind(RF.UI);
+    RF.UI.render=function(s){
+      const out=v1017RenderBase(s);
+      if(s)RF.V1017.mountOverlay(s);
+      return out;
+    };
+
+    // Road interruptions now rely on the normal popup pause/resume machinery. They do not manually
+    // zero the travel clock or require the player to restart it afterwards.
+    RF.maybeTravelInterrupt=function(){
+      const s=RF.state,a=s?.activity;if(!a||a.type!=='travel'||!a.v8Prepared||a.v8Checked||RF.UI.modal||s.combat)return;
+      if(a.progress<a.v8Checkpoint)return;
+      a.v8Checked=true;if(Math.random()>a.v8EventChance)return;
+      const ev=RF.chooseRoadEvent?.(s);if(!ev)return;
+      s.v8=s.v8||{};s.v8.travelInterrupts=(s.v8.travelInterrupts||0)+1;s.stats.travelEvents=(s.stats.travelEvents||0)+1;s.v8.roadEventsSeen=s.v8.roadEventsSeen||{};s.v8.roadEventsSeen[ev.id]=(s.v8.roadEventsSeen[ev.id]||0)+1;
+      const at=Math.round(100*Math.max(0,a.progress)/Math.max(1,a.duration));
+      RF.UI.modal={type:'event',event:{...ev,choices:ev.choices.map(c=>({...c,result:ss=>{const text=c.result(ss);return `${text}\n\nThe road waits at ${at}% complete. Close this event to continue the journey.`;}}))}};
+      RF.log(s,`Travel interrupted: ${ev.title}`,'important');RF.save(s);RF.UI.render(s);
+    };
+
+    // ---------- Combat during travel ----------
+    RF.V1017.suspendForCombat=function(s){
+      if(!s?.activity||s.activity.type!=='travel')return false;
+      const v=RF.V1017.ensure(s);v.suspendedTravel={activity:RF.V1017.cloneActivity(s.activity),clock:RF.V1017.captureRunningClock(s),at:Date.now()};
+      return true;
+    };
+    RF.V1017.restoreAfterCombat=function(s){
+      const v=RF.V1017.ensure(s),rec=v?.suspendedTravel;if(!rec?.activity||s.combat)return false;
+      s.activity=RF.V1017.cloneActivity(rec.activity);v.suspendedTravel=null;
+      RF.V1017.applyTravelClock(s,rec.clock||{speed:1,paused:false,boostRemaining:0});
+      RF.V1016?.sanitiseTravel?.(s,{resume:false});
+      RF.log?.(s,'You return to the road where the interruption began.','important');RF.save?.(s);return true;
+    };
+    RF.V1017.abandonSuspended=function(s){if(s?.v1017)s.v1017.suspendedTravel=null};
+
+    const v1017StartBattleBase=RF.startBattle;
+    RF.startBattle=function(id,opts={}){
+      const s=RF.state;if(s?.activity?.type==='travel')RF.V1017.suspendForCombat(s);
+      return v1017StartBattleBase.apply(RF,arguments);
+    };
+
+    const v1017WinBase=RF.winCombat;
+    RF.winCombat=function(){
+      const had=!!RF.state?.v1017?.suspendedTravel;
+      const out=v1017WinBase.apply(RF,arguments);const s=RF.state;
+      if(had&&s&&!s.combat&&RF.V1017.restoreAfterCombat(s))RF.UI.render(s);
+      return out;
+    };
+
+    const v1017FleeBase=RF.fleeV4;
+    RF.fleeV4=function(){
+      const had=!!RF.state?.v1017?.suspendedTravel;
+      const out=v1017FleeBase.apply(RF,arguments);const s=RF.state;
+      if(had&&s&&!s.combat&&RF.V1017.restoreAfterCombat(s))RF.UI.render(s);
+      return out;
+    };
+
+    const v1017LoseBase=RF.loseV4Battle;
+    RF.loseV4Battle=function(){
+      const s0=RF.state;RF.V1017.abandonSuspended(s0);
+      return v1017LoseBase.apply(RF,arguments);
+    };
+
+    // Emergency travel cancellation / developer teleport must also forget any suspended road state.
+    if(RF.V1016?.forceTeleport){
+      const v1017TeleportBase=RF.V1016.forceTeleport.bind(RF.V1016);
+      RF.V1016.forceTeleport=function(id){RF.V1017.abandonSuspended(RF.state);return v1017TeleportBase(id)};
+    }
+    const v1017CancelBase=RF.cancelActivity;
+    RF.cancelActivity=function(){
+      const s=RF.state;if(s?.activity?.type==='travel')RF.V1017.abandonSuspended(s);
+      return v1017CancelBase.apply(RF,arguments);
+    };
+
+    // Save migration metadata.
+    RF.V1017.migrate=function(s){if(!s)return s;RF.V1017.ensure(s);s.version='10.17.0';return s};
+    /* V11.8: legacy save/migration wrapper extracted to canonical core. */
+    if(RF.state){RF.V1017.migrate(RF.state);try{RF.save?.(RF.state)}catch(_){};RF.UI.render(RF.state)}
+  });}
+  function installHistoricalV1020(){return once('js/v10_20.js',()=>{
+    window.RF = window.RF || {};
+    RF.VERSION='10.20.0';
+
+    /* Realmforge V10.20 — Waypoint Journeys
+       - World Map locations open a route-confirmation popup.
+       - Direct routes can be started from the popup or left alone.
+       - Multi-leg routes show every waypoint before departure.
+       - A planned journey persists across individual travel legs.
+       - At each intermediate stop, the player chooses Continue Journey or Stop Here.
+       - Existing Travel Overlay, road events and combat interruptions continue to operate per leg.
+    */
+
+    RF.V1020=RF.V1020||{launchingRouteLeg:false};
+    RF.V1020.ensure=function(s){
+      if(!s)return null;
+      s.v1020=s.v1020||{};
+      if(!('routePlan' in s.v1020))s.v1020.routePlan=null;
+      return s.v1020;
+    };
+    RF.V1020.loc=function(id){return RF.DATA.locations?.[id]||null};
+    RF.V1020.route=function(s,dest,allowLocked=false){
+      if(!s||!dest||typeof RF.v9Route!=='function')return null;
+      try{return RF.v9Route(s,s.location,dest,allowLocked)}catch(_){return null}
+    };
+    RF.V1020.legMinutes=function(from,to){return Number(RF.DATA.locations?.[from]?.neighbors?.[to])||0};
+    RF.V1020.routeNames=function(path){return (path||[]).map(id=>RF.V1020.loc(id)?.name||id)};
+    RF.V1020.chainHtml=function(path,current){
+      return `<div class="v1020RouteChain">${(path||[]).map((id,i)=>{
+        const l=RF.V1020.loc(id);return `<span class="v1020Stop ${id===current?'here':''}">${l?.icon||'📍'} ${l?.name||id}</span>${i<(path.length-1)?'<b>›</b>':''}`;
+      }).join('')}</div>`;
+    };
+    RF.V1020.clearPlan=function(s,reason=''){
+      const v=RF.V1020.ensure(s);if(!v)return;
+      if(v.routePlan&&reason)RF.log?.(s,reason);
+      v.routePlan=null;
+    };
+
+    // ---------- World Map: tap a destination, inspect the route, then deliberately begin ----------
+    RF.V1020.openRoutePreview=function(dest){
+      const s=RF.state,d=RF.V1020.loc(dest);if(!s||!d)return;
+      RF.V1020.ensure(s);
+      s.v9=s.v9||{};s.v9.mapDest=null; // V9's old inline route card is superseded by the popup.
+      RF.UI.modal={type:'v1020RoutePreview',destination:dest};
+      RF.UI.render(s);
+    };
+
+    RF.V1020.beginRoute=function(dest){
+      const s=RF.state;if(!s)return;
+      const route=RF.V1020.route(s,dest,false);
+      if(!route||!route.path||route.path.length<2){
+        RF.UI.modal={type:'message',title:'Route unavailable',text:'There is no currently usable road route to that destination.'};RF.UI.render(s);return;
+      }
+      const v=RF.V1020.ensure(s);
+      v.routePlan={
+        destination:dest,
+        path:[...route.path],
+        currentIndex:0,
+        pending:false,
+        startedDay:s.day,
+        startedMinute:s.minute,
+        startedAt:Date.now()
+      };
+      const next=route.path[1];
+      RF.UI.modal=null;
+      RF.V1020.launchingRouteLeg=true;
+      try{RF.travel(next)}finally{RF.V1020.launchingRouteLeg=false}
+      if(s.activity?.type==='travel'){
+        s.activity.v1020Planned=true;s.activity.v1020Destination=dest;
+        RF.save?.(s);
+      }else{
+        RF.V1020.clearPlan(s);
+        RF.UI.modal={type:'message',title:'Could not depart',text:'The journey could not be started. Check that the next road is still available.'};RF.UI.render(s);
+      }
+    };
+
+    RF.V1020.remainingRoute=function(s){
+      const p=RF.V1020.ensure(s)?.routePlan;if(!p?.destination)return null;
+      return RF.V1020.route(s,p.destination,false);
+    };
+    RF.V1020.openContinue=function(s){
+      const p=RF.V1020.ensure(s)?.routePlan;if(!p?.pending||RF.UI.modal||s.combat||s.activity)return false;
+      if(s.location===p.destination){RF.V1020.clearPlan(s);return false}
+      RF.UI.modal={type:'v1020RouteContinue',destination:p.destination};
+      return true;
+    };
+    RF.V1020.continueRoute=function(){
+      const s=RF.state,p=RF.V1020.ensure(s)?.routePlan;if(!s||!p)return;
+      const route=RF.V1020.remainingRoute(s);
+      if(!route||route.path.length<2){
+        p.pending=false;RF.UI.modal={type:'message',title:'Journey interrupted',text:'The onward route is no longer available from here. Your planned journey has been stopped.'};RF.V1020.clearPlan(s);RF.save?.(s);RF.UI.render(s);return;
+      }
+      p.path=[...route.path];p.currentIndex=0;p.pending=false;
+      const next=route.path[1];RF.UI.modal=null;
+      RF.V1020.launchingRouteLeg=true;
+      try{RF.travel(next)}finally{RF.V1020.launchingRouteLeg=false}
+      if(s.activity?.type==='travel'){
+        s.activity.v1020Planned=true;s.activity.v1020Destination=p.destination;RF.save?.(s);
+      }else{
+        RF.V1020.clearPlan(s);RF.UI.modal={type:'message',title:'Could not continue',text:'The next road could not be started.'};RF.UI.render(s);
+      }
+    };
+    RF.V1020.stopRoute=function(){
+      const s=RF.state;if(!s)return;const p=RF.V1020.ensure(s)?.routePlan;
+      const dest=p?.destination?RF.V1020.loc(p.destination)?.name:null;
+      RF.V1020.clearPlan(s,dest?`You stop the planned journey to ${dest} here.`:'');
+      RF.UI.modal=null;RF.save?.(s);RF.UI.render(s);
+    };
+
+    // ---------- Map presentation ----------
+    const v1020WorldMapBase=RF.UI.worldMap?.bind(RF.UI);
+    if(v1020WorldMapBase)RF.UI.worldMap=function(s){
+      if(s?.v9)s.v9.mapDest=null;
+      let h=v1020WorldMapBase(s);
+      h=h.replace('Choose any location to plan a route. Realmforge shows every road junction you must pass through rather than pretending distant locations are adjacent.',
+        'Tap a location to inspect the route. Multi-leg journeys show every waypoint before you set out.');
+      return h;
+    };
+
+    // ---------- Modal UI ----------
+    const v1020ModalBase=RF.UI.modalHtml.bind(RF.UI);
+    RF.UI.modalHtml=function(s){
+      const m=this.modal;
+      if(m?.type==='v1020RoutePreview'){
+        const dest=m.destination,d=RF.V1020.loc(dest),unlocked=RF.v9LocationUnlocked?RF.v9LocationUnlocked(s,dest):true;
+        const route=unlocked?RF.V1020.route(s,dest,false):null;
+        const potential=!route?RF.V1020.route(s,dest,true):null;
+        const lock=RF.v9LockText?.(s,dest)||'';
+        if(dest===s.location)return `<div class="modalBack"><div class="modal v1020RouteModal"><div class="itemHero">${d?.icon||'📍'}</div><span class="eyebrow">WORLD MAP</span><h2>${d?.name||'Location'}</h2><div class="itemDesc">${d?.desc||''}</div><div class="notice good">You are already here.</div><div class="choices"><button class="choice" data-v1020-route-leave><b>Close</b></button></div></div></div>`;
+        if(!route){
+          const potentialText=potential?.path?.length>1?`<div class="v1020Potential"><b>Known path:</b> ${RF.V1020.routeNames(potential.path).join(' → ')}</div>`:'';
+          return `<div class="modalBack"><div class="modal v1020RouteModal"><div class="itemHero">${d?.icon||'📍'}</div><span class="eyebrow">WORLD MAP • ROUTE</span><h2>${d?.name||'Destination'}</h2><div class="itemDesc">${d?.desc||''}</div><div class="notice">No usable route from your current location.${lock?`<br><b>${lock}</b>`:''}</div>${potentialText}<div class="choices"><button class="choice" data-v1020-route-leave><b>Leave it</b></button></div></div></div>`;
+        }
+        const legs=route.path.length-1,direct=legs===1,first=route.path[1],firstMin=RF.V1020.legMinutes(s.location,first),mids=route.path.slice(1,-1);
+        return `<div class="modalBack"><div class="modal v1020RouteModal"><div class="itemHero">${d?.icon||'📍'}</div><span class="eyebrow">WORLD MAP • ${direct?'DIRECT JOURNEY':`${legs}-LEG JOURNEY`}</span><h2>${d?.name||'Destination'}</h2><div class="itemDesc">${d?.desc||''}</div>${RF.V1020.chainHtml(route.path,s.location)}<div class="tradeSummary"><span>Road legs <b>${legs}</b></span><span>Total road time <b>${route.minutes} min</b></span><span>First leg <b>${firstMin} min</b></span></div>${mids.length?`<div class="notice"><b>Waypoints:</b> ${mids.map(id=>`${RF.V1020.loc(id)?.icon||'📍'} ${RF.V1020.loc(id)?.name||id}`).join(' → ')}<br><small>You will be asked whether to continue at each stop.</small></div>`:`<div class="notice good">A single road leads directly there.</div>`}<div class="choices"><button class="choice" data-v1020-route-begin="${dest}"><b>Begin journey</b><small>${direct?`Travel directly to ${d.name}.`:`Start with ${RF.V1020.loc(first)?.name||'the first waypoint'}.`}</small></button><button class="choice" data-v1020-route-leave><b>Leave it</b></button></div></div></div>`;
+      }
+      if(m?.type==='v1020RouteContinue'){
+        const p=RF.V1020.ensure(s)?.routePlan,dest=p?.destination||m.destination,d=RF.V1020.loc(dest),route=RF.V1020.route(s,dest,false);
+        if(!route||route.path.length<2)return `<div class="modalBack"><div class="modal v1020RouteModal"><div class="itemHero">🛑</div><span class="eyebrow">PLANNED JOURNEY</span><h2>Route unavailable</h2><div class="notice">The onward road to ${d?.name||'your destination'} is no longer usable from here.</div><div class="choices"><button class="choice" data-v1020-route-stop><b>Stop here</b></button></div></div></div>`;
+        const next=route.path[1],nextLoc=RF.V1020.loc(next),legs=route.path.length-1;
+        return `<div class="modalBack"><div class="modal v1020RouteModal"><div class="itemHero">${RF.V1020.loc(s.location)?.icon||'📍'}</div><span class="eyebrow">WAYPOINT REACHED</span><h2>${RF.V1020.loc(s.location)?.name||'Waypoint'}</h2><div class="itemDesc">You have reached an intermediate stop on your planned journey to <b>${d?.name||'your destination'}</b>.</div>${RF.V1020.chainHtml(route.path,s.location)}<div class="tradeSummary"><span>Next leg <b>${RF.V1020.legMinutes(s.location,next)} min</b></span><span>Road legs left <b>${legs}</b></span><span>Remaining road time <b>${route.minutes} min</b></span></div><div class="notice">Next: ${nextLoc?.icon||'📍'} <b>${nextLoc?.name||next}</b>${legs>1?`<br><small>You will be asked again at the next waypoint.</small>`:''}</div><div class="choices"><button class="choice" data-v1020-route-continue><b>Continue journey</b><small>Begin the next leg toward ${d?.name||'the destination'}.</small></button><button class="choice" data-v1020-route-stop><b>Stop here</b><small>End the planned journey and remain at ${RF.V1020.loc(s.location)?.name||'this location'}.</small></button></div></div></div>`;
+      }
+      return v1020ModalBase(s);
+    };
+
+    // ---------- Route lifecycle ----------
+    const v1020TravelBase=RF.travel;
+    RF.travel=function(id){
+      const s=RF.state;
+      // A normal World travel button starts an independent journey and cancels any old route chain.
+      if(s&&!RF.V1020.launchingRouteLeg&&RF.V1020.ensure(s)?.routePlan)RF.V1020.clearPlan(s);
+      return v1020TravelBase.apply(RF,arguments);
+    };
+
+    const v1020FinishTravelBase=RF.finishTravel;
+    RF.finishTravel=function(a){
+      const planned=!!RF.state?.v1020?.routePlan && (a?.v1020Planned||a?.v1020Destination===RF.state.v1020.routePlan.destination);
+      const target=a?.target;
+      const out=v1020FinishTravelBase.apply(RF,arguments);
+      const s=RF.state,p=RF.V1020.ensure(s)?.routePlan;
+      if(!planned||!s||!p)return out;
+      if(target===p.destination||s.location===p.destination){
+        const name=RF.V1020.loc(p.destination)?.name||'your destination';
+        RF.log?.(s,`Planned journey complete: ${name}.`,'important');RF.V1020.clearPlan(s);RF.save?.(s);return out;
+      }
+      // We reached a waypoint. Preserve the route plan and wait for any arrival event/combat to finish.
+      p.pending=true;p.lastWaypoint=s.location;p.arrivedAt=Date.now();RF.save?.(s);
+      if(!RF.UI.modal&&!s.combat&&!s.activity){RF.V1020.openContinue(s);RF.UI.render(s)}
+      return out;
+    };
+
+    // If an arrival event or battle temporarily occupies the UI, show the waypoint choice as soon as it is safe.
+    const v1020RenderBase=RF.UI.render.bind(RF.UI);
+    RF.UI.render=function(s){
+      if(s){
+        const p=RF.V1020.ensure(s)?.routePlan;
+        if(p?.pending&&!RF.UI.modal&&!s.combat&&!s.activity&&!RF.V101?.mainMenu)RF.V1020.openContinue(s);
+      }
+      return v1020RenderBase(s);
+    };
+
+    // Stopping/turning back or emergency teleporting ends a planned route chain as well.
+    const v1020CancelBase=RF.cancelActivity;
+    RF.cancelActivity=function(){
+      const s=RF.state,wasTravel=s?.activity?.type==='travel';
+      if(wasTravel&&RF.V1020.ensure(s)?.routePlan)RF.V1020.clearPlan(s);
+      return v1020CancelBase.apply(RF,arguments);
+    };
+    if(RF.V1016?.forceTeleport){
+      const v1020TeleportBase=RF.V1016.forceTeleport.bind(RF.V1016);
+      RF.V1016.forceTeleport=function(id){RF.V1020.clearPlan(RF.state);return v1020TeleportBase(id)};
+    }
+    if(typeof RF.loseV4Battle==='function'){
+      const v1020LoseBase=RF.loseV4Battle;
+      RF.loseV4Battle=function(){RF.V1020.clearPlan(RF.state);return v1020LoseBase.apply(RF,arguments)};
+    }
+
+    // ---------- Bind final map/modal controls after all historical wrappers ----------
+    const v1020BindBase=RF.UI.bind.bind(RF.UI);
+    RF.UI.bind=function(s){
+      try{v1020BindBase(s||RF.state)}catch(err){console.warn('[Realmforge V10.20 bind recovery]',err)}
+      document.querySelectorAll('[data-map-dest]').forEach(b=>b.onclick=()=>RF.V1020.openRoutePreview(b.dataset.mapDest));
+      document.querySelectorAll('[data-v1020-route-begin]').forEach(b=>b.onclick=()=>RF.V1020.beginRoute(b.dataset.v1020RouteBegin));
+      document.querySelectorAll('[data-v1020-route-leave]').forEach(b=>b.onclick=()=>{RF.UI.modal=null;RF.UI.render(RF.state)});
+      document.querySelectorAll('[data-v1020-route-continue]').forEach(b=>b.onclick=()=>RF.V1020.continueRoute());
+      document.querySelectorAll('[data-v1020-route-stop]').forEach(b=>b.onclick=()=>RF.V1020.stopRoute());
+    };
+
+    // ---------- Styling ----------
+    (function(){
+      const css=document.createElement('style');css.id='rf-v1020-style';css.textContent=`
+        .v1020RouteModal .itemDesc{margin-bottom:12px}
+        .v1020RouteChain{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:10px 4px 13px;margin:5px 0 8px;scrollbar-width:none}
+        .v1020RouteChain::-webkit-scrollbar{display:none}
+        .v1020RouteChain>b{flex:0 0 auto;color:#a98c5d;font-size:20px}
+        .v1020Stop{flex:0 0 auto;padding:8px 10px;border:1px solid rgba(211,173,104,.24);border-radius:12px;background:rgba(0,0,0,.16);font-size:13px;color:#dbc79e;white-space:nowrap}
+        .v1020Stop.here{border-color:#e1bb6f;background:rgba(174,118,41,.18);color:#ffe6a9}
+        .v1020Potential{margin:10px 0;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.17);color:#cbb99a;line-height:1.45}
+        .v1020RouteModal .tradeSummary{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+        .v1020RouteModal .tradeSummary span{min-width:0;text-align:center}
+        @media(max-width:390px){.v1020RouteModal .tradeSummary{grid-template-columns:1fr 1fr}.v1020RouteModal .tradeSummary span:last-child{grid-column:1/-1}}
+      `;document.head.appendChild(css);
+    })();
+
+    RF.V1020.migrate=function(s){if(!s)return s;RF.V1020.ensure(s);s.version='10.20.0';return s};
+    /* V11.8: legacy save/migration wrapper extracted to canonical core. */
+    if(RF.state){RF.V1020.migrate(RF.state);try{RF.save?.(RF.state)}catch(_){};RF.UI.render(RF.state)}
+  });}
+  function installHistoricalV1122(){return once('js/v11_2_2.js',()=>{
+    window.RF=window.RF||{};
+    RF.VERSION='11.2.2';
+    RF.BUILD={
+      version:'11.2.2',
+      title:'Clock Sentinel',
+      built:'17 Sep 2026 • 21:20 BST',
+      buildId:'20260917-2120-bst'
+    };
+    RF.V1122=RF.V1122||{};
+
+    /* Realmforge V11.2.2 — Clock Sentinel
+       - Replaces the single-point-of-failure world RAF loop with a guarded scheduler.
+       - Adds an independent visible-page watchdog that takes over if RAF progression stalls.
+       - Repairs stale travel/popup pause debris without overriding a deliberate manual Pause.
+       - Repairs already-stuck journeys on load and keeps progress/completion lossless.
+       - Keeps over-encumbrance, combat, action games and genuine modal pauses authoritative.
+    */
+
+    (()=>{
+    'use strict';
+    const V=RF.V1122;
+    V.version='11.2.2';
+    V.rafId=0;
+    V.lastFrameStamp=0;
+    V.lastRafWall=Date.now();
+    V.lastProgressWall=Date.now();
+    V.lastFallbackWall=0;
+    V.fallbackActive=false;
+    V.recoveryNoticeAt=0;
+    V.WATCH_MS=500;
+    V.STALL_MS=1600;
+
+    V.nowPerf=()=>typeof performance!=='undefined'&&performance.now?performance.now():Date.now();
+    V.visible=()=>typeof document==='undefined'||document.visibilityState!=='hidden';
+    V.over=s=>!!RF.isOverEncumbered?.(s);
+    V.selectOpen=()=>typeof document!=='undefined'&&document.activeElement?.tagName==='SELECT';
+
+    V.trueBlocker=function(s){
+      if(!s)return 'no-state';
+      if(V.over(s))return 'over-encumbered';
+      if(RF.UI?.modal)return 'modal';
+      if(s.combat)return 'combat';
+      if(RF.actionGame)return 'action';
+      if((+s.speed||0)<=0)return 'paused';
+      return '';
+    };
+    V.shouldRun=s=>V.visible()&&!V.trueBlocker(s);
+
+    V.markProgress=function(){V.lastProgressWall=Date.now()};
+    V.noteRecovery=function(s,reason){
+      if(!s)return;
+      s.v1122=s.v1122||{};
+      s.v1122.recoveries=(s.v1122.recoveries||0)+1;
+      s.v1122.lastRecovery=Date.now();
+      const now=Date.now();
+      if(now-V.recoveryNoticeAt>10000){
+        V.recoveryNoticeAt=now;
+        RF.log?.(s,`Clock Sentinel recovered a stalled ${reason||'world clock'} without losing progress.`,'good');
+      }
+    };
+
+    V.resetPauseDebris=function(s){
+      if(!s)return false;
+      let dirty=false;
+      try{if(RF.V1016?.clearGhostModal?.(s))dirty=true}catch(_){ }
+
+      // V9.6 stores temporary pause snapshots for actual popups/selects. If no such interface exists,
+      // these flags are stale and must never be allowed to survive as a hidden time lock.
+      if(!RF.UI?.modal&&!V.selectOpen()&&RF.V96){
+        if(RF.V96.modalPaused||RF.V96.modalResume||RF.V96.selectPaused||RF.V96.selectResume||RF.V96.modalWasOpen){
+          RF.V96.modalPaused=false;RF.V96.modalResume=null;
+          RF.V96.selectPaused=false;RF.V96.selectResume=null;
+          RF.V96.modalWasOpen=false;dirty=true;
+        }
+      }
+
+      if(s.activity?.type==='travel'){
+        try{if(RF.V1016?.sanitiseTravel?.(s,{resume:false}))dirty=true}catch(_){ }
+        s.v83=s.v83||{};
+        // A positive speed is an explicit running state. `paused=true` beside it is contradictory.
+        if((+s.speed||0)>0){
+          if(s.paused){s.paused=false;dirty=true}
+          if(s.v83.manualPause){s.v83.manualPause=false;dirty=true}
+        }
+        // Conversely, an old accidental zero-speed journey with no deliberate Pause should resume.
+        if((+s.speed||0)===0&&!s.v83.manualPause&&!RF.UI?.modal&&!s.combat&&!RF.actionGame&&!V.over(s)){
+          s.speed=1;s.paused=false;dirty=true;
+        }
+      }
+      return dirty;
+    };
+
+    V.finishReadyActivity=function(s){
+      const a=s?.activity;if(!a)return false;
+      const p=Number(a.progress)||0,d=Math.max(.001,Number(a.duration)||1);
+      if(p+1e-6<d||RF.UI?.modal)return false;
+      try{
+        if(a.type==='travel')RF.finishTravel(a);
+        else if(a.type==='craft')RF.finishCraft(a);
+        else RF.finishActivity(a);
+      }catch(err){
+        RF.V1016?.reportTickError?.(err,`${a.type||'activity'} completion`);
+        if(RF.state?.activity===a)RF.state.activity=null;
+      }
+      return true;
+    };
+
+    V.step=function(s,dt,{fallback=false}={}){
+      if(!s||!Number.isFinite(dt)||dt<=0)return false;
+      if(!V.shouldRun(s))return false;
+      dt=Math.max(.001,Math.min(fallback?1.0:.25,dt));
+      const speed=Math.max(0,+s.speed||0);if(speed<=0)return false;
+      const gameSec=dt*speed;
+      const beforeMinute=Number(s.minute)||0;
+      const beforeProgress=Number(s.activity?.progress)||0;
+
+      // Activity timers first, exactly as the hardened V10.16 clock intended.
+      if(s.activity){
+        const a=s.activity;
+        let p=Number(a.progress),d=Number(a.duration);
+        if(!Number.isFinite(p)||p<0)p=0;
+        if(!Number.isFinite(d)||d<=0)d=1;
+        a.duration=d;a.progress=Math.min(d,p+gameSec);
+      }
+
+      try{RF.advanceWorld(gameSec*(RF.V102?.worldMinutesPerSecond??.32))}
+      catch(err){RF.V1016?.reportTickError?.(err,'world simulation')}
+
+      V.finishReadyActivity(s);
+
+      const afterMinute=Number(s.minute)||0;
+      const afterProgress=Number(s.activity?.progress)||0;
+      if(afterMinute!==beforeMinute||afterProgress!==beforeProgress)V.markProgress();
+
+      RF.autoSave=(RF.autoSave||0)+dt;
+      RF.renderAcc=(RF.renderAcc||0)+dt;
+      if(RF.autoSave>8){try{RF.save?.(s)}catch(err){console.warn(err)}RF.autoSave=0}
+      if(fallback||RF.renderAcc>.18){
+        try{RF.UI.render(s)}catch(err){RF.V1016?.reportTickError?.(err,'UI render')}
+        RF.renderAcc=0;
+      }
+      return true;
+    };
+
+    V.schedule=function(){
+      if(!V.visible()||V.rafId)return;
+      V.rafId=requestAnimationFrame(ts=>{V.rafId=0;RF.tick(ts)});
+    };
+
+    // One guarded master tick. Any older already-queued callback hands off to this function on its
+    // next schedule. Near-simultaneous duplicate callbacks collapse back to one managed RAF chain.
+    RF.tick=function(now){
+      now=Number.isFinite(now)?now:V.nowPerf();
+      const wall=Date.now();
+      V.lastRafWall=wall;
+      if(V.lastFrameStamp&&Math.abs(now-V.lastFrameStamp)<5){V.schedule();return}
+      V.lastFrameStamp=now;
+      try{
+        const s=RF.state;
+        if(!s){RF.lastTick=now;return}
+        V.resetPauseDebris(s);
+        let prev=Number(RF.lastTick);if(!Number.isFinite(prev)||prev<=0)prev=now;
+        let dt=(now-prev)/1000;if(!Number.isFinite(dt)||dt<0)dt=0;
+        RF.lastTick=now;
+        V.step(s,dt);
+      }catch(err){RF.V1016?.reportTickError?.(err,'Clock Sentinel RAF')}
+      finally{V.schedule()}
+    };
+
+    V.recoverIfStalled=function(){
+      const s=RF.state;if(!s||!V.visible())return false;
+      const dirty=V.resetPauseDebris(s);
+      if(dirty){try{RF.save?.(s)}catch(_){}}
+      if(!V.shouldRun(s)){V.fallbackActive=false;V.lastFallbackWall=0;return dirty}
+
+      const now=Date.now();
+      const rafStalled=now-V.lastRafWall>V.STALL_MS;
+      const progressStalled=now-V.lastProgressWall>V.STALL_MS;
+      if(!rafStalled&&!progressStalled){V.fallbackActive=false;V.lastFallbackWall=0;return dirty}
+
+      // A running clock that has not changed for >1.6s is impossible in normal play. Switch to a
+      // temporary interval-backed pulse, preserve the exact journey/activity, then try to re-arm RAF.
+      if(!V.fallbackActive){
+        V.fallbackActive=true;V.lastFallbackWall=now;
+        V.noteRecovery(s,s.activity?.type==='travel'?'journey':'world clock');
+      }
+      const elapsed=V.lastFallbackWall?Math.max(.12,Math.min(1,(now-V.lastFallbackWall)/1000)):.25;
+      V.lastFallbackWall=now;
+      try{V.step(s,elapsed,{fallback:true})}catch(err){RF.V1016?.reportTickError?.(err,'Clock Sentinel fallback')}
+      V.schedule();
+      try{RF.save?.(s)}catch(_){ }
+      return true;
+    };
+
+    V.repairOnResume=function(){
+      const s=RF.state;if(!s)return;
+      const dirty=V.resetPauseDebris(s);
+      RF.lastTick=V.nowPerf();
+      V.lastRafWall=Date.now();V.lastProgressWall=Date.now();V.lastFallbackWall=0;V.fallbackActive=false;
+      if(dirty)try{RF.save?.(s)}catch(_){ }
+      V.finishReadyActivity(s);
+      try{RF.UI.render(s)}catch(_){ }
+      V.schedule();
+    };
+
+    V.migrate=function(s){
+      if(!s)return s;
+      s.v1122=s.v1122||{};
+      // Never alter valid Pack/Bank/Equipment/Tool Belt contents here. This repair is clock-only.
+      V.resetPauseDebris(s);
+      if(s.activity?.type==='travel'){
+        try{RF.V1016?.sanitiseTravel?.(s,{resume:false})}catch(_){ }
+        if((+s.speed||0)>0)s.paused=false;
+        if((+s.speed||0)===0&&!s.v83?.manualPause&&!V.over(s)&&!RF.UI?.modal&&!s.combat&&!RF.actionGame){s.speed=1;s.paused=false}
+      }
+      s.version='11.2.2';
+      return s;
+    };
+    /* V11.8: legacy save/migration wrapper extracted to canonical core. */
+
+    // Independent watchdog: unlike the visual RAF loop, this can detect a dead RAF chain and take
+    // over long enough to recover it. It only runs while the app is visible and time should run.
+    if(V.watchdog)clearInterval(V.watchdog);
+    V.watchdog=setInterval(()=>V.recoverIfStalled(),V.WATCH_MS);
+
+    ['visibilitychange','pageshow','focus'].forEach(name=>window.addEventListener(name,()=>{
+      if(name==='visibilitychange'&&!V.visible())return;
+      V.repairOnResume();
+    },{passive:true}));
+
+    if(RF.state){
+      V.migrate(RF.state);
+      RF.lastTick=V.nowPerf();
+      RF.save?.(RF.state);
+      setTimeout(()=>{V.repairOnResume()},0);
+    }
+    })();
+  });}
+  const api={
+    installHistoricalV9Routing,installHistoricalV1016,installHistoricalV1017,installHistoricalV1020,installHistoricalV1122,
+    get installedStages(){return Array.from(installed);},
+    start:id=>RF.travel(id),finish:a=>RF.finishTravel(a),setSpeed:s=>typeof RF.setSpeed==='function'?RF.setSpeed(s):null,
+    repair:s=>typeof RF.repairTravelIfStalled==='function'?RF.repairTravelIfStalled(s):s,
+    route:(s,from,to,allowLocked=false)=>typeof RF.v9Route==='function'?RF.v9Route(s,from,to,allowLocked):null,
+    preview:id=>RF.V1020?.openRoutePreview?RF.V1020.openRoutePreview(id):null,
+    beginRoute:(...a)=>RF.V1020?.beginRoute?RF.V1020.beginRoute(...a):null,
+    clearPlan:(s,r)=>RF.V1020?.clearPlan?RF.V1020.clearPlan(s,r):null,
+    unlocked:(s,id)=>typeof RF.v9LocationUnlocked==='function'?RF.v9LocationUnlocked(s,id):false,
+    lockText:(s,id)=>typeof RF.v9LockText==='function'?RF.v9LockText(s,id):''
+  };
+  RF.Systems.Travel=RF.Modules.register('systems.travel',api,{owner:'systems',status:'canonical',historicalStages:['v9-routing','v10.16','v10.17','v10.20','v11.2.2']});
+})();
+
+/* ===== js/systems/quests.js ===== */
+/* Realmforge V11.12.0 — Canonical Quest Journal.
+   Owns the V9.3 quest discovery/journal/detail interaction formerly embedded in compatibility.
+   Later quest data and progression hooks can extend the same RF.Systems.Quests contract. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  let installed=false;
+  function installHistoricalV93(){
+    if(installed)return RF.V93;
+    installed=true;
+    RF.V93.questMeta={
+      first_steps:{source:'Story',giver:'Your own curiosity',auto:true,summary:'Learn the rhythm of Greenvale and establish yourself as a capable traveller.'},
+      missing_caravan:{source:'Story',giver:'Greenvale road rumours',auto:true,summary:'Investigate the caravan that vanished on the eastern road.'},
+      blackthorn:{source:'Story',giver:'Blackthorn evidence',auto:true,summary:'Follow the token back to the gang operating beyond Greenvale.'},
+      greenvale_teeth:{source:'Greenvale Noticeboard',location:'greenvale',summary:'Cull predators troubling the farms around Sunmeadow.'},
+      river_provisions:{source:'Greenvale Noticeboard',location:'greenvale',summary:'Bring fresh fish and prove you know your way around a river.'},
+      miners_due:{source:'Brann / Mine Notice',location:'mine',summary:'Replace valuable ore lost after a mine support failure.'},
+      woodland_ledger:{source:'Elira',location:'forest',summary:'Help document Whisperwood and its more territorial inhabitants.'},
+      ironridge_contract:{source:'Ironridge Contract Board',location:'ironridge',summary:'Reduce dangerous drakes around Redstone Quarry.'},
+      marsh_medicine:{source:'Nessa Vale',location:'reedmere',summary:'Gather fen reagents for Reedmere medicine.'},
+      field_notes:{source:'Maelin Quill',location:'mirewatch',summary:'Collect practical combat observations on dangerous Mirefen wildlife.'},
+      locksmiths_errand:{source:'Cobb Rill',location:'reedmere',summary:'Demonstrate sufficient finesse for a suspiciously legitimate locksmith.'}
+    };
+    RF.v93OfferVisible=function(s,id){let q=RF.DATA.quests[id],m=RF.V93.questMeta[id];if(!q||!m||m.auto||s.quests[id]?.done||s.quests[id]?.active)return false;if(m.location&&s.location!==m.location)return false;
+      if(id==='ironridge_contract'&&!s.visited?.ironridge)return false;if(['marsh_medicine','locksmiths_errand'].includes(id)&&!s.visited?.reedmere)return false;if(id==='field_notes'&&!s.visited?.mirewatch)return false;return true};
+    RF.v93AcceptQuest=function(id){let s=RF.state,q=RF.DATA.quests[id];if(!q||s.quests[id]?.done)return;s.quests[id]={active:true,done:false};delete s.questAbandoned[id];RF.log(s,`Quest accepted: ${q.name}`,'important');RF.save(s);RF.UI.modal={type:'questDetail',id};RF.UI.render(s)};
+    RF.v93AbandonQuest=function(id){let s=RF.state,qs=s.quests[id];if(!qs?.active)return;delete s.quests[id];s.questAbandoned[id]=true;RF.log(s,`Quest abandoned: ${RF.DATA.quests[id]?.name||id}`);RF.save(s);RF.UI.modal=null;RF.UI.render(s)};
+    RF.v93RewardText=function(q){let r=q?.reward||{},a=[];if(r.gold)a.push(`${r.gold}g`);if(r.xp)a.push(`${r.xp} character XP`);if(r.item&&RF.DATA.items[r.item])a.push(`${RF.DATA.items[r.item].icon} ${RF.DATA.items[r.item].name}`);return a.join(' • ')||'No listed reward'};
+
+    RF.UI.quests=function(s){let active=Object.entries(s.quests||{}).filter(([,qs])=>qs.active&&!qs.done),done=Object.entries(s.quests||{}).filter(([,qs])=>qs.done),offers=Object.keys(RF.DATA.quests).filter(id=>RF.v93OfferVisible(s,id));let row=(id,qs,label)=>{let q=RF.DATA.quests[id],m=RF.V93.questMeta[id]||{};if(!q)return'';return `<button class="row quest browseRow ${qs?.done?'done':''}" data-quest-detail="${id}" data-quest-state="${label}"><div class="meta"><div class="questTitle"><b>${q.name}</b><span class="tag">${label}</span></div><small>${m.summary||q.desc}</small></div><span class="chev">›</span></button>`};return `<section class="card"><h2>📜 Quest Journal</h2><div class="sub">Quests are discovered through story events, people, noticeboards and exploration. Tap any entry for objectives, source, requirements and rewards.</div></section>${offers.length?`<section class="card"><h3>Available Here</h3><div class="list">${offers.map(id=>row(id,null,'AVAILABLE')).join('')}</div></section>`:''}<section class="card"><h3>Active</h3><div class="list">${active.length?active.map(([id,qs])=>row(id,qs,'ACTIVE')).join(''):'<div class="sub">No active quests.</div>'}</div></section><section class="card"><h3>Completed</h3><div class="list">${done.length?done.map(([id,qs])=>row(id,qs,'DONE')).join(''):'<div class="sub">No completed quests yet.</div>'}</div></section>`};
+
+    const questModalBase=RF.UI.modalHtml.bind(RF.UI);
+    RF.UI.modalHtml=function(s){let m=this.modal;
+      if(m?.type==='questDetail'){let q=RF.DATA.quests[m.id],qs=s.quests[m.id],meta=RF.V93.questMeta[m.id]||{},isOffer=!qs||(!qs.active&&!qs.done);if(!q)return'';let objs=q.objectives.map(o=>`<div class="objective detailObj">${this.objDone(s,o)?'✅':'⬜'} ${o.text}</div>`).join('');return `<div class="modalBack"><div class="modal questModal"><span class="eyebrow">${qs?.done?'COMPLETED':qs?.active?'ACTIVE QUEST':'QUEST OFFER'}</span><h2>📜 ${q.name}</h2><div class="itemDesc">${q.desc}</div><div class="questInfo"><b>Source</b><span>${meta.source||meta.giver||'World event'}</span></div>${meta.giver?`<div class="questInfo"><b>Giver</b><span>${meta.giver}</span></div>`:''}<h3>Objectives</h3>${objs}<h3>Rewards</h3><div class="notice good">${RF.v93RewardText(q)}</div><div class="choices">${isOffer?`<button class="choice" data-quest-accept="${m.id}"><b>Accept Quest</b></button>`:''}${qs?.active?`<button class="choice dangerChoice" data-quest-abandon="${m.id}"><b>Abandon Quest</b><small>You can reacquire it from its source later.</small></button>`:''}<button class="choice" data-quest-close><b>Close</b></button></div></div></div>`}
+      return questModalBase(s);
+    };
+
+    const questBindBase=RF.UI.bind.bind(RF.UI);
+    RF.UI.bind=function(s){questBindBase(s);
+      document.querySelectorAll('[data-quest-detail]').forEach(b=>b.onclick=()=>{RF.UI.modal={type:'questDetail',id:b.dataset.questDetail};RF.UI.render(s)});document.querySelectorAll('[data-quest-accept]').forEach(b=>b.onclick=()=>RF.v93AcceptQuest(b.dataset.questAccept));document.querySelectorAll('[data-quest-abandon]').forEach(b=>b.onclick=()=>RF.v93AbandonQuest(b.dataset.questAbandon));document.querySelectorAll('[data-quest-close]').forEach(b=>b.onclick=()=>{RF.UI.modal=null;RF.UI.render(s)});
+    };
+    return RF.V93;
+  }
+
+  const api={
+    installHistoricalV93,
+    get installed(){return installed;},
+    check:s=>RF.questCheck(s),
+    accept:id=>typeof RF.v93AcceptQuest==='function'?RF.v93AcceptQuest(id):null,
+    abandon:id=>typeof RF.v93AbandonQuest==='function'?RF.v93AbandonQuest(id):null,
+    visible:(s,id)=>typeof RF.v93OfferVisible==='function'?RF.v93OfferVisible(s,id):true,
+    requirementText:(...a)=>typeof RF.v93Req==='function'?RF.v93Req(...a):'',
+    journal:s=>RF.UI.quests?.(s)||''
+  };
+  RF.Systems.Quests=RF.Modules.register('systems.quests',api,{owner:'systems',status:'canonical',historicalStage:'v9.3'});
+})();
+
+/* ===== js/systems/wayfinder.js ===== */
+/* Realmforge V11.12.0 — Canonical Wayfinder.
+   Owns the mature V11.5.1 contextual locked-route guidance system.
+   Installed at the original V11.5.1 boundary so progression behaviour remains identical. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  let installed=false;
+  function installHistoricalV1151(){
+    if(installed)return RF.V1151;
+    installed=true;
+    window.RF=window.RF||{};
+    RF.VERSION='11.5.1';
+    RF.BUILD={
+      version:'11.5.1',
+      title:'Wayfinder Hints',
+      built:'17 Sep 2026 • 23:28 BST',
+      buildId:'20260917-2328-bst'
+    };
+    RF.V1151=RF.V1151||{};
+
+    /* Realmforge V11.5.1 — Wayfinder Hints
+       - Locked World Map destinations no longer expose internal save-flag names.
+       - Tapping a locked destination gives a subtle contextual hint for the NEXT step only.
+       - Hints advance automatically as the campaign state advances, until the road unlocks.
+       - Covers every current flag-locked and skill-locked location without changing progression rules.
+    */
+
+    (()=>{
+    'use strict';
+    const V=RF.V1151;
+    V.version='11.5.1';
+    V.escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    V.skillLevel=(s,id)=>Math.max(1,Number(s?.skills?.[id]?.level)||1);
+    V.kills=(s,id)=>Math.max(0,Number(s?.kills?.[id])||0);
+
+    V.northHint=function(s){
+      if(!s?.flags?.woundedMerchantResolved){
+        return {title:'The east road has unfinished business',text:'Travellers around Whisperwood and Kingroad Crossroads have been seeing signs of trouble. One of them may know more than they first let on.'};
+      }
+      if(!s.flags.banditCampKnown){
+        return {title:'Stories leave tracks',text:'What you learned on the east road points back toward Kingroad Crossroads. A careful search there may reveal a trail that ordinary traffic has hidden.'};
+      }
+      if(!s.flags.eastwatchOpen){
+        const n=V.kills(s,'bandit')+V.kills(s,'blackthorn_scout');
+        if(n<3)return {title:'Eastwatch is still watching from a distance',text:'The watch has little reason to open its doors while Blackthorn still looks like a roadside nuisance. A few decisive victories against their people may change that.'};
+        return {title:'The watch should have noticed by now',text:'Blackthorn has taken enough losses to draw official attention. Eastwatch Tower is worth checking again.'};
+      }
+      if(!s.flags.vossRevealed){
+        return {title:'A name is missing from the story',text:'Blackthorn has organisation behind it. Their tougher enforcers are more likely than common raiders to be carrying orders, letters, or names.'};
+      }
+      if(!s.flags.vossDefeated){
+        return {title:'Cut off the head, not another branch',text:'You know who commands Blackthorn now. Their hidden camp is the natural place to press that advantage.'};
+      }
+      return {title:'The road north is now a matter of permission',text:'With Blackthorn broken, Sergeant Halden at Eastwatch may finally be willing to discuss passage beyond the valley.'};
+    };
+
+    V.flagHint=function(s,flag,id){
+      switch(flag){
+        case 'banditCampKnown':
+          if(!s?.flags?.woundedMerchantResolved)return {title:'Someone has seen too much',text:'Keep an eye on the roads around Whisperwood and Kingroad Crossroads. Trouble there may point toward whoever is hiding beyond the ridge.'};
+          return {title:'Blackthorn left a trail',text:'The account you heard points toward Kingroad Crossroads. Search the road itself for signs the bandits failed to hide.'};
+
+        case 'eastwatchOpen': {
+          if(!s?.flags?.banditCampKnown)return V.northHint(s);
+          const n=V.kills(s,'bandit')+V.kills(s,'blackthorn_scout');
+          if(n<3)return {title:'Give the watch a reason to listen',text:'Eastwatch is tracking Blackthorn activity. Driving more of their raiders from the valley may make the tower take you seriously.'};
+          return {title:'Eastwatch should be paying attention',text:'Enough Blackthorn fighters have fallen that the guards can no longer dismiss the threat. Try the tower again.'};
+        }
+
+        case 'deepMineFound':
+          if(V.skillLevel(s,'exploration')<3)return {title:'There are older workings below',text:'The Old Greenvale Mine has signs of passages beyond the obvious tunnels, but spotting the right marks will take a little more experience on the road.'};
+          return {title:'Look past the working mine',text:'Old boards and unfamiliar markings inside the Old Greenvale Mine suggest that one tunnel was hidden rather than abandoned. A deliberate search may find it.'};
+
+        case 'wayfarerHallOpen':
+          if((s?.player?.level||1)<3&&!s?.flags?.eastwatchOpen)return {title:'The Wayfarers prefer proven travellers',text:'Greenvale’s guild hall does not seem interested in complete newcomers. A little more worldly experience may be enough to draw an invitation.'};
+          return {title:'Someone in Greenvale knows the Wayfarers',text:'People connected to the roads and the watch occasionally point capable travellers toward paid work. Ask around rather than looking for an unlocked door.'};
+
+        case 'cryptOpened':
+          if(s?.flags?.cryptMarked)return {title:'You already found the breathing stone',text:'The slab beneath Mossbound Ruins is still on your map. Perhaps the question is no longer where the entrance is, but whether you are ready to uncover it.'};
+          if(!s?.flags?.vossDefeated&&V.skillLevel(s,'exploration')<6)return {title:'The ruins are hiding a second story',text:'Mossbound Ruins feel older than their surface stones suggest. Greater experience, or new knowledge from the Blackthorn affair, may make the buried signs easier to read.'};
+          return {title:'Cold air has to come from somewhere',text:'At Mossbound Ruins, disturbed stone and a thread of unnatural cold may reward patient exploration.'};
+
+        case 'northRoadOpen':
+          return V.northHint(s);
+
+        case 'emberdeepKnown':
+          if(!s?.flags?.northRoadOpen)return {title:'First reach the country that knows its name',text:V.northHint(s).text};
+          if(V.skillLevel(s,'mining')<7)return {title:'Miners keep some roads to themselves',text:'Ironridge workers are reluctant to discuss the old furnace tunnels with casual travellers. More time underground may loosen tongues.'};
+          return {title:'Listen for talk of a sealed furnace road',text:'Experienced workers around Ironridge and Redstone Quarry have started whispering about heat where no furnace should still burn.'};
+
+        default:
+          return {title:'The road is not ready to reveal itself',text:'Keep progressing through nearby quests, exploration and conversations. The next clue is somewhere in the world you can already reach.'};
+      }
+    };
+
+    V.skillHint=function(s,skill,need,id){
+      const name=RF.DATA.skills?.[skill]?.name||skill;
+      const have=V.skillLevel(s,skill);
+      if(id==='ruins')return {title:'The overgrown trail is difficult to read',text:have>=need-1?'The route through the moss is beginning to make sense. A little more field experience should be enough to pick it out.':'Spend more time exploring the valley. The path to these ruins is there, but you are not yet reading the terrain the way an experienced traveller would.'};
+      if(id==='drowned_ruins')return {title:'The fen hides its roads under water',text:have>=need-1?'You are close to understanding the safe approach. One more stretch of difficult exploration may make the drowned route readable.':'The route through the flooded ground is too deceptive to follow safely. More experience charting difficult places should help.'};
+      return {title:`More ${name} experience will help`,text:`The way is visible, but not yet practical. Spend more time developing ${name} and return when the route feels less uncertain.`};
+    };
+
+    V.progressHint=function(s,id){
+      const loc=RF.DATA.locations?.[id];
+      if(!loc)return {title:'No clue yet',text:'Nothing useful is known about this route.'};
+      if(loc.lockedFlag&&!s?.flags?.[loc.lockedFlag])return V.flagHint(s,loc.lockedFlag,id);
+      if(loc.lockedSkill){
+        const [skill,need]=Object.entries(loc.lockedSkill)[0]||[];
+        if(skill&&V.skillLevel(s,skill)<Number(need||1))return V.skillHint(s,skill,Number(need||1),id);
+      }
+      return {title:'The route itself is open',text:'Something else along the planned path is currently preventing the journey.'};
+    };
+
+    V.blockedLocation=function(s,dest){
+      if(!s||!dest)return dest;
+      if(RF.v9LocationUnlocked&&!RF.v9LocationUnlocked(s,dest))return dest;
+      const route=RF.V1020?.route?.(s,dest,true)||RF.v9Route?.(s,s.location,dest,true);
+      if(route?.path){
+        for(const id of route.path.slice(1)){
+          if(RF.v9LocationUnlocked&&!RF.v9LocationUnlocked(s,id))return id;
+        }
+      }
+      return dest;
+    };
+
+    // Never expose raw internal save flag names on the World Map.
+    const oldLockText=RF.v9LockText;
+    RF.v9LockText=function(s,id){
+      const loc=RF.DATA.locations?.[id];if(!loc)return oldLockText?oldLockText(s,id):'';
+      if(loc.lockedFlag&&!s?.flags?.[loc.lockedFlag])return 'World progress needed';
+      if(loc.lockedSkill){
+        const [sk,lv]=Object.entries(loc.lockedSkill)[0]||[];
+        if(sk&&V.skillLevel(s,sk)<Number(lv||1))return `More ${RF.DATA.skills?.[sk]?.name||sk} experience needed`;
+      }
+      return '';
+    };
+
+    // Replace only the LOCKED route-preview presentation. Route calculation and unlock logic stay authoritative.
+    const modalBase=RF.UI.modalHtml.bind(RF.UI);
+    RF.UI.modalHtml=function(s){
+      const m=this.modal;
+      if(m?.type==='v1020RoutePreview'){
+        const dest=m.destination,d=RF.DATA.locations?.[dest];
+        const route=RF.V1020?.route?.(s,dest,false)||RF.v9Route?.(s,s.location,dest,false);
+        if(dest!==s.location&&!route){
+          const potential=RF.V1020?.route?.(s,dest,true)||RF.v9Route?.(s,s.location,dest,true);
+          const blocker=V.blockedLocation(s,dest),blockedLoc=RF.DATA.locations?.[blocker];
+          const hint=V.progressHint(s,blocker);
+          const potentialText=potential?.path?.length>1?`<div class="v1020Potential"><b>Known path:</b> ${(RF.V1020?.routeNames?RF.V1020.routeNames(potential.path):potential.path.map(x=>RF.DATA.locations?.[x]?.name||x)).join(' → ')}</div>`:'';
+          const blockerLine=blocker&&blocker!==dest&&blockedLoc?`<small>The route is currently held up around ${V.escape(blockedLoc.name)}.</small>`:'';
+          return `<div class="modalBack"><div class="modal v1020RouteModal v1151LockedRoute"><div class="itemHero">${d?.icon||'📍'}</div><span class="eyebrow">WORLD MAP • ROUTE</span><h2>${V.escape(d?.name||'Destination')}</h2><div class="itemDesc">${V.escape(d?.desc||'')}</div><div class="notice v1151RouteClosed"><b>The way is not open yet.</b>${blockerLine}</div><div class="v1151WayfinderHint"><span class="eyebrow">WAYFINDER'S HINT</span><b>${V.escape(hint.title)}</b><p>${V.escape(hint.text)}</p></div>${potentialText}<div class="choices"><button class="choice" data-v1020-route-leave><b>Leave it</b></button></div></div></div>`;
+        }
+      }
+      return modalBase(s);
+    };
+
+    const old=document.getElementById('v1151-wayfinder-style');if(old)old.remove();
+    const st=document.createElement('style');st.id='v1151-wayfinder-style';st.textContent=`
+    .v1151RouteClosed{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+    .v1151RouteClosed>b{color:#edd7a7}.v1151RouteClosed small{color:#aa9a7c;line-height:1.35}
+    .v1151WayfinderHint{margin:12px 0;padding:14px 15px;border:1px solid rgba(115,160,88,.5);border-radius:14px;background:linear-gradient(180deg,rgba(39,71,38,.36),rgba(24,47,26,.25));box-shadow:inset 3px 0 0 rgba(132,188,101,.75)}
+    .v1151WayfinderHint>.eyebrow{display:block;color:#b8d99a;margin-bottom:7px;font-size:9px;letter-spacing:.16em}
+    .v1151WayfinderHint>b{display:block;color:#e6efcf;font-size:15px;line-height:1.25;margin-bottom:6px}
+    .v1151WayfinderHint>p{margin:0;color:#c5b99e;font-size:13px;line-height:1.48}
+    `;
+    document.head.appendChild(st);
+
+    // Presentation-only patch: no save migration and no progression flags are changed.
+    if(RF.state)setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0);
+    })();
+    return RF.V1151;
+  }
+  const api={
+    installHistoricalV1151,
+    get installed(){return installed;},
+    hint:(s,id)=>RF.V1151?.progressHint?RF.V1151.progressHint(s,id):null,
+    lockText:(s,id)=>typeof RF.v9LockText==='function'?RF.v9LockText(s,id):'',
+    northHint:s=>RF.V1151?.northHint?RF.V1151.northHint(s):null
+  };
+  RF.Systems.Wayfinder=RF.Modules.register('systems.wayfinder',api,{owner:'systems',status:'canonical',historicalStage:'v11.5.1'});
+})();
+
+/* ===== js/systems/inventory.js ===== */
+/* Realmforge V11.13.0 — Canonical Inventory implementation stages.
+   Owns the mature Vault/Pack grid-flow and lossless over-encumbrance layers extracted in V11.13. The mixed V8.2 Pack/Bank/Mastery bootstrap remains historical for now because it also owns skilling and combat-feedback code.
+   Exact historical stage source is executed at its original chronological boundary. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  const sources={"js/v10_42.js":"window.RF=window.RF||{};\nRF.VERSION='10.42.0';\nRF.BUILD={\n  version:'10.42.0',\n  title:'Vault Grid',\n  built:'16 Sep 2026 • 22:15 BST',\n  buildId:'20260916-2215-bst'\n};\nRF.V1042=RF.V1042||{};\n\n/* Realmforge V10.42 — Vault Grid\n   - Rebuilds Bank into a sleek Pack/Bank tab interface using a 3-column item grid.\n   - Tapping a stack now moves it instantly when only 1 can move, or opens a quantity popup for larger stacks.\n   - Press and hold any bank tile to inspect item details without leaving the Vault.\n   - Aligns the Bank with the newer Skills and navigation-grid design direction.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1042;\nV.HOLD_MS=650;\nV.MOVE_CANCEL_PX=14;\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.42.0';\n  s.v1042=s.v1042||{};\n  if(!s.v1042.bankTab)s.v1042.bankTab='pack';\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.cap=s=>RF.packCapacity?RF.packCapacity(s):(RF.V82?.PACK_CAP||28);\nV.tab=s=>s?.v1042?.bankTab||'pack';\nV.setTab=function(s,tab){\n  s.v1042=s.v1042||{};\n  s.v1042.bankTab=tab==='bank'?'bank':'pack';\n  if(RF.UI.modal?.type==='bank')delete RF.UI.modal.v1042Qty;\n  RF.save?.(s);RF.UI.render(s);\n};\nV.sortedEntries=function(obj){\n  if(RF.V1012?.sortedEntries)return RF.V1012.sortedEntries(obj||{});\n  return Object.entries(obj||{}).sort((a,b)=>{\n    const an=RF.DATA.items?.[a[0]]?.name||a[0],bn=RF.DATA.items?.[b[0]]?.name||b[0];\n    return an.localeCompare(bn);\n  });\n};\nV.packMovable=function(s,id){\n  const held=Math.max(0,Number(s?.inventory?.[id])||0);\n  const protectedQty=RF.isEquipped?.(s,id)?1:0;\n  return Math.max(0,held-protectedQty);\n};\nV.bankMovable=function(s,id){\n  const held=Math.max(0,Number(s?.bank?.[id])||0);\n  if(!held)return 0;\n  if(!(s?.inventory?.[id]>0)&&RF.packUsed(s)>=V.cap(s))return 0;\n  return held;\n};\nV.moveCount=function(s,side,id){return side==='bank'?V.bankMovable(s,id):V.packMovable(s,id)};\nV.bankStacks=s=>Object.values(s?.bank||{}).filter(q=>(+q||0)>0).length;\nV.entries=function(s,side,cat){\n  const source=side==='bank'?(s.bank||{}):(s.inventory||{});\n  return V.sortedEntries(source)\n    .filter(([,q])=>(+q||0)>0)\n    .filter(([id])=>cat==='all'||RF.v92Category(RF.DATA.items[id])===cat)\n    .map(([id,q])=>({id,qty:+q||0,it:RF.DATA.items[id]}))\n    .filter(x=>x.it);\n};\nV.actionWord=side=>side==='bank'?'Withdraw':'Deposit';\nV.sideLabel=side=>side==='bank'?'Bank':'Pack';\nV.stateLine=function(s,side,id,qty){\n  const req=RF.v93Req?.(s,id)||'';\n  const equipped=side==='pack'&&RF.isEquipped?.(s,id);\n  const bits=[`${side==='bank'?'Bank':'Pack'} ×${qty}`];\n  if(equipped)bits.push('Equipped');\n  if(req)bits.push(req);\n  return bits.join(' • ');\n};\nV.tileHtml=function(s,side,row){\n  const {id,qty,it}=row;\n  const movable=V.moveCount(s,side,id);\n  const eq=side==='pack'&&RF.isEquipped?.(s,id);\n  const cls=['v1042BankTile'];\n  if(movable<1)cls.push('disabled');\n  if(eq)cls.push('equipped');\n  return `<button type=\"button\" class=\"${cls.join(' ')}\" data-v1042-bank-tile=\"${V.escape(id)}\" data-v1042-bank-side=\"${side}\" data-v1042-bank-info=\"${V.escape(id)}\" aria-label=\"${V.escape(it.name)}\">\n    <div class=\"v1042TileIcon\">${it.icon||'📦'}</div>\n    <div class=\"v1042TileName\">${V.escape(it.name)}</div>\n    <div class=\"v1042TileMeta\">${side==='bank'?'Bank':'Pack'} ×${qty}</div>\n    <div class=\"v1042TileFoot\">\n      <span class=\"v1042TileQty\">×${qty}</span>\n      ${eq?'<span class=\"v1042TileBadge\">EQ</span>':movable<1?'<span class=\"v1042TileBadge muted\">LOCK</span>':'<span class=\"v1042TileBadge\">MOVE</span>'}\n    </div>\n  </button>`;\n};\nV.itemInfo=function(s,id){\n  const it=RF.DATA.items?.[id];\n  if(!it)return null;\n  const req=RF.itemRequirement?.(it);\n  const rows=[];\n  rows.push(['Type',it.rarity||it.type||'Item']);\n  rows.push(['In Pack',String(Math.max(0,Number(s?.inventory?.[id])||0))]);\n  rows.push(['In Bank',String(Math.max(0,Number(s?.bank?.[id])||0))]);\n  if(it.value!=null)rows.push(['Value',`${it.value}g`]);\n  if(req)rows.push(['Requirement',`${RF.DATA.skills?.[req.skill]?.name||req.skill} Lv ${req.level} • You: ${s?.skills?.[req.skill]?.level||1}`]);\n  if(it.damage)rows.push(['Damage',String(it.damage)]);\n  if(it.armor)rows.push(['Armour',String(it.armor)]);\n  if(it.heal)rows.push(['Healing',`${it.heal} HP`]);\n  if(it.stamina)rows.push(['Stamina',`${it.stamina} STA`]);\n  if(it.slot)rows.push(['Equipment slot',String(it.slot)]);\n  return {icon:it.icon||'📦',name:it.name||id,desc:it.desc||'No description recorded.',rows};\n};\nV.closeInfo=function(){document.querySelector('.v1042BankInfoBack')?.remove()};\nV.showInfo=function(id){\n  const s=RF.state,info=V.itemInfo(s,id); if(!info)return;\n  V.closeInfo();\n  const back=document.createElement('div');\n  back.className='v1042BankInfoBack';\n  back.innerHTML=`<div class=\"v1042BankInfoModal\" role=\"dialog\" aria-modal=\"true\" aria-label=\"${V.escape(info.name)} details\">\n    <div class=\"v1042BankInfoHero\"><div class=\"v1042BankInfoIcon\">${info.icon}</div><div><span class=\"eyebrow\">ITEM DETAILS</span><h2>${V.escape(info.name)}</h2></div></div>\n    <p class=\"v1042BankInfoDesc\">${V.escape(info.desc)}</p>\n    <div class=\"v1042BankInfoRows\">${info.rows.map(([k,v])=>`<div><span>${V.escape(k)}</span><b>${V.escape(v)}</b></div>`).join('')}</div>\n    <button class=\"v1042BankInfoClose\">Close</button>\n  </div>`;\n  document.body.appendChild(back);\n  back.addEventListener('click',e=>{if(e.target===back||e.target.closest('.v1042BankInfoClose'))V.closeInfo()});\n  navigator.vibrate?.(18);\n};\nV.openQty=function(side,id){\n  if(RF.UI.modal?.type!=='bank')return;\n  RF.UI.modal.v1042Qty={side,id};\n  RF.UI.render(RF.state);\n};\nV.closeQty=function(){\n  if(RF.UI.modal?.type==='bank'&&RF.UI.modal.v1042Qty){delete RF.UI.modal.v1042Qty;RF.UI.render(RF.state)}\n};\nV.transfer=function(side,id,qty){\n  const s=RF.state;if(!s||!RF.isBankTown?.(s))return;\n  qty=Math.max(1,Math.floor(Number(qty)||1));\n  if(side==='pack'){\n    const movable=V.packMovable(s,id),q=Math.min(qty,movable);\n    if(q<1){RF.animateDenied?.(`[data-v1042-bank-tile=\"${id}\"]`);return;}\n    RF.takeItem(s,id,q);\n    s.bank=s.bank||{};\n    s.bank[id]=(s.bank[id]||0)+q;\n    s.stats=s.stats||{};s.stats.bankTransfers=(s.stats.bankTransfers||0)+q;\n    RF.log?.(s,`Deposited ${q} × ${RF.DATA.items?.[id]?.name||id}.`);\n  }else{\n    const movable=V.bankMovable(s,id),q=Math.min(qty,movable);\n    if(q<1){RF.animateDenied?.(`[data-v1042-bank-tile=\"${id}\"]`);return;}\n    s.inventory=s.inventory||{};\n    if(!(s.inventory[id]>0)&&RF.packUsed(s)>=V.cap(s)){RF.animateDenied?.(`[data-v1042-bank-tile=\"${id}\"]`);return;}\n    s.bank[id]-=q;if(s.bank[id]<=0)delete s.bank[id];\n    s.inventory[id]=(s.inventory[id]||0)+q;\n    s.stats=s.stats||{};s.stats.bankTransfers=(s.stats.bankTransfers||0)+q;\n    RF.log?.(s,`Withdrew ${q} × ${RF.DATA.items?.[id]?.name||id}.`);\n  }\n  if(RF.UI.modal?.type==='bank')delete RF.UI.modal.v1042Qty;\n  RF.save?.(s);RF.UI.render(s);\n};\nV.tileTap=function(side,id){\n  const s=RF.state,count=V.moveCount(s,side,id);\n  if(count<1){RF.animateDenied?.(`[data-v1042-bank-tile=\"${id}\"]`);return;}\n  if(count===1)V.transfer(side,id,1);\n  else V.openQty(side,id);\n};\nV.qtyPopup=function(s,m){\n  const qd=m?.v1042Qty;if(!qd)return '';\n  const side=qd.side==='bank'?'bank':'pack',id=qd.id,it=RF.DATA.items?.[id];\n  if(!it)return '';\n  const max=V.moveCount(s,side,id),act=V.actionWord(side);\n  const quick=[1,2,5,10];\n  return `<div class=\"v1042QtyBack\" data-v1042-qty-back>\n    <div class=\"v1042QtyModal\" role=\"dialog\" aria-modal=\"true\" aria-label=\"${V.escape(act)} ${V.escape(it.name)}\">\n      <div class=\"v1042QtyHero\"><div class=\"v1042QtyIcon\">${it.icon||'📦'}</div><div><span class=\"eyebrow\">${V.escape(side==='bank'?'WITHDRAW FROM BANK':'DEPOSIT TO BANK')}</span><h3>${V.escape(it.name)}</h3><div class=\"sub\">Choose how many to ${act.toLowerCase()}.</div></div></div>\n      <div class=\"v1042QtyQuick\">${quick.map(n=>`<button type=\"button\" data-v1042-qty-quick=\"${n}\" ${n>max?'disabled':''}>${n}</button>`).join('')}<button type=\"button\" data-v1042-qty-all ${max<1?'disabled':''}>All</button></div>\n      <label class=\"v1042QtyCustom\">Custom amount<input data-v1042-qty-input type=\"number\" inputmode=\"numeric\" min=\"1\" max=\"${max}\" value=\"${Math.min(max,1)}\"></label>\n      <div class=\"v1042QtyFoot\"><button type=\"button\" class=\"v1042QtyMove\" data-v1042-qty-move ${max<1?'disabled':''}>${V.escape(act)} X</button><button type=\"button\" class=\"v1042QtyCancel\" data-v1042-qty-cancel>Cancel</button></div>\n      <div class=\"tiny center\">Available to move: ${max}</div>\n    </div>\n  </div>`;\n};\nV.bindTile=function(btn){\n  if(!btn||btn.dataset.v1042Bound==='1')return;\n  btn.dataset.v1042Bound='1';\n  let timer=0,startX=0,startY=0,longFired=false,activePointer=null;\n  const cancel=()=>{if(timer){clearTimeout(timer);timer=0}btn.classList.remove('holding');activePointer=null};\n  btn.addEventListener('pointerdown',e=>{\n    if(e.pointerType==='mouse'&&e.button!==0)return;\n    cancel();longFired=false;activePointer=e.pointerId;startX=e.clientX;startY=e.clientY;\n    btn.classList.add('holding');\n    timer=setTimeout(()=>{timer=0;longFired=true;btn.classList.remove('holding');V.showInfo(btn.dataset.v1042BankInfo)},V.HOLD_MS);\n  });\n  btn.addEventListener('pointermove',e=>{if(activePointer!==e.pointerId)return;if(Math.hypot(e.clientX-startX,e.clientY-startY)>V.MOVE_CANCEL_PX)cancel();});\n  btn.addEventListener('pointerup',cancel);btn.addEventListener('pointercancel',cancel);btn.addEventListener('lostpointercapture',cancel);btn.addEventListener('contextmenu',e=>e.preventDefault());\n  btn.addEventListener('click',e=>{\n    if(longFired){longFired=false;e.preventDefault();e.stopImmediatePropagation();return;}\n    e.preventDefault();e.stopImmediatePropagation();\n    V.tileTap(btn.dataset.v1042BankSide,btn.dataset.v1042BankTile);\n  },true);\n};\n\nconst modalBase=RF.UI.modalHtml.bind(RF.UI);\nRF.UI.modalHtml=function(s){\n  const m=this.modal;\n  if(m?.type!=='bank')return modalBase(s);\n  if(!RF.isBankTown(s))return `<div class=\"modalBack\"><div class=\"modal\"><div style=\"font-size:42px\">🏦</div><h2>Bank Unavailable</h2><div class=\"sub\">Your vault can only be accessed from town banks.</div><div class=\"choices\"><button class=\"choice\" data-close-bank><b>Close</b></button></div></div></div>`;\n  const tab=V.tab(s),cat=s.v93?.bankCategory||'all',cap=V.cap(s),used=RF.packUsed(s),bankStacks=V.bankStacks(s),rows=V.entries(s,tab,cat),loc=RF.DATA.locations?.[s.location],label=tab==='bank'?'stored stacks':'slots';\n  const grid=rows.map(r=>V.tileHtml(s,tab,r)).join('');\n  return `<div class=\"modalBack\"><div class=\"modal bankModal v1042VaultModal\">\n    <div class=\"v1042VaultHead\"><div><span class=\"eyebrow\">${V.escape((loc?.name||'Town').toUpperCase())} BANK</span><h2>${loc?.icon||'🏦'} Vault</h2><div class=\"sub\">Tap to move • hold for details</div></div><button class=\"v1042VaultClose\" type=\"button\" data-close-bank aria-label=\"Close Bank\">✕</button></div>\n    <div class=\"v1042VaultTabs\">\n      <button type=\"button\" class=\"v1042VaultTab ${tab==='pack'?'active':''}\" data-v1042-bank-tab=\"pack\"><span>🎒 Pack</span><b>${used}/${cap}</b></button>\n      <button type=\"button\" class=\"v1042VaultTab ${tab==='bank'?'active':''}\" data-v1042-bank-tab=\"bank\"><span>🏦 Bank</span><b>${bankStacks} stacks</b></button>\n    </div>\n    <div class=\"v1042VaultTools\">${RF.v93Select('bank',cat)}<div class=\"v1042VaultCount\">${tab==='pack'?`${used}/${cap}`:`${bankStacks}`} ${label}</div></div>\n    <div class=\"v1042VaultGridWrap\">\n      <div class=\"v1042VaultGrid\">${grid||`<div class=\"v1042VaultEmpty\">Nothing in this category.</div>`}</div>\n    </div>\n    <div class=\"v1042VaultFoot\"><button class=\"quietClose\" data-close-bank>Close Bank</button></div>\n    ${V.qtyPopup(s,m)}\n  </div></div>`;\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('[data-v1042-bank-tab]').forEach(b=>b.onclick=()=>V.setTab(s,b.dataset.v1042BankTab));\n  document.querySelectorAll('.v1042BankTile[data-v1042-bank-info]').forEach(V.bindTile);\n  document.querySelector('[data-v1042-qty-cancel]')?.addEventListener('click',()=>V.closeQty());\n  document.querySelector('[data-v1042-qty-back]')?.addEventListener('click',e=>{if(e.target===e.currentTarget)V.closeQty()});\n  document.querySelectorAll('[data-v1042-qty-quick]').forEach(b=>b.onclick=()=>{const q=+b.dataset.v1042QtyQuick||1,m=RF.UI.modal?.v1042Qty;if(m)V.transfer(m.side,m.id,q)});\n  document.querySelector('[data-v1042-qty-all]')?.addEventListener('click',()=>{const m=RF.UI.modal?.v1042Qty;if(m)V.transfer(m.side,m.id,V.moveCount(RF.state,m.side,m.id))});\n  document.querySelector('[data-v1042-qty-move]')?.addEventListener('click',()=>{\n    const m=RF.UI.modal?.v1042Qty;if(!m)return;\n    const input=document.querySelector('[data-v1042-qty-input]');\n    const max=V.moveCount(RF.state,m.side,m.id),q=Math.max(1,Math.min(max,Math.floor(+input?.value||1)));\n    V.transfer(m.side,m.id,q);\n  });\n};\n\nconst renderBase=RF.UI.render.bind(RF.UI);\nRF.UI.render=function(s){\n  if(this.modal?.type!=='bank')V.closeInfo();\n  return renderBase(s);\n};\n\nconst st=document.createElement('style');st.id='v1042-vault-grid-style';st.textContent=`\n.v1042VaultModal{width:min(740px,100%);height:min(89dvh,860px);max-height:89dvh;display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto;gap:12px;overflow:hidden;padding:18px 14px 14px}\n.v1042VaultHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.v1042VaultHead h2{margin:2px 0 0;color:#f1d496;font-size:25px}.v1042VaultHead .sub{margin-top:4px;color:#b7a78a}\n.v1042VaultClose{width:42px;height:42px;border-radius:13px;border:1px solid rgba(214,173,96,.28);background:linear-gradient(180deg,rgba(52,38,22,.85),rgba(25,19,13,.95));color:#edd6a0;font-size:20px;display:grid;place-items:center;flex:0 0 auto}\n.v1042VaultTabs{display:grid;grid-template-columns:1fr 1fr;gap:10px}.v1042VaultTab{appearance:none;border:1px solid rgba(201,159,84,.24);border-radius:16px;background:linear-gradient(180deg,rgba(46,34,21,.76),rgba(20,15,10,.95));padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#e5d1a3;text-align:left;box-shadow:inset 0 1px rgba(255,255,255,.05)}.v1042VaultTab span{font-weight:800}.v1042VaultTab b{font-size:12px;color:#b8a991;font-weight:700}.v1042VaultTab.active{border-color:#c69d59;background:linear-gradient(180deg,rgba(96,67,29,.95),rgba(40,28,17,.98));box-shadow:0 0 0 1px rgba(198,157,89,.16) inset,0 10px 26px #0003}\n.v1042VaultTools{display:flex;align-items:end;justify-content:space-between;gap:10px}.v1042VaultTools .filterSelect{flex:1 1 auto;margin:0}.v1042VaultTools .filterSelect span{text-transform:uppercase;letter-spacing:.14em}.v1042VaultCount{flex:0 0 auto;font-size:11px;color:#b4a489;padding-bottom:3px}\n.v1042VaultGridWrap{min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border:1px solid rgba(198,158,83,.18);border-radius:18px;background:linear-gradient(180deg,rgba(13,10,8,.28),rgba(9,7,6,.42));padding:10px}\n.v1042VaultGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-content:start}\n.v1042BankTile{appearance:none;position:relative;min-height:132px;border-radius:18px;border:1px solid rgba(201,159,84,.18);background:linear-gradient(180deg,rgba(43,32,21,.92),rgba(18,13,10,.98));padding:12px 10px 10px;color:#f3e1bb;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:7px;box-shadow:inset 0 1px rgba(255,255,255,.035);-webkit-touch-callout:none;user-select:none;touch-action:manipulation}\n.v1042BankTile.holding{outline:1px solid #bc8b45;box-shadow:0 0 0 1px #bc8b4528 inset}.v1042BankTile.holding:after{content:'';position:absolute;left:0;bottom:0;height:3px;background:#d8ae63;animation:v1042HoldFill .65s linear forwards;width:0}.v1042BankTile.disabled{opacity:.52;filter:saturate(.65)}.v1042BankTile.equipped{border-color:rgba(106,151,110,.34)}\n@keyframes v1042HoldFill{from{width:0}to{width:100%}}\n.v1042TileIcon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:30px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01));border:1px solid rgba(223,183,104,.14)}\n.v1042TileName{font-weight:800;line-height:1.12;font-size:14px;min-height:31px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n.v1042TileMeta{font-size:10px;line-height:1.25;color:#ad9c80;min-height:24px}.v1042TileFoot{margin-top:auto;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px}.v1042TileQty{font-weight:800;font-size:14px;color:#f2d89b}.v1042TileBadge{font-size:9px;font-weight:800;letter-spacing:.08em;border:1px solid rgba(208,167,87,.28);padding:4px 6px;border-radius:999px;background:rgba(208,167,87,.08);color:#d9c18f}.v1042TileBadge.muted{background:rgba(255,255,255,.04);color:#b5a58b;border-color:rgba(255,255,255,.08)}\n.v1042VaultEmpty{grid-column:1/-1;padding:30px 14px;text-align:center;color:#b9ab94;font-size:13px}\n.v1042VaultFoot{display:flex}.v1042VaultFoot .quietClose{width:100%;margin:0}\n.v1042QtyBack{position:absolute;inset:0;z-index:30;background:#080604cc;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:14px}.v1042QtyModal{width:min(430px,100%);border:1px solid #775c38;border-radius:18px;background:linear-gradient(180deg,#21190f,#15110d);box-shadow:0 22px 60px #000b;padding:16px}.v1042QtyHero{display:flex;gap:12px;align-items:center}.v1042QtyIcon{width:54px;height:54px;border-radius:15px;display:grid;place-items:center;font-size:30px;background:#2a2117;border:1px solid #6b5438}.v1042QtyHero h3{margin:2px 0 0;color:#f0d99f;font-size:22px}.v1042QtyQuick{margin-top:13px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.v1042QtyQuick button,.v1042QtyMove,.v1042QtyCancel{min-height:44px;border-radius:12px;border:1px solid rgba(216,173,87,.42);background:linear-gradient(180deg,rgba(100,71,31,.92),rgba(61,42,21,.95));color:#f6e7c1;font:inherit;font-weight:750}.v1042QtyQuick button:disabled,.v1042QtyMove:disabled{opacity:.38}.v1042QtyCustom{display:grid;gap:6px;margin-top:12px;color:#c2b59d;font-size:12px}.v1042QtyCustom input{height:44px;border-radius:12px;border:1px solid #59442b;background:#0e0b09;color:#f1dfb7;padding:0 12px;font:inherit}.v1042QtyFoot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.v1042QtyCancel{background:linear-gradient(180deg,rgba(77,62,39,.96),rgba(48,39,27,.96))}\n.v1042BankInfoBack{position:fixed;inset:0;z-index:141;background:#080604c9;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}.v1042BankInfoModal{width:min(430px,100%);max-height:88vh;overflow:auto;border:1px solid #775c38;border-radius:18px;background:linear-gradient(180deg,#21190f,#15110d);box-shadow:0 22px 60px #000b;padding:17px}.v1042BankInfoHero{display:flex;align-items:center;gap:12px;margin-bottom:10px}.v1042BankInfoIcon{width:58px;height:58px;display:grid;place-items:center;border-radius:16px;font-size:34px;background:#2a2117;border:1px solid #6b5438}.v1042BankInfoHero h2{margin:2px 0 0;color:#f0d99f;font-size:25px}.v1042BankInfoDesc{margin:7px 0 13px;color:#c4b79f;line-height:1.45;font-size:13px}.v1042BankInfoRows{border:1px solid #463729;border-radius:13px;overflow:hidden}.v1042BankInfoRows>div{display:grid;grid-template-columns:minmax(95px,.8fr) minmax(0,1.4fr);gap:10px;padding:9px 10px;border-bottom:1px solid #392d23}.v1042BankInfoRows>div:last-child{border-bottom:0}.v1042BankInfoRows span{font-size:10px;color:#958976}.v1042BankInfoRows b{font-size:10px;color:#e5d5b5;text-align:right;line-height:1.3}.v1042BankInfoClose{width:100%;margin-top:13px;min-height:46px;border-radius:12px;border:1px solid #745630;background:#302215;color:#f2dfb7;font-weight:700}\n@media(max-width:430px){.v1042VaultModal{height:91dvh;max-height:91dvh;padding:14px 10px 10px;gap:10px}.v1042VaultHead h2{font-size:23px}.v1042VaultGrid{gap:8px}.v1042BankTile{min-height:122px;padding:10px 8px 8px;border-radius:16px}.v1042TileIcon{width:42px;height:42px;font-size:27px}.v1042TileName{font-size:13px;min-height:28px}.v1042TileMeta{font-size:9.5px}.v1042TileQty{font-size:13px}.v1042TileBadge{font-size:8px;padding:3px 5px}.v1042QtyModal,.v1042BankInfoModal{padding:14px}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_43.js":"window.RF=window.RF||{};\nRF.VERSION='10.43.0';\nRF.BUILD={\n  version:'10.43.0',\n  title:'Vault Compact',\n  built:'16 Sep 2026 • 22:22 BST',\n  buildId:'20260916-2222-bst'\n};\nRF.V1043=RF.V1043||{};\n\n/* Realmforge V10.43 — Vault Compact\n   - Tightens the V10.42 vault layout into a denser 4-column grid.\n   - Shortens item tiles and removes the redundant Pack/Bank quantity subline.\n   - Reduces item-name sizing so compact tiles still fit neatly on mobile.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1043;\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.43.0';\n  s.v1043=s.v1043||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nconst oldStyle=document.getElementById('v1043-vault-compact-style');\nif(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');\nst.id='v1043-vault-compact-style';\nst.textContent=`\n.v1042VaultModal{width:min(760px,100%);padding:16px 12px 12px;gap:10px}\n.v1042VaultGridWrap{padding:8px}\n.v1042VaultGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}\n.v1042BankTile{min-height:104px;padding:9px 7px 8px;border-radius:15px;gap:5px}\n.v1042TileIcon{width:36px;height:36px;border-radius:12px;font-size:24px}\n.v1042TileName{font-size:11px;line-height:1.12;min-height:24px}\n.v1042TileMeta{display:none!important}\n.v1042TileFoot{gap:6px}\n.v1042TileQty{font-size:11px;line-height:1}\n.v1042TileBadge{font-size:8px;padding:3px 5px}\n.v1042VaultHead h2{font-size:24px}\n.v1042VaultHead .sub{font-size:11px}\n.v1042VaultTab{padding:11px 12px;border-radius:15px}\n.v1042VaultTools{gap:8px;align-items:center}\n.v1042VaultCount{font-size:10px;padding-bottom:0}\n@media(max-width:430px){\n  .v1042VaultModal{height:91dvh;max-height:91dvh;padding:12px 8px 10px;gap:9px}\n  .v1042VaultGridWrap{padding:7px}\n  .v1042VaultGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}\n  .v1042BankTile{min-height:98px;padding:8px 6px 7px;border-radius:14px}\n  .v1042TileIcon{width:34px;height:34px;font-size:22px}\n  .v1042TileName{font-size:10.5px;min-height:22px}\n  .v1042TileQty{font-size:10.5px}\n  .v1042TileBadge{font-size:7.5px;padding:3px 4px}\n}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_44.js":"window.RF=window.RF||{};\nRF.VERSION='10.44.0';\nRF.BUILD={\n  version:'10.44.0',\n  title:'Vault Flow',\n  built:'16 Sep 2026 • 22:33 BST',\n  buildId:'20260916-2233-bst'\n};\nRF.V1044=RF.V1044||{};\n\n/* Realmforge V10.44 — Vault Flow\n   - Improves the V10.42/10.43 quantity popup workflow.\n   - Shows the remaining movable amount beside the item name.\n   - Quick quantity buttons no longer close the popup after each transfer, enabling repeated taps.\n   - Adds an in-grid reddish close button and removes the redundant footer availability line.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1044;\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.44.0';\n  s.v1044=s.v1044||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nconst B=RF.V1042;\nif(B){\n  B.qtyPopup=function(s,m){\n    const qd=m?.v1042Qty;if(!qd)return '';\n    const side=qd.side==='bank'?'bank':'pack',id=qd.id,it=RF.DATA.items?.[id];\n    if(!it)return '';\n    const max=B.moveCount(s,side,id),act=B.actionWord(side);\n    const quick=[1,2,5];\n    return `<div class=\"v1042QtyBack\" data-v1042-qty-back>\n      <div class=\"v1042QtyModal v1044QtyModal\" role=\"dialog\" aria-modal=\"true\" aria-label=\"${B.escape(act)} ${B.escape(it.name)}\">\n        <div class=\"v1042QtyHero\"><div class=\"v1042QtyIcon\">${it.icon||'📦'}</div><div><span class=\"eyebrow\">${B.escape(side==='bank'?'WITHDRAW FROM BANK':'DEPOSIT TO BANK')}</span><h3>${B.escape(it.name)} <span class=\"v1044QtyCount\">×${max}</span></h3><div class=\"sub\">Choose how many to ${act.toLowerCase()}.</div></div></div>\n        <div class=\"v1042QtyQuick v1044QtyQuick\">${quick.map(n=>`<button type=\"button\" data-v1042-qty-quick=\"${n}\" ${n>max?'disabled':''}>${n}</button>`).join('')}<button type=\"button\" data-v1042-qty-quick=\"10\" ${10>max?'disabled':''}>10</button><button type=\"button\" data-v1042-qty-all ${max<1?'disabled':''}>All</button><button type=\"button\" class=\"v1044QtyCloseBtn\" data-v1042-qty-cancel>Close</button></div>\n        <label class=\"v1042QtyCustom\">Custom amount<input data-v1042-qty-input type=\"number\" inputmode=\"numeric\" min=\"1\" max=\"${max}\" value=\"${Math.min(max,1)}\"></label>\n        <div class=\"v1042QtyFoot v1044QtyFoot\"><button type=\"button\" class=\"v1042QtyMove\" data-v1042-qty-move ${max<1?'disabled':''}>${B.escape(act)} X</button></div>\n      </div>\n    </div>`;\n  };\n\n  B.transfer=function(side,id,qty){\n    const s=RF.state;if(!s||!RF.isBankTown?.(s))return;\n    qty=Math.max(1,Math.floor(Number(qty)||1));\n    const keepOpen=RF.UI.modal?.type==='bank' && !!RF.UI.modal?.v1042Qty && RF.UI.modal.v1042Qty.id===id && RF.UI.modal.v1042Qty.side===side;\n    if(side==='pack'){\n      const movable=B.packMovable(s,id),q=Math.min(qty,movable);\n      if(q<1){RF.animateDenied?.(`[data-v1042-bank-tile=\"${id}\"]`);return;}\n      RF.takeItem(s,id,q);\n      s.bank=s.bank||{};\n      s.bank[id]=(s.bank[id]||0)+q;\n      s.stats=s.stats||{};s.stats.bankTransfers=(s.stats.bankTransfers||0)+q;\n      RF.log?.(s,`Deposited ${q} × ${RF.DATA.items?.[id]?.name||id}.`);\n    }else{\n      const movable=B.bankMovable(s,id),q=Math.min(qty,movable);\n      if(q<1){RF.animateDenied?.(`[data-v1042-bank-tile=\"${id}\"]`);return;}\n      s.inventory=s.inventory||{};\n      if(!(s.inventory[id]>0)&&RF.packUsed(s)>=B.cap(s)){RF.animateDenied?.(`[data-v1042-bank-tile=\"${id}\"]`);return;}\n      s.bank[id]-=q;if(s.bank[id]<=0)delete s.bank[id];\n      s.inventory[id]=(s.inventory[id]||0)+q;\n      s.stats=s.stats||{};s.stats.bankTransfers=(s.stats.bankTransfers||0)+q;\n      RF.log?.(s,`Withdrew ${q} × ${RF.DATA.items?.[id]?.name||id}.`);\n    }\n    if(RF.UI.modal?.type==='bank'){\n      const remaining=B.moveCount(s,side,id);\n      if(keepOpen && remaining>0)RF.UI.modal.v1042Qty={side,id};\n      else delete RF.UI.modal.v1042Qty;\n    }\n    RF.save?.(s);RF.UI.render(s);\n  };\n}\n\nconst oldStyle=document.getElementById('v1044-vault-flow-style');\nif(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');\nst.id='v1044-vault-flow-style';\nst.textContent=`\n.v1044QtyModal .v1042QtyHero h3{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}\n.v1044QtyCount{font-size:18px;color:#d8c08b;font-weight:800}\n.v1044QtyQuick{grid-template-columns:repeat(3,minmax(0,1fr))!important}\n.v1044QtyCloseBtn{background:linear-gradient(180deg,rgba(118,43,43,.96),rgba(76,24,24,.98))!important;border-color:rgba(210,102,102,.42)!important;color:#f5dddd!important}\n.v1044QtyFoot{grid-template-columns:1fr!important}\n.v1044QtyFoot .v1042QtyMove{width:100%}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_45.js":"window.RF=window.RF||{};\nRF.VERSION='10.45.0';\nRF.BUILD={\n  version:'10.45.0',\n  title:'Pack Grid',\n  built:'16 Sep 2026 • 22:52 BST',\n  buildId:'20260916-2252-bst'\n};\nRF.V1045=RF.V1045||{};\n\n/* Realmforge V10.45 — Pack Grid\n   - Rebuilds the main Pack tab into the same compact 4-column grid direction as the Vault.\n   - Replaces inventory category dropdowns with a single-row tab strip.\n   - Applies the new category tabs across inventory-facing interfaces such as Pack and Bank.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1045;\nV.CATS=[\n  ['all','All'],\n  ['weapons','Weapons'],\n  ['armour','Armour'],\n  ['consumables','Food'],\n  ['materials','Mats'],\n  ['tools','Tools'],\n  ['treasure','Treasure'],\n  ['other','Other']\n];\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.45.0';\n  s.v1045=s.v1045||{};\n  s.v93=s.v93||{};\n  if(!s.v93.inventoryCategory)s.v93.inventoryCategory='all';\n  if(!s.v93.bankCategory)s.v93.bankCategory='all';\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.cap=s=>RF.packCapacity?RF.packCapacity(s):(RF.V82?.PACK_CAP||28);\nV.categoryTabs=function(kind,active){\n  return `<div class=\"v1045CatScroller\" role=\"tablist\" aria-label=\"${V.escape(kind)} categories\">${V.CATS.map(([id,label])=>`<button type=\"button\" class=\"v1045CatTab ${active===id?'active':''}\" data-v1045-cat-kind=\"${kind}\" data-v1045-cat=\"${id}\">${V.escape(label)}</button>`).join('')}</div>`;\n};\nRF.v93Select=function(kind,active){return V.categoryTabs(kind,active)};\n\nV.packTile=function(s,id,qty){\n  const it=RF.DATA.items?.[id]; if(!it)return '';\n  const equipped=RF.isEquipped?.(s,id);\n  const can=RF.canEquipItem?.(s,id);\n  const badge=equipped?'<span class=\"v1042TileBadge\">EQ</span>':(it.slot&&!can?'<span class=\"v1042TileBadge muted\">LOCK</span>':'');\n  return `<button type=\"button\" class=\"v1042BankTile v1045PackTile ${equipped?'equipped':''}\" data-item-detail=\"${V.escape(id)}\" aria-label=\"${V.escape(it.name)}\">\n    <div class=\"v1042TileIcon\">${it.icon||'📦'}</div>\n    <div class=\"v1042TileName\">${V.escape(it.name)}</div>\n    <div class=\"v1042TileFoot\"><span class=\"v1042TileQty\">×${qty}</span>${badge}</div>\n  </button>`;\n};\n\nRF.UI.inventory=function(s){\n  const used=RF.packUsed(s),cap=V.cap(s),pct=Math.min(100,used/cap*100),cat=s.v93?.inventoryCategory||'all';\n  const entries=(RF.V1012?.sortedEntries?RF.V1012.sortedEntries(s.inventory):Object.entries(s.inventory||{}))\n    .filter(([,q])=>(+q||0)>0)\n    .filter(([id])=>cat==='all'||RF.v92Category(RF.DATA.items[id])===cat);\n  const tiles=entries.map(([id,q])=>V.packTile(s,id,+q||0)).join('');\n  return `<section class=\"card v1045PackCard\"><div class=\"questTitle\"><h2>Pack</h2><span class=\"packCount ${used>=cap?'full':''}\">${used}/${cap} slots</span></div><div class=\"packBar\"><div style=\"width:${pct}%\"></div></div>${V.categoryTabs('inventory',cat)}${RF.isBankTown(s)?`<button class=\"action bankOpen v1045BankOpen\" data-open-bank><b>🏦 Open Bank</b><small>Deposit or withdraw stored items</small></button>`:'<div class=\"tiny bankHint\">🏦 Bank access: Greenvale, Ironridge and Reedmere.</div>'}<div class=\"v1045PackGridWrap\"><div class=\"v1042VaultGrid v1045PackGrid\">${tiles||'<div class=\"v1042VaultEmpty\">Nothing in this category.</div>'}</div></div></section>`;\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('[data-v1045-cat-kind]').forEach(b=>b.onclick=()=>{\n    const kind=b.dataset.v1045CatKind,cat=b.dataset.v1045Cat;\n    s.v93=s.v93||{};\n    s.v93[`${kind}Category`]=cat;\n    RF.save?.(s);\n    RF.UI.render(s);\n  });\n};\n\nconst oldStyle=document.getElementById('v1045-pack-grid-style');\nif(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');\nst.id='v1045-pack-grid-style';\nst.textContent=`\n.v1045CatScroller{display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 1px 1px}.v1045CatScroller::-webkit-scrollbar{display:none}\n.v1045CatTab{flex:0 0 auto;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(200,159,84,.22);background:linear-gradient(180deg,rgba(36,27,19,.82),rgba(18,13,10,.94));color:#d7c39a;font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap;box-shadow:inset 0 1px rgba(255,255,255,.04)}\n.v1045CatTab.active{border-color:#c69d59;background:linear-gradient(180deg,rgba(109,76,33,.98),rgba(65,45,22,.98));color:#f5e5bf}\n.v1045PackCard{display:grid;gap:12px}.v1045BankOpen{margin-top:2px}.v1045PackGridWrap{border:1px solid rgba(198,158,83,.16);border-radius:18px;background:linear-gradient(180deg,rgba(13,10,8,.18),rgba(9,7,6,.32));padding:8px;min-height:0}.v1045PackGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-content:start}\n.v1045PackTile{min-height:98px;padding:8px 6px 7px;border-radius:14px}.v1045PackTile .v1042TileIcon{width:34px;height:34px;font-size:22px}.v1045PackTile .v1042TileName{font-size:10.5px;min-height:22px}.v1045PackTile .v1042TileFoot{margin-top:auto}.v1045PackTile .v1042TileQty{font-size:10.5px}.v1045PackTile .v1042TileBadge{font-size:7.5px;padding:3px 4px}\n.v1042VaultTools .v1045CatScroller{flex:1 1 auto}\n@media(min-width:700px){.v1045PackTile{min-height:104px;padding:9px 7px 8px}.v1045PackTile .v1042TileIcon{width:36px;height:36px;font-size:24px}.v1045PackTile .v1042TileName{font-size:11px;min-height:24px}.v1045PackTile .v1042TileQty{font-size:11px}.v1045PackTile .v1042TileBadge{font-size:8px;padding:3px 5px}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_46.js":"window.RF=window.RF||{};\nRF.VERSION='10.46.0';\nRF.BUILD={\n  version:'10.46.0',\n  title:'Category Grid',\n  built:'16 Sep 2026 • 23:02 BST',\n  buildId:'20260916-2302-bst'\n};\nRF.V1046=RF.V1046||{};\n\n/* Realmforge V10.46 — Category Grid\n   - Reworks the V10.45 category tabs into a tidy 2-row, 4-column layout.\n   - Keeps the new category-tab system while preventing horizontal stretch in Pack and Vault.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1046;\nV.CATS=[\n  ['all','All'],['weapons','Weapons'],['armour','Armour'],['consumables','Food'],\n  ['materials','Mats'],['tools','Tools'],['treasure','Treasure'],['other','Other']\n];\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.46.0';\n  s.v1046=s.v1046||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.cap=s=>RF.packCapacity?RF.packCapacity(s):(RF.V82?.PACK_CAP||28);\nV.categoryTabs=function(kind,active){\n  return `<div class=\"v1046CatGrid\" role=\"tablist\" aria-label=\"${V.escape(kind)} categories\">${V.CATS.map(([id,label])=>`<button type=\"button\" class=\"v1046CatTab ${active===id?'active':''}\" data-v1045-cat-kind=\"${kind}\" data-v1045-cat=\"${id}\">${V.escape(label)}</button>`).join('')}</div>`;\n};\nRF.v93Select=function(kind,active){return V.categoryTabs(kind,active)};\n\n// Rebuild Pack so it uses the new compact 2x4 category layout too.\nRF.UI.inventory=function(s){\n  const used=RF.packUsed(s),cap=V.cap(s),pct=Math.min(100,used/cap*100),cat=s.v93?.inventoryCategory||'all';\n  const sorted=(RF.V1012?.sortedEntries?RF.V1012.sortedEntries(s.inventory):Object.entries(s.inventory||{}));\n  const entries=sorted.filter(([,q])=>(+q||0)>0).filter(([id])=>cat==='all'||RF.v92Category(RF.DATA.items[id])===cat);\n  const tiles=entries.map(([id,q])=>{\n    const it=RF.DATA.items?.[id]; if(!it)return '';\n    const equipped=RF.isEquipped?.(s,id);\n    const can=RF.canEquipItem?.(s,id);\n    const badge=equipped?'<span class=\"v1042TileBadge\">EQ</span>':(it.slot&&!can?'<span class=\"v1042TileBadge muted\">LOCK</span>':'');\n    return `<button type=\"button\" class=\"v1042BankTile v1045PackTile ${equipped?'equipped':''}\" data-item-detail=\"${V.escape(id)}\" aria-label=\"${V.escape(it.name)}\"><div class=\"v1042TileIcon\">${it.icon||'📦'}</div><div class=\"v1042TileName\">${V.escape(it.name)}</div><div class=\"v1042TileFoot\"><span class=\"v1042TileQty\">×${q}</span>${badge}</div></button>`;\n  }).join('');\n  return `<section class=\"card v1045PackCard\"><div class=\"questTitle\"><h2>Pack</h2><span class=\"packCount ${used>=cap?'full':''}\">${used}/${cap} slots</span></div><div class=\"packBar\"><div style=\"width:${pct}%\"></div></div>${V.categoryTabs('inventory',cat)}${RF.isBankTown(s)?`<button class=\"action bankOpen v1045BankOpen\" data-open-bank><b>🏦 Open Bank</b><small>Deposit or withdraw stored items</small></button>`:'<div class=\"tiny bankHint\">🏦 Bank access: Greenvale, Ironridge and Reedmere.</div>'}<div class=\"v1045PackGridWrap\"><div class=\"v1042VaultGrid v1045PackGrid\">${tiles||'<div class=\"v1042VaultEmpty\">Nothing in this category.</div>'}</div></div></section>`;\n};\n\nconst oldStyle=document.getElementById('v1046-category-grid-style');\nif(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');\nst.id='v1046-category-grid-style';\nst.textContent=`\n.v1046CatGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;align-items:stretch}\n.v1046CatTab{min-height:36px;padding:0 6px;border-radius:14px;border:1px solid rgba(200,159,84,.22);background:linear-gradient(180deg,rgba(36,27,19,.82),rgba(18,13,10,.94));color:#d7c39a;font-size:10px;font-weight:800;letter-spacing:.01em;line-height:1.05;white-space:normal;text-align:center;box-shadow:inset 0 1px rgba(255,255,255,.04)}\n.v1046CatTab.active{border-color:#c69d59;background:linear-gradient(180deg,rgba(109,76,33,.98),rgba(65,45,22,.98));color:#f5e5bf}\n.v1042VaultTools .v1046CatGrid{flex:1 1 auto;width:100%}\n.v1042VaultTools{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px}\n.v1042VaultCount{padding-top:5px}\n@media(max-width:430px){\n  .v1046CatGrid{gap:6px}\n  .v1046CatTab{min-height:34px;font-size:9.5px;padding:0 4px;border-radius:13px}\n  .v1042VaultTools{gap:8px}\n}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_47.js":"window.RF=window.RF||{};\nRF.VERSION='10.47.0';\nRF.BUILD={\n  version:'10.47.0',\n  title:'Three Vaults',\n  built:'16 Sep 2026 • 23:12 BST',\n  buildId:'20260916-2312-bst'\n};\nRF.V1047=RF.V1047||{};\n\n/* Realmforge V10.47 — Three Vaults\n   - Removes the redundant bottom Close Bank control from the modern Vault modal.\n   - Restores banking as a regional-town service in Greenvale, Ironridge and Reedmere.\n   - Adds the same dedicated World > Bank section used in Greenvale to Ironridge and Reedmere.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1047;\nV.BANKS=RF.Config.clone(\"services.banks\");\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.47.0';\n  s.v1047=s.v1047||{};\n  // Mark these locations as banking settlements for systems that inspect location data directly.\n  ['greenvale','ironridge','reedmere'].forEach(id=>{if(RF.DATA?.locations?.[id])RF.DATA.locations[id].bank=true});\n  return s;\n};\n\n// Restore the original regional-bank geography that V10.10 temporarily narrowed to Greenvale.\nRF.isBankTown=s=>!!s&&!!V.BANKS[s.location];\n['greenvale','ironridge','reedmere'].forEach(id=>{if(RF.DATA?.locations?.[id])RF.DATA.locations[id].bank=true});\n\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// Normalize World banking into the same dedicated card at all three banking settlements.\nconst worldBase=RF.UI.world.bind(RF.UI);\nRF.UI.world=function(s){\n  let html=worldBase(s);\n  const bank=V.BANKS[s?.location];\n  if(!bank)return html;\n\n  // Remove any earlier bank button/card so this patch owns one consistent regional-bank section.\n  html=html.replace(/<button class=\"action bankOpen[^>]*data-open-bank[^>]*>[\\s\\S]*?<\\/button>/g,'');\n  html=html.replace(/<section class=\"card v1014BankSection\">[\\s\\S]*?<\\/section>/g,'');\n\n  const disabled=(s.activity||s.combat)?'disabled':'';\n  const section=`<section class=\"card v1014BankSection v1047BankSection\"><h3>Bank</h3><button class=\"action bankOpen v1014BankButton v1047BankButton\" data-open-bank ${disabled}><span class=\"emoji\">${bank.icon}</span><b>${bank.name}</b><small>Deposit or withdraw stored items</small></button></section>`;\n  const travel='<section class=\"card\"><h3>Travel</h3>';\n  if(html.includes(travel))html=html.replace(travel,section+travel);\n  else html+=section;\n  return html;\n};\n\n// Modern Vault already has the top-right X. Remove only its redundant bottom close row.\nconst modalBase=RF.UI.modalHtml.bind(RF.UI);\nRF.UI.modalHtml=function(s){\n  let h=modalBase(s);\n  if(this.modal?.type==='bank'){\n    h=h.replace(/<div class=\"v1042VaultFoot\">[\\s\\S]*?<\\/div>/g,'');\n  }\n  return h;\n};\n\n// V10.10's older bank binder hard-coded Greenvale. Reassert the current geography last.\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('[data-open-bank]').forEach(b=>{\n    b.onclick=()=>{\n      if(!RF.isBankTown(RF.state))return;\n      RF.openBank();\n    };\n  });\n};\n\nconst oldStyle=document.getElementById('v1047-three-vaults-style');\nif(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');\nst.id='v1047-three-vaults-style';\nst.textContent=`\n.v1042VaultModal{grid-template-rows:auto auto auto minmax(0,1fr)!important}\n.v1042VaultFoot{display:none!important}\n.v1047BankSection{padding-bottom:14px}\n.v1047BankButton{margin:0!important}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){\n  V.migrate(RF.state);\n  RF.save?.(RF.state);\n  setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0);\n}\n})();\n","js/v10_51.js":"window.RF=window.RF||{};\nRF.VERSION='10.51.0';\nRF.BUILD={\n  version:'10.51.0',\n  title:'Vault Trim',\n  built:'17 Sep 2026 • 03:27 BST',\n  buildId:'20260917-0327-bst'\n};\nRF.V1051=RF.V1051||{};\n\n/* Realmforge V10.51 — Vault Trim\n   - Removes the redundant secondary Pack/Bank count beside the Vault category filters.\n   - The Pack and Bank tabs at the top remain the single source of capacity/storage counts.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1051;\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.51.0';\n  s.v1051=s.v1051||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// V10.42 writes a second count beside the category controls. The top Pack/Bank tabs already\n// show the same information, so remove that duplicate from the rendered Vault markup entirely.\nconst modalBase=RF.UI.modalHtml.bind(RF.UI);\nRF.UI.modalHtml=function(s){\n  let h=modalBase(s);\n  if(this.modal?.type==='bank')h=h.replace(/<div class=\"v1042VaultCount\">[\\s\\S]*?<\\/div>/,'');\n  return h;\n};\n\nconst oldStyle=document.getElementById('v1051-vault-trim-style');\nif(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');\nst.id='v1051-vault-trim-style';\nst.textContent=`\n.v1042VaultTools{grid-template-columns:minmax(0,1fr)!important}\n.v1042VaultCount{display:none!important}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_52.js":"window.RF=window.RF||{};\nRF.VERSION='10.52.0';\nRF.BUILD={\n  version:'10.52.0',\n  title:'Quick Stack',\n  built:'17 Sep 2026 • 03:36 BST',\n  buildId:'20260917-0336-bst'\n};\nRF.V1052=RF.V1052||{};\n\n/* Realmforge V10.52 — Quick Stack\n   - Adds a one-tap Pack -> Bank quick-stack action inside the Vault.\n   - Only items that already have a stored Bank stack are moved.\n   - Equipped copies remain protected exactly as with normal deposits.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1052;\nconst B=RF.V1042;\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.52.0';\n  s.v1052=s.v1052||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nV.stackable=function(s){\n  if(!s||!B)return [];\n  return Object.keys(s.inventory||{}).map(id=>{\n    const bankQty=Math.max(0,Number(s.bank?.[id])||0);\n    const move=B.packMovable(s,id);\n    return {id,move,bankQty};\n  }).filter(x=>x.bankQty>0&&x.move>0);\n};\nV.summary=function(s){\n  const rows=V.stackable(s);\n  return {stacks:rows.length,items:rows.reduce((n,x)=>n+x.move,0)};\n};\nV.quickStack=function(){\n  const s=RF.state;\n  if(!s||!RF.isBankTown?.(s)||RF.UI.modal?.type!=='bank'||!B)return;\n  const rows=V.stackable(s);\n  if(!rows.length){\n    RF.animateDenied?.('[data-v1052-quick-stack]');\n    return;\n  }\n  let items=0;\n  for(const {id,move} of rows){\n    if(move<1)continue;\n    RF.takeItem(s,id,move);\n    s.bank=s.bank||{};\n    s.bank[id]=(s.bank[id]||0)+move;\n    items+=move;\n  }\n  s.stats=s.stats||{};\n  s.stats.bankTransfers=(s.stats.bankTransfers||0)+items;\n  RF.log?.(s,`Quick stacked ${items} item${items===1?'':'s'} across ${rows.length} bank stack${rows.length===1?'':'s'}.`);\n  if(RF.UI.modal?.type==='bank')delete RF.UI.modal.v1042Qty;\n  RF.save?.(s);\n  RF.UI.render(s);\n};\n\n// Insert the action between the main Pack/Bank tabs and the category controls.\nconst modalBase=RF.UI.modalHtml.bind(RF.UI);\nRF.UI.modalHtml=function(s){\n  let h=modalBase(s);\n  if(this.modal?.type!=='bank'||!B)return h;\n  const sum=V.summary(s);\n  const label=sum.items>0?`${sum.items} item${sum.items===1?'':'s'} • ${sum.stacks} stack${sum.stacks===1?'':'s'}`:'No matching Pack stacks';\n  const quick=`<button type=\"button\" class=\"v1052QuickStack\" data-v1052-quick-stack ${sum.items<1?'disabled':''}><span class=\"v1052QuickIcon\">⚡</span><span><b>Quick Stack</b><small>Pack → Bank • ${label}</small></span></button>`;\n  h=h.replace(/(<div class=\"v1042VaultTabs\">[\\s\\S]*?<\\/div>)/,`$1${quick}`);\n  return h;\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelector('[data-v1052-quick-stack]')?.addEventListener('click',V.quickStack);\n};\n\nconst oldStyle=document.getElementById('v1052-quick-stack-style');\nif(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');\nst.id='v1052-quick-stack-style';\nst.textContent=`\n.v1042VaultModal{grid-template-rows:auto auto auto auto minmax(0,1fr)!important}\n.v1052QuickStack{appearance:none;width:100%;min-height:46px;border-radius:14px;border:1px solid rgba(201,159,84,.25);background:linear-gradient(180deg,rgba(49,36,22,.9),rgba(22,16,11,.98));color:#ead8ad;display:flex;align-items:center;gap:10px;padding:8px 12px;text-align:left;box-shadow:inset 0 1px rgba(255,255,255,.04)}\n.v1052QuickStack:not(:disabled):active{transform:translateY(1px);filter:brightness(1.08)}\n.v1052QuickStack:disabled{opacity:.42;filter:saturate(.55)}\n.v1052QuickIcon{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:rgba(198,157,89,.09);border:1px solid rgba(198,157,89,.17);font-size:17px;flex:0 0 auto}\n.v1052QuickStack>span:last-child{min-width:0;display:grid;gap:2px}.v1052QuickStack b{font-size:12px;color:#f0d79e}.v1052QuickStack small{font-size:9.5px;color:#a99a80;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n@media(max-width:430px){.v1052QuickStack{min-height:43px;padding:7px 10px}.v1052QuickIcon{width:28px;height:28px}.v1052QuickStack b{font-size:11.5px}.v1052QuickStack small{font-size:9px}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_56.js":"window.RF=window.RF||{};\nRF.VERSION='10.56.0';\nRF.BUILD={\n  version:'10.56.0',\n  title:'Overburdened',\n  built:'17 Sep 2026 • 15:58 BST',\n  buildId:'20260917-1558-bst'\n};\nRF.V1056=RF.V1056||{};\n\n/* Realmforge V10.56 — Overburdened\n   - Pack acquisitions are lossless: new item stacks may temporarily exceed Pack capacity.\n   - Being above capacity pauses simulated time and prevents travel until the Pack is sorted.\n   - The Pack page shows a prominent over-encumbered warning and exact excess-slot count.\n   - Detached Equipment / Tool Belt returns may overflow safely instead of deleting or blocking gear.\n   - Existing saves/loadouts migrate in place; nothing valid is unequipped or discarded.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1056;\nV.version='10.56.0';\nV.LEGACY_PICKS={master_lockpick:2,fine_lockpick:4,master_picks:8};\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.cap=s=>RF.packCapacity?Math.max(0,+RF.packCapacity(s)||0):Math.max(0,+RF.V82?.PACK_CAP||28);\nV.used=s=>RF.packUsed?Math.max(0,+RF.packUsed(s)||0):Object.values(s?.inventory||{}).filter(q=>(+q||0)>0).length;\nV.excess=s=>Math.max(0,V.used(s)-V.cap(s));\nV.isOver=s=>V.excess(s)>0;\nRF.isOverEncumbered=V.isOver;\nRF.packExcess=V.excess;\n\nV.syncPauseSnapshots=function(s){\n  if(!s)return;\n  if(RF.V96){\n    if(RF.V96.modalResume){RF.V96.modalResume.speed=0;RF.V96.modalResume.paused=true;RF.V96.modalResume.boostRemaining=0}\n    if(RF.V96.selectResume){RF.V96.selectResume.speed=0;RF.V96.selectResume.paused=true;RF.V96.selectResume.boostRemaining=0}\n    RF.V96.lastNonZeroSpeed=RF.V96.lastNonZeroSpeed||1;\n  }\n};\nV.enforcePause=function(s,{log=false}={}){\n  if(!s||!V.isOver(s))return false;\n  const wasMoving=(+s.speed||0)>0||!s.paused;\n  s.speed=0;s.paused=true;\n  if(s.v8){s.v8.boostUntil=0}\n  V.syncPauseSnapshots(s);\n  s.v1056=s.v1056||{};\n  if(log&&wasMoving&&!s.v1056.pauseLogged){\n    RF.log?.(s,`Pack over capacity (${V.used(s)}/${V.cap(s)} slots). Time and travel pause until you free ${V.excess(s)} slot${V.excess(s)===1?'':'s'}.`,'bad');\n    s.v1056.pauseLogged=true;\n  }\n  return true;\n};\nV.clearResolvedFlag=function(s){\n  if(!s)return;\n  s.v1056=s.v1056||{};\n  if(!V.isOver(s))s.v1056.pauseLogged=false;\n};\nV.warningText=function(s){\n  const used=V.used(s),cap=V.cap(s),ex=V.excess(s);\n  return `Your Pack is ${ex} slot${ex===1?'':'s'} over capacity (${used}/${cap}). Time and travel are locked until you bank, drop, sell, use or equip enough items to return to ${cap}/${cap} or lower.`;\n};\nV.warn=function(s=RF.state,title='Over-encumbered'){\n  if(!s)return false;\n  V.enforcePause(s);\n  RF.UI.modal={type:'message',title,text:V.warningText(s)};\n  RF.save?.(s);RF.UI.render(s);return false;\n};\nV.canPassTime=s=>!V.isOver(s);\nRF.canPassTime=V.canPassTime;\n\n// Future migrations can always return invalidated loadout items here. This deliberately\n// permits a temporary 31/30-style Pack rather than deleting gear or blocking migration.\nV.forceToPack=function(s,id,qty=1,reason='Loadout item returned to Pack'){\n  if(!s||!id)return false;\n  qty=Math.floor(Number(qty)||0);if(qty<=0)return false;\n  s.inventory=s.inventory||{};s.inventory[id]=(s.inventory[id]||0)+qty;\n  if(s.collection?.items)s.collection.items[id]=true;\n  RF.log?.(s,`${reason}: ${qty} × ${RF.DATA.items?.[id]?.name||id}.`,'important');\n  V.enforcePause(s,{log:true});\n  return true;\n};\nRF.forceLoadoutItemToPack=V.forceToPack;\n\n// Lossless item intake. V8.2 used to bank or discard brand-new overflow stacks; from V10.56\n// every legitimate acquisition lands in the Pack first and the player gets to sort it out.\nRF.addItem=function(s,id,q=1){\n  if(!s||!id)return false;\n  q=Math.floor(Number(q)||0);if(q<=0)return false;\n  if(V.LEGACY_PICKS[id]){q*=V.LEGACY_PICKS[id];id='lockpick'}\n  s.inventory=s.inventory||{};\n  s.inventory[id]=(s.inventory[id]||0)+q;\n  if(s.collection?.items)s.collection.items[id]=true;\n  V.enforcePause(s,{log:true});\n  return true;\n};\n\n// Detached loadout returns/swaps must never destroy an item because the Pack happens to be full.\nif(RF.V1053){\n  RF.V1053.addPackOne=function(s,id){return V.forceToPack(s,id,1,'Loadout item returned to Pack')};\n  RF.V1053.canSwap=function(s,newId){return Math.max(0,Number(s?.inventory?.[newId])||0)>0};\n}\n\n// Active gathering/crafting and market purchases may create overflow too. The penalty is the\n// resulting time lock, not disappearance of the reward.\nif(RF.V1022)RF.V1022.canReceiveGather=()=>true;\nV.craftAnalysis=function(s,id){\n  const r=RF.DATA.recipes?.[id];\n  if(!r)return {max:0,blockers:['Recipe data is unavailable.'],materialMax:0};\n  const blockers=[];\n  const level=s.skills?.[r.skill]?.level||1;\n  if(level<r.level)blockers.push(`Requires ${RF.DATA.skills?.[r.skill]?.name||r.skill} Lv ${r.level} (you are Lv ${level}).`);\n  let materialMax=Infinity;\n  for(const [itemId,qty] of Object.entries(r.inputs||{})){\n    const have=RF.V1019?.craftCount?RF.V1019.craftCount(s,itemId):Math.max(0,+s.inventory?.[itemId]||0);\n    materialMax=Math.min(materialMax,Math.floor(have/qty));\n    if(have<qty){\n      const pack=Math.max(0,+s.inventory?.[itemId]||0),bank=RF.V1019?.bankCount?RF.V1019.bankCount(s,itemId):0;\n      const where=RF.V1019?.canUseBank?.(s)?`pack ${pack} + bank ${bank}`:`pack ${pack}`;\n      blockers.push(`Need ${qty} × ${RF.DATA.items?.[itemId]?.name||itemId} (you have ${have}: ${where}).`);\n    }\n  }\n  if(!Number.isFinite(materialMax))materialMax=0;\n  materialMax=Math.max(0,materialMax);\n  if(blockers.length)return {max:0,blockers,materialMax};\n  return {max:materialMax,blockers:[],materialMax};\n};\nif(RF.V1019)RF.V1019.craftAnalysis=V.craftAnalysis;\nif(RF.V1015){RF.V1015.craftAnalysis=V.craftAnalysis;RF.V1015.recipeState=function(s,id,r){const a=V.craftAnalysis(s,id),lvl=s.skills?.[r.skill]?.level||1;if(lvl<r.level)return {label:`LV ${r.level}`,ready:false};if(a.materialMax<1)return {label:'MATS',ready:false};return {label:'READY',ready:true}}}\nRF.v9MaxCraft=function(s,id){return V.craftAnalysis(s,id).max};\nRF.v9MaxBuy=function(s,id,price){\n  const it=RF.DATA.items?.[id];if(!it)return 0;\n  return Math.max(0,Math.floor((s.gold||0)/Math.max(1,price||1)));\n};\nif(RF.V1054){\n  RF.V1054.buyMax=function(s,loc,id){\n    const rec=RF.V1054.ensureStock(s,loc),stock=Math.max(0,Number(rec?.stock?.[id])||0),price=RF.V1054.buyPrice(s,loc,id);\n    if(stock<1||price<1)return 0;\n    return Math.min(stock,Math.max(0,Math.floor((s.gold||0)/price)));\n  };\n}\n\n// Time cannot move while burdened. Returning false lets newer callers detect the block while\n// older callers simply receive a harmless no-op instead of advancing the world clock.\nconst advanceBase=RF.advanceWorld;\nRF.advanceWorld=function(minutes){\n  const s=RF.state;\n  if(s&&V.isOver(s)){V.enforcePause(s);return false}\n  return advanceBase.apply(this,arguments);\n};\n\nconst speedBase=RF.setSpeed;\nRF.setSpeed=function(v){\n  const s=RF.state;\n  if(s&&+v>0&&V.isOver(s))return V.warn(s);\n  const out=speedBase.apply(this,arguments);V.clearResolvedFlag(RF.state);return out;\n};\n\nconst travelBase=RF.travel;\nRF.travel=function(){\n  const s=RF.state;\n  if(s&&V.isOver(s))return V.warn(s,'Too burdened to travel');\n  return travelBase.apply(this,arguments);\n};\n\nconst startActivityBase=RF.startActivity;\nRF.startActivity=function(type){\n  const s=RF.state;\n  if(s&&V.isOver(s))return V.warn(s,type==='travel'?'Too burdened to travel':'Pack must be sorted first');\n  return startActivityBase.apply(this,arguments);\n};\n\n// Explicit long rests should not grant free recovery when advanceWorld is blocked.\nif(typeof RF.restAtHome==='function'){\n  const restHomeBase=RF.restAtHome;\n  RF.restAtHome=function(){if(V.isOver(RF.state))return V.warn(RF.state,'Too burdened to rest');return restHomeBase.apply(this,arguments)};\n}\nif(typeof RF.v10RestUntil==='function'){\n  const restInnBase=RF.v10RestUntil;\n  RF.v10RestUntil=function(){if(V.isOver(RF.state))return V.warn(RF.state,'Too burdened to rest');return restInnBase.apply(this,arguments)};\n}\n\n// Time-costing active minigames also respect the lock. Pack-management actions, combat,\n// dialogue and ordinary UI remain available so the player can solve the overload.\nV.guardStart=function(name,fn){if(typeof fn!=='function')return fn;return function(){if(V.isOver(RF.state))return V.warn(RF.state,'Pack must be sorted first');return fn.apply(this,arguments)}};\nif(typeof RF.v9StartCraftQty==='function')RF.v9StartCraftQty=V.guardStart('craft',RF.v9StartCraftQty);\nif(typeof RF.startExcavation==='function')RF.startExcavation=V.guardStart('excavation',RF.startExcavation);\nif(typeof RF.startPotionLab==='function')RF.startPotionLab=V.guardStart('herblore',RF.startPotionLab);\nif(typeof RF.cookAtFire==='function')RF.cookAtFire=V.guardStart('cooking',RF.cookAtFire);\nif(RF.V1024?.startHomeCook)RF.V1024.startHomeCook=V.guardStart('cooking',RF.V1024.startHomeCook);\nif(typeof RF.lightFire==='function')RF.lightFire=V.guardStart('firemaking',RF.lightFire);\nif(typeof RF.startLockpick==='function')RF.startLockpick=V.guardStart('lockpicking',RF.startLockpick);\nif(typeof RF.startPickpocket==='function')RF.startPickpocket=V.guardStart('pickpocket',RF.startPickpocket);\nif(typeof RF.researchEnemy==='function')RF.researchEnemy=V.guardStart('research',RF.researchEnemy);\n\n// If road loot/event rewards make the Pack overflow, keep the journey record paused but hide the\n// travel overlay so the player can actually open Pack, drop/use items, or use a bank at the origin.\nif(RF.V1017?.mountOverlay){\n  const overlayBase=RF.V1017.mountOverlay.bind(RF.V1017);\n  RF.V1017.mountOverlay=function(s){if(V.isOver(s)){V.enforcePause(s);return}return overlayBase(s)};\n}\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.v1056=s.v1056||{};s.inventory=s.inventory||{};\n  // Keep valid existing Equipment/Tool Belt loadouts exactly where they are. V10.53 remains the\n  // owner of detached-loadout migration; we only add overflow-safe return semantics from now on.\n  if(RF.V1053?.migrate)RF.V1053.migrate(s);\n  s.version='10.56.0';\n  V.enforcePause(s,{log:false});V.clearResolvedFlag(s);\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// Pack warning + count treatment.\nconst inventoryBase=RF.UI.inventory.bind(RF.UI);\nRF.UI.inventory=function(s){\n  let h=inventoryBase(s),used=V.used(s),cap=V.cap(s),ex=V.excess(s);\n  if(!ex)return h;\n  const warning=`<div class=\"v1056OverWarning\"><div class=\"v1056WarnIcon\">⚠️</div><div><b>OVER-ENCUMBERED • +${ex} SLOT${ex===1?'':'S'}</b><span>${used}/${cap} Pack slots. Time and travel are paused until you bank, drop, sell, use or equip enough items.</span></div></div>`;\n  h=h.replace(/(<div class=\"v1046CatGrid\"[^>]*>)/,warning+'$1');\n  h=h.replace('packCount full','packCount full v1056OverCount');\n  return h;\n};\n\n// Give the top time controls a visibly locked state while still allowing taps to explain why.\nconst topBase=RF.UI.top?.bind(RF.UI);\nif(topBase)RF.UI.top=function(s){\n  let h=topBase(s);if(!V.isOver(s))return h;\n  return h.replace(/class=\"speed ([^\"]*)\" data-speed=\"([12])\"/g,(m,cls,v)=>`class=\"speed ${cls} v1056TimeLocked\" data-speed=\"${v}\" aria-disabled=\"true\" title=\"Free Pack space to resume time\"`);\n};\n\n// Final render guard catches older systems that restore a pre-combat/pre-modal speed after loot.\nconst renderBase=RF.UI.render.bind(RF.UI);\nRF.UI.render=function(s){if(s)V.enforcePause(s,{log:false});const out=renderBase(s);if(s&&!V.isOver(s))V.clearResolvedFlag(s);return out};\n\nconst st=document.createElement('style');st.id='v1056-overburdened-style';st.textContent=`\n.v1056OverWarning{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:center;padding:11px 12px;border:1px solid rgba(207,91,73,.62);border-radius:15px;background:linear-gradient(180deg,rgba(91,31,24,.46),rgba(47,19,16,.58));box-shadow:inset 0 1px rgba(255,255,255,.035)}\n.v1056WarnIcon{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:rgba(155,54,42,.28);font-size:21px}.v1056OverWarning b{display:block;color:#f2b49f;font-size:12px;letter-spacing:.06em}.v1056OverWarning span{display:block;margin-top:3px;color:#d7b9ae;font-size:10.5px;line-height:1.35}\n.v1056OverCount{color:#ef9e89!important}.speed.v1056TimeLocked{opacity:.42!important;border-color:rgba(183,88,70,.35)!important;color:#c99d94!important;filter:saturate(.55)}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n"};
+  const installed=[];
+  const installedSet=new Set();
+  function runClassic(name) {
+    if(installedSet.has(name)) return false;
+    const source=sources[name];
+    if(typeof source!=='string') throw new Error(`Unknown canonical Inventory stage: ${name}`);
+    const script=document.createElement('script');
+    script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-stage',name);
+    script.textContent=source+`\n//# sourceURL=realmforge-canonical:///inventory/${name.replace(/^js\//,'')}\n`;
+    (document.head||document.documentElement).appendChild(script);
+    script.remove();
+    installedSet.add(name);installed.push(name);
+    return true;
+  }
+  const api={
+
+    quantity: (state,id) => Math.max(0,Number(state?.inventory?.[id])||0),
+    add: (state,id,qty=1) => RF.addItem(state,id,qty),
+    take: (state,id,qty=1) => RF.takeItem(state,id,qty),
+    has: (state,req) => RF.hasItems(state,req),
+    capacity: state => typeof RF.packCapacity==='function' ? RF.packCapacity(state) : Infinity,
+    free: state => typeof RF.packFree==='function' ? RF.packFree(state) : Infinity,
+    drop: (id,all=false) => typeof RF.dropItem==='function' ? RF.dropItem(id,all) : false,
+    use: id => RF.useItem(id),
+    openItem: id => typeof RF.openItem==='function' ? RF.openItem(id) : null,
+    openBank: () => typeof RF.openBank==='function' ? RF.openBank() : null,
+    installHistoricalStage: runClassic,
+    installedStages: installed,
+    ownsStage: name => Object.prototype.hasOwnProperty.call(sources,name),
+    stageNames: () => Object.keys(sources)
+  };
+  RF.Systems.Inventory=RF.Modules.register('systems.inventory',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(sources).length,extractedIn:'11.13.0'});
+})();
+
+/* ===== js/systems/equipment.js ===== */
+/* Realmforge V11.13.0 — Canonical Equipment implementation stages.
+   Owns the mature Tool Belt, dedicated loadout pages, detached-copy model, full loadout stat balance and slot-manager layers extracted in V11.13.
+   Exact historical stage source is executed at its original chronological boundary. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  const sources={"js/v10_3.js":"window.RF=window.RF||{};\nRF.VERSION='10.3.0';\n\n/* Realmforge V10.3 — Tool Belt\n   - Tools are explicitly equipped into a separate tool belt.\n   - Equipped tools are protected from banking/dropping and marked in Pack.\n   - Active skills use the equipped tool instead of automatically selecting the best carried tool.\n   - Character page gains a dedicated Tool Belt section, separate from weapons/armour.\n*/\n\n(()=>{const st=document.createElement('style');st.textContent=`\n.v103ToolGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}\n.v103ToolSlot{border:1px solid #493d2f;background:#191611;border-radius:12px;padding:10px;min-height:82px;display:flex;gap:9px;align-items:center;text-align:left;color:#eadfc5}\n.v103ToolSlot .icon{font-size:25px;min-width:30px}.v103ToolSlot .meta{min-width:0}.v103ToolSlot small{display:block;color:#a99d88;margin-top:2px;line-height:1.25}.v103ToolSlot b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n.v103ToolType{font-size:10px;color:#d1b46f;text-transform:uppercase;letter-spacing:.08em}\n`;document.head.appendChild(st)})();\n\nRF.v103ToolTypes=function(){\n  const preferred=['mining','woodcutting','fishing','firemaking','lockpicking'];\n  const found=[...new Set(Object.values(RF.DATA.items).map(it=>it?.tool).filter(Boolean))];\n  return [...preferred.filter(x=>found.includes(x)),...found.filter(x=>!preferred.includes(x))];\n};\nRF.v103ToolLabel=function(type){return RF.DATA.skills[type]?.name||({lockpicking:'Lockpicking'}[type])||String(type).replace(/_/g,' ').replace(/\\b\\w/g,c=>c.toUpperCase())};\nRF.v103BestOwnedTool=function(s,type){return Object.entries(RF.DATA.items).filter(([id,it])=>it?.tool===type&&(s.inventory?.[id]||0)>0).map(([id,it])=>({id,...it})).sort((a,b)=>(b.tier||1)-(a.tier||1))[0]||null};\nRF.v103ToolEquipped=function(s,id){return Object.values(s.toolbelt||{}).includes(id)};\nRF.v103ToolSlotFor=function(s,id){return Object.entries(s.toolbelt||{}).find(([,x])=>x===id)?.[0]||null};\n\nRF.migrateV103=function(s){\n  if(!s)return s;s.version='10.3.0';s.flags=s.flags||{};s.toolbelt=s.toolbelt||{};\n  RF.v103ToolTypes().forEach(type=>{\n    const current=s.toolbelt[type];\n    if(current&&RF.DATA.items[current]?.tool===type)return;\n    const best=RF.v103BestOwnedTool(s,type);s.toolbelt[type]=best?.id||null;\n  });\n  return s\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// The explicitly equipped tool is now the active tool. No silent best-in-pack selection.\nRF.bestTool=function(s,skill){\n  const id=s?.toolbelt?.[skill],it=id&&RF.DATA.items[id];\n  if(id&&it?.tool===skill)return {id,...it};\n  return null\n};\n\n// Equipment helpers now understand both worn equipment and the separate tool belt.\nconst v103IsEquippedBase=RF.isEquipped;\nRF.isEquipped=function(s,id){return !!(v103IsEquippedBase?.(s,id)||RF.v103ToolEquipped(s,id))};\nconst v103EquippedSlotBase=RF.equippedSlot;\nRF.equippedSlot=function(s,id){return RF.v103ToolSlotFor(s,id)?`tool:${RF.v103ToolSlotFor(s,id)}`:(v103EquippedSlotBase?.(s,id)||null)};\nconst v103CanEquipBase=RF.canEquipItem;\nRF.canEquipItem=function(s,id){const it=RF.DATA.items[id];if(it?.tool)return (s.inventory?.[id]||0)>0;return v103CanEquipBase?s? v103CanEquipBase(s,id):false:false};\n\nRF.equipTool=function(id){\n  const s=RF.state,it=RF.DATA.items[id];if(!it?.tool||(s.inventory[id]||0)<1)return;\n  s.toolbelt=s.toolbelt||{};s.toolbelt[it.tool]=id;RF.log(s,`Equipped ${it.name} to the ${RF.v103ToolLabel(it.tool)} tool belt slot.`,'good');RF.save(s);RF.UI.render(s)\n};\nRF.unequipTool=function(id){\n  const s=RF.state,type=RF.v103ToolSlotFor(s,id);if(!type)return;s.toolbelt[type]=null;RF.log(s,`Removed ${RF.DATA.items[id]?.name||id} from the tool belt.`);RF.save(s);RF.UI.render(s)\n};\nconst v103EquipBase=RF.equip;RF.equip=function(id){const it=RF.DATA.items[id];if(it?.tool)return RF.equipTool(id);return v103EquipBase(id)};\nconst v103UnequipBase=RF.unequip;RF.unequip=function(id){if(RF.DATA.items[id]?.tool)return RF.unequipTool(id);return v103UnequipBase(id)};\n\n// Pack: tools show EQUIP / EQUIPPED just like gear, but remain a distinct equipment family.\nRF.UI.inventory=function(s){\n  let used=RF.packUsed(s),pct=Math.min(100,used/RF.V82.PACK_CAP*100),cat=s.v93?.inventoryCategory||'all';\n  let rows=Object.entries(s.inventory).filter(([,q])=>q>0).filter(([id])=>cat==='all'||RF.v92Category(RF.DATA.items[id])===cat).map(([id,q])=>{\n    let it=RF.DATA.items[id];if(!it)return'';let equipped=RF.isEquipped(s,id),req=RF.v93Req?.(s,id)||'',can=it.tool?true:RF.canEquipItem(s,id);\n    let equippable=!!(it.slot||it.tool),state=equipped?'<span class=\"equipState equipped\">EQUIPPED</span>':equippable?(can?'<span class=\"equipState\">EQUIP</span>':'<span class=\"equipState locked\">LOCKED</span>'):'';\n    let sub=it.rarity||it.type||'Item';if(it.tool)sub+=` • ${RF.v103ToolLabel(it.tool)} tool${it.tier?` • Tier ${it.tier}`:''}`;else if(req)sub+=` • ${req}`;\n    return `<button class=\"row inventoryRow\" data-item-detail=\"${id}\"><div class=\"icon\">${it.icon}</div><div class=\"meta\"><b>${it.name} ${state}</b><small>${sub}</small></div><span class=\"qty\">×${q}</span><span class=\"chev\">›</span></button>`\n  }).join('');\n  return `<section class=\"card\"><div class=\"questTitle\"><h2>Pack</h2><span class=\"packCount ${used>=RF.V82.PACK_CAP?'full':''}\">${used}/${RF.V82.PACK_CAP} slots</span></div><div class=\"packBar\"><div style=\"width:${pct}%\"></div></div>${RF.v93Select('inventory',cat)}${RF.isBankTown(s)?`<button class=\"action bankOpen\" data-open-bank><b>🏦 Open Bank</b><small>Deposit or withdraw stored items</small></button>`:''}<div class=\"list inventoryList\">${rows||'<div class=\"sub\">Nothing in this category.</div>'}</div></section>`\n};\n\n// Tool item details get belt-specific controls and stats.\nconst v103ModalBase=RF.UI.modalHtml.bind(RF.UI);\nRF.UI.modalHtml=function(s){let m=this.modal;\n  if(m?.type==='itemDetail'){\n    const id=m.id,it=RF.DATA.items[id],q=s.inventory[id]||0;\n    if(it?.tool&&q>0){\n      const equipped=RF.v103ToolEquipped(s,id),active=s.toolbelt?.[it.tool],activeItem=active?RF.DATA.items[active]:null;\n      let stats=[`🧰 ${RF.v103ToolLabel(it.tool)} tool`,`⭐ Tier ${it.tier||1}`];if(it.power!=null)stats.push(`⚙️ Work power ${it.power}`);if(it.control!=null)stats.push(`🎯 Control +${Math.round(it.control*100)}%`);if(it.value!=null)stats.push(`🪙 Base value ${it.value}g`);\n      return `<div class=\"modalBack\"><div class=\"modal itemModal\"><div class=\"itemHero\">${it.icon}</div><span class=\"eyebrow\">TOOL • OWNED ×${q}</span><h2>${it.name}</h2><div class=\"itemDesc\">${it.desc||'No description recorded.'}</div><div class=\"itemStats\">${stats.map(x=>`<span>${x}</span>`).join('')}</div><div class=\"notice\">Tool Belt: <b>${RF.v103ToolLabel(it.tool)}</b>${activeItem&&!equipped?`<br>Currently equipped: ${activeItem.icon} ${activeItem.name}`:''}</div><div class=\"choices\">${equipped?`<button class=\"choice\" data-tool-unequip=\"${id}\"><b>Unequip from Tool Belt</b></button>`:`<button class=\"choice\" data-tool-equip=\"${id}\"><b>Equip to Tool Belt</b><small>This becomes the tool used for ${RF.v103ToolLabel(it.tool)} actions.</small></button>`}<button class=\"choice dangerChoice\" data-drop-item=\"${id}\" ${equipped?'disabled':''}><b>Drop 1</b><small>${equipped?'Equipped tools cannot be dropped.':'Permanently discard one.'}</small></button>${q>1&&!equipped?`<button class=\"choice dangerChoice\" data-drop-all=\"${id}\"><b>Drop All (${q})</b></button>`:''}<button class=\"choice\" data-close-item><b>Close</b></button></div></div></div>`\n    }\n  }\n  return v103ModalBase(s)\n};\n\n// Character: remove the old automatic Active Tools card and replace it with a real Tool Belt.\nconst v103CharacterBase=RF.UI.character.bind(RF.UI);\nRF.UI.character=function(s){\n  let h=v103CharacterBase(s);\n  h=h.replace(/<section class=\"card\"><h3>🧰 Active Tools<\\/h3>[\\s\\S]*?<\\/section>/,'');\n  const rows=RF.v103ToolTypes().map(type=>{const id=s.toolbelt?.[type],it=id?RF.DATA.items[id]:null;return `<button class=\"v103ToolSlot\" ${id?`data-item-detail=\"${id}\"`:''}><div class=\"icon\">${it?.icon||'▫️'}</div><div class=\"meta\"><span class=\"v103ToolType\">${RF.v103ToolLabel(type)}</span><b>${it?.name||'Empty slot'}</b><small>${it?`Tier ${it.tier||1} • Equipped`:'Equip a matching tool from your Pack'}</small></div></button>`}).join('');\n  return h+`<section class=\"card\"><div class=\"questTitle\"><h3>🧰 Tool Belt</h3><span class=\"tiny\">Separate from worn gear</span></div><div class=\"sub\">Only the tool equipped here provides its bonuses during active skilling.</div><div class=\"v103ToolGrid\">${rows}</div></section>`\n};\n\nconst v103BindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){v103BindBase(s);\n  document.querySelectorAll('[data-tool-equip]').forEach(b=>b.onclick=()=>{RF.equipTool(b.dataset.toolEquip);RF.UI.modal={type:'itemDetail',id:b.dataset.toolEquip};RF.UI.render(RF.state)});\n  document.querySelectorAll('[data-tool-unequip]').forEach(b=>b.onclick=()=>{RF.unequipTool(b.dataset.toolUnequip);RF.UI.modal={type:'itemDetail',id:b.dataset.toolUnequip};RF.UI.render(RF.state)});\n};\n\nif(RF.state){RF.migrateV103(RF.state);RF.save(RF.state)}\n","js/v10_50.js":"window.RF=window.RF||{};\nRF.VERSION='10.50.0';\nRF.BUILD={\n  version:'10.50.0',\n  title:'Loadout Pages',\n  built:'17 Sep 2026 • 02:24 BST',\n  buildId:'20260917-0224-bst'\n};\nRF.V1050=RF.V1050||{};\n\n/* Realmforge V10.50 — Loadout Pages\n   - Promotes Equipment and Tool Belt into dedicated navigation tabs.\n   - Both pages use the newer compact 4-column inventory-card direction.\n   - Removes the old Equipment and Tool Belt cards from Character so Character can focus on progression and records.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1050;\nV.version='10.50.0';\nV.EQUIP_SLOTS=[\n  ['main','⚔️','Main Hand'],['off','🛡️','Off Hand'],['head','🪖','Head'],['chest','🥋','Chest'],\n  ['legs','👖','Legs'],['boots','🥾','Boots'],['ring1','💍','Ring I'],['ring2','💍','Ring II']\n];\n\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.50.0';\n  s.v1050=s.v1050||{};\n  s.equipment=s.equipment||{};\n  V.EQUIP_SLOTS.forEach(([slot])=>{if(!(slot in s.equipment))s.equipment[slot]=null});\n  s.toolbelt=s.toolbelt||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nV.toolTypes=function(){\n  const types=(RF.v103ToolTypes?.()||[]).filter(x=>x!=='lockpicking');\n  return [...new Set(types)];\n};\nV.toolIcon=function(type){\n  return ({mining:'⛏️',woodcutting:'🪓',fishing:'🎣',firemaking:'🔥'})[type]||'🧰';\n};\nV.slotTile=function(s,slot,slotIcon,label){\n  const id=s.equipment?.[slot],it=id?RF.DATA.items?.[id]:null;\n  if(it){\n    return `<button type=\"button\" class=\"v1050LoadoutTile equipped\" data-item-detail=\"${V.escape(id)}\" aria-label=\"${V.escape(label)}: ${V.escape(it.name)}\">\n      <div class=\"v1050TileIcon\">${it.icon||slotIcon}</div>\n      <div class=\"v1050TileLabel\">${V.escape(label)}</div>\n      <div class=\"v1050TileName\">${V.escape(it.name)}</div>\n      <div class=\"v1050TileFoot\"><span>EQUIPPED</span></div>\n    </button>`;\n  }\n  return `<div class=\"v1050LoadoutTile empty\" aria-label=\"${V.escape(label)} empty\">\n    <div class=\"v1050TileIcon muted\">${slotIcon}</div>\n    <div class=\"v1050TileLabel\">${V.escape(label)}</div>\n    <div class=\"v1050TileName muted\">Empty slot</div>\n    <div class=\"v1050TileFoot\"><span>EMPTY</span></div>\n  </div>`;\n};\nV.toolTile=function(s,type){\n  const id=s.toolbelt?.[type],it=id?RF.DATA.items?.[id]:null,label=RF.v103ToolLabel?.(type)||type;\n  if(it){\n    return `<button type=\"button\" class=\"v1050LoadoutTile equipped\" data-item-detail=\"${V.escape(id)}\" aria-label=\"${V.escape(label)} tool: ${V.escape(it.name)}\">\n      <div class=\"v1050TileIcon\">${it.icon||V.toolIcon(type)}</div>\n      <div class=\"v1050TileLabel\">${V.escape(label)}</div>\n      <div class=\"v1050TileName\">${V.escape(it.name)}</div>\n      <div class=\"v1050TileFoot\"><span>Tier ${it.tier||1}</span></div>\n    </button>`;\n  }\n  return `<div class=\"v1050LoadoutTile empty\" aria-label=\"${V.escape(label)} tool slot empty\">\n    <div class=\"v1050TileIcon muted\">${V.toolIcon(type)}</div>\n    <div class=\"v1050TileLabel\">${V.escape(label)}</div>\n    <div class=\"v1050TileName muted\">Empty slot</div>\n    <div class=\"v1050TileFoot\"><span>EMPTY</span></div>\n  </div>`;\n};\n\nRF.UI.equipmentPage=function(s){\n  V.migrate(s);\n  const equipped=V.EQUIP_SLOTS.filter(([slot])=>!!s.equipment?.[slot]).length;\n  const tiles=V.EQUIP_SLOTS.map(([slot,icon,label])=>V.slotTile(s,slot,icon,label)).join('');\n  return `<section class=\"card v1050LoadoutCard\">\n    <div class=\"questTitle\"><div><span class=\"eyebrow\">LOADOUT</span><h2>🛡️ Equipment</h2></div><span class=\"packCount\">${equipped}/${V.EQUIP_SLOTS.length} equipped</span></div>\n    <div class=\"sub\">Your worn combat gear. Tap an equipped item for details, requirements and unequip controls.</div>\n    <div class=\"v1050Summary\"><span>⚔️ Weapon Damage <b>${RF.weaponDamage(s)}</b></span><span>🛡️ Armour <b>${RF.armor(s)}</b></span></div>\n    <div class=\"v1050LoadoutGrid\">${tiles}</div>\n  </section>`;\n};\n\nRF.UI.toolbeltPage=function(s){\n  V.migrate(s);\n  const types=V.toolTypes(),equipped=types.filter(type=>!!s.toolbelt?.[type]).length;\n  const tiles=types.map(type=>V.toolTile(s,type)).join('');\n  return `<section class=\"card v1050LoadoutCard\">\n    <div class=\"questTitle\"><div><span class=\"eyebrow\">ACTIVE SKILL TOOLS</span><h2>🧰 Tool Belt</h2></div><span class=\"packCount\">${equipped}/${types.length} equipped</span></div>\n    <div class=\"sub\">Only tools equipped here provide their bonuses during active skilling. Tap an equipped tool for details or to unequip it.</div>\n    <div class=\"v1050LoadoutGrid\">${tiles||'<div class=\"v1042VaultEmpty\">No Tool Belt slots are currently available.</div>'}</div>\n  </section>`;\n};\n\n// Dedicated page routes.\nconst pageBase=RF.UI.page.bind(RF.UI);\nRF.UI.page=function(s){\n  if(this.tab==='equipment')return this.equipmentPage(s);\n  if(this.tab==='toolbelt')return this.toolbeltPage(s);\n  return pageBase(s);\n};\n\n// Character is now progression / reputation / records only. Loadout management has its own pages.\nconst characterBase=RF.UI.character.bind(RF.UI);\nRF.UI.character=function(s){\n  let h=characterBase(s);\n  h=h.replace(/<section class=\"card\"><h3>Equipment<\\/h3>[\\s\\S]*?<\\/section>/g,'');\n  h=h.replace(/<section class=\"card\"><div class=\"questTitle\"><h3>🧰 Tool Belt<\\/h3>[\\s\\S]*?<\\/section>/g,'');\n  return h;\n};\n\n// Keep both the fallback nav source and the active V10.38 launcher aware of the new pages.\nconst navOrder=[\n  ['world','🌍','World'],['map','🗺️','World Map'],['database','📚','Database'],\n  ['character','🧍','Character'],['equipment','🛡️','Equipment'],['toolbelt','🧰','Tool Belt'],\n  ['skills','📊','Skills'],['inventory','🎒','Pack'],['quests','📜','Quests'],\n  ['shop','🪙','Shop'],['dev','🛠️','Developer'],['options','⚙️','Options & Saves']\n];\nif(RF.V95)RF.V95.navItems=navOrder.map(x=>[...x]);\nif(RF.V1038){\n  RF.V1038.items=navOrder.map(x=>({id:x[0],icon:x[1],label:x[2]}));\n  RF.V1038.meta={\n    ...(RF.V1038.meta||{}),\n    world:'Your current location, actions and feed.',\n    map:'Route planning and travel overview.',\n    database:'Browse items, enemies, resources and lore.',\n    character:'Stats, progression, reputation and lifetime records.',\n    equipment:'Worn weapons, armour, rings and combat loadout.',\n    toolbelt:'Equipped tools used by active gathering skills.',\n    skills:'Mastery levels and skill details.',\n    inventory:'Pack, bank access and item actions.',\n    quests:'Active objectives and quest progress.',\n    shop:'Trading and merchants.',\n    dev:'Testing tools and campaign utilities.',\n    options:'Save slots, backups and campaign controls.'\n  };\n}\n\nconst st=document.createElement('style');st.id='v1050-loadout-pages-style';st.textContent=`\n.v1050LoadoutCard{display:grid;gap:12px}.v1050LoadoutCard h2{margin:2px 0 0}\n.v1050Summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.v1050Summary span{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid rgba(198,158,83,.18);border-radius:13px;background:rgba(15,11,8,.28);color:#ae9e84;font-size:10px}.v1050Summary b{color:#efd59d;font-size:12px}\n.v1050LoadoutGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border:1px solid rgba(198,158,83,.16);border-radius:18px;background:linear-gradient(180deg,rgba(13,10,8,.18),rgba(9,7,6,.32));padding:8px}\n.v1050LoadoutTile{appearance:none;min-width:0;min-height:110px;padding:9px 7px 8px;border-radius:15px;border:1px solid rgba(201,159,84,.18);background:linear-gradient(180deg,rgba(43,32,21,.92),rgba(18,13,10,.98));color:#f3e1bb;text-align:left;display:flex;flex-direction:column;gap:5px;box-shadow:inset 0 1px rgba(255,255,255,.035)}\nbutton.v1050LoadoutTile:active{transform:scale(.98);border-color:#a97c3e}.v1050LoadoutTile.equipped{border-color:rgba(198,157,89,.34)}.v1050LoadoutTile.empty{opacity:.58}\n.v1050TileIcon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01));border:1px solid rgba(223,183,104,.14)}.v1050TileIcon.muted{filter:grayscale(.7);opacity:.65}\n.v1050TileLabel{font-size:8px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#bca679;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v1050TileName{font-size:10.5px;font-weight:800;line-height:1.14;min-height:24px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.v1050TileName.muted{color:#9b8d77}.v1050TileFoot{margin-top:auto;font-size:7.5px;font-weight:800;letter-spacing:.07em;color:#d5bd8a}\n@media(max-width:430px){.v1050LoadoutGrid{gap:7px;padding:7px}.v1050LoadoutTile{min-height:102px;padding:8px 6px 7px;border-radius:14px}.v1050TileIcon{width:34px;height:34px;font-size:22px}.v1050TileName{font-size:10px;min-height:22px}.v1050TileLabel{font-size:7.5px}.v1050Summary span{font-size:9px;padding:8px}.v1050Summary b{font-size:11px}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_53.js":"window.RF=window.RF||{};\nRF.VERSION='10.53.0';\nRF.BUILD={\n  version:'10.53.0',\n  title:'Detached Loadout',\n  built:'17 Sep 2026 • 07:26 BST',\n  buildId:'20260917-0726-bst'\n};\nRF.V1053=RF.V1053||{};\n\n/* Realmforge V10.53 — Detached Loadout\n   - Worn equipment and Tool Belt tools now live outside the Pack and no longer consume Pack slots.\n   - Equipping from the Pack removes one copy from the Pack; replacing gear returns the old item to the Pack.\n   - Unequipping returns the item to the Pack and is blocked if doing so would exceed Pack capacity.\n   - Existing saves are migrated once by extracting currently equipped copies from Pack inventory.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1053;\nV.version='10.53.0';\nV.EQUIP_SLOTS=RF.V1050?.EQUIP_SLOTS?.map(x=>x[0])||['main','off','head','chest','legs','boots','ring1','ring2'];\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.cap=s=>RF.packCapacity?RF.packCapacity(s):(RF.V82?.PACK_CAP||28);\nV.packQty=(s,id)=>Math.max(0,Number(s?.inventory?.[id])||0);\nV.loadoutRefs=function(s,id){\n  const out=[];\n  Object.entries(s?.equipment||{}).forEach(([slot,x])=>{if(x===id)out.push({kind:'equipment',slot})});\n  Object.entries(s?.toolbelt||{}).forEach(([slot,x])=>{if(x===id)out.push({kind:'toolbelt',slot})});\n  return out;\n};\nV.isLoadoutItem=(s,id)=>V.loadoutRefs(s,id).length>0;\nV.removePackOne=function(s,id){\n  const q=V.packQty(s,id);if(q<1)return false;\n  RF.takeItem(s,id,1);return true;\n};\nV.addPackOne=function(s,id){\n  if(!s||!id)return false;\n  if(V.packQty(s,id)<=0&&RF.packUsed(s)>=V.cap(s))return false;\n  s.inventory=s.inventory||{};s.inventory[id]=(s.inventory[id]||0)+1;return true;\n};\nV.canSwap=function(s,newId,oldId){\n  const used=RF.packUsed(s),newQ=V.packQty(s,newId);\n  if(newQ<1)return false;\n  let after=used-(newQ===1?1:0);\n  if(oldId&&oldId!==newId&&V.packQty(s,oldId)<=0)after++;\n  return after<=V.cap(s);\n};\nV.blocked=function(title,text){RF.UI.modal={type:'message',title,text};RF.UI.render(RF.state);return false};\n\n// V10.3 originally required a Tool Belt item to remain physically in inventory. From V10.53\n// onward the Tool Belt itself owns that copy, so old migrations must preserve a valid detached tool.\nRF.migrateV103=function(s){\n  if(!s)return s;s.version='10.3.0';s.flags=s.flags||{};s.toolbelt=s.toolbelt||{};\n  RF.v103ToolTypes().forEach(type=>{\n    const current=s.toolbelt[type];\n    if(current&&RF.DATA.items[current]?.tool===type)return;\n    const best=RF.v103BestOwnedTool(s,type);s.toolbelt[type]=best?.id||null;\n  });\n  return s;\n};\n\nV.extractExistingLoadout=function(s){\n  if(s.v1053?.detached)return;\n  const refs=[];\n  V.EQUIP_SLOTS.forEach(slot=>{const id=s.equipment?.[slot];if(id)refs.push(id)});\n  Object.values(s.toolbelt||{}).forEach(id=>{if(id)refs.push(id)});\n  refs.forEach(id=>{if(V.packQty(s,id)>0)RF.takeItem(s,id,1)});\n  s.v1053.detached=true;\n};\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.53.0';s.v1053=s.v1053||{};s.inventory=s.inventory||{};s.equipment=s.equipment||{};s.toolbelt=s.toolbelt||{};\n  V.extractExistingLoadout(s);\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// Tool bonuses now come from the detached Tool Belt copy rather than a matching Pack copy.\nRF.bestTool=function(s,skill){\n  const id=s?.toolbelt?.[skill],it=id&&RF.DATA.items?.[id];\n  if(id&&it?.tool===skill)return {id,...it};\n  return null;\n};\n\nRF.equipTool=function(id){\n  const s=RF.state,it=RF.DATA.items?.[id];\n  if(!s||!it?.tool||V.packQty(s,id)<1)return false;\n  const type=it.tool,oldId=s.toolbelt?.[type]||null;\n  if(oldId===id)return V.blocked('Already Equipped',`${it.name} is already in that Tool Belt slot.`);\n  if(!V.canSwap(s,id,oldId))return V.blocked('Pack Full',`There is no Pack slot available for ${RF.DATA.items?.[oldId]?.name||'the replaced tool'}. Free a Pack slot before swapping tools.`);\n  V.removePackOne(s,id);\n  if(oldId)V.addPackOne(s,oldId);\n  s.toolbelt=s.toolbelt||{};s.toolbelt[type]=id;\n  RF.log?.(s,oldId?`Equipped ${it.name}; ${RF.DATA.items?.[oldId]?.name||oldId} returned to the Pack.`:`Equipped ${it.name} to the ${RF.v103ToolLabel?.(type)||type} Tool Belt slot.`,'good');\n  RF.save?.(s);RF.UI.render(s);return true;\n};\nRF.unequipTool=function(id){\n  const s=RF.state,type=RF.v103ToolSlotFor?.(s,id);if(!s||!type)return false;\n  if(!V.addPackOne(s,id))return V.blocked('Pack Full',`Free a Pack slot before removing ${RF.DATA.items?.[id]?.name||id} from the Tool Belt.`);\n  s.toolbelt[type]=null;RF.log?.(s,`${RF.DATA.items?.[id]?.name||id} returned to the Pack.`);RF.save?.(s);RF.UI.render(s);return true;\n};\n\nRF.equip=function(id){\n  const s=RF.state,it=RF.DATA.items?.[id];if(!s||!it)return false;\n  if(it.tool)return RF.equipTool(id);\n  if(!it.slot||V.packQty(s,id)<1)return false;\n  const req=RF.itemRequirement?.(it);\n  if(req&&(s.skills?.[req.skill]?.level||1)<req.level)return V.blocked('Requirement Not Met',`Requires ${RF.DATA.skills?.[req.skill]?.name||req.skill} level ${req.level}.`);\n  const slot=it.slot,oldId=s.equipment?.[slot]||null;\n  if(oldId===id)return V.blocked('Already Equipped',`${it.name} is already equipped in that slot.`);\n  if(!V.canSwap(s,id,oldId))return V.blocked('Pack Full',`There is no Pack slot available for ${RF.DATA.items?.[oldId]?.name||'the replaced item'}. Free a Pack slot before changing equipment.`);\n  V.removePackOne(s,id);\n  if(oldId)V.addPackOne(s,oldId);\n  s.equipment=s.equipment||{};s.equipment[slot]=id;\n  RF.log?.(s,oldId?`Equipped ${it.name}; ${RF.DATA.items?.[oldId]?.name||oldId} returned to the Pack.`:`Equipped ${it.name}.`,'good');\n  RF.save?.(s);RF.UI.render(s);return true;\n};\nRF.unequip=function(id){\n  const s=RF.state;if(!s)return false;\n  const toolType=RF.v103ToolSlotFor?.(s,id);if(toolType)return RF.unequipTool(id);\n  const slot=Object.entries(s.equipment||{}).find(([,x])=>x===id)?.[0];if(!slot)return false;\n  if(!V.addPackOne(s,id))return V.blocked('Pack Full',`Free a Pack slot before unequipping ${RF.DATA.items?.[id]?.name||id}.`);\n  s.equipment[slot]=null;RF.log?.(s,`${RF.DATA.items?.[id]?.name||id} returned to the Pack.`);RF.save?.(s);RF.UI.render(s);return true;\n};\n\n// Pack copies are now independent of loadout copies. A duplicate in the Pack may be dropped or banked.\nRF.dropItem=function(id,qty=1){\n  const s=RF.state;if(!s)return;\n  qty=Math.min(Math.max(1,Math.floor(Number(qty)||1)),V.packQty(s,id));if(qty<1)return;\n  RF.takeItem(s,id,qty);s.stats=s.stats||{};s.stats.itemsDropped=(s.stats.itemsDropped||0)+qty;\n  RF.log?.(s,`Dropped ${qty} × ${RF.DATA.items?.[id]?.name||id}.`);RF.save?.(s);RF.UI.modal=null;RF.UI.render(s);\n};\nRF.bankDeposit=function(id,all=false){\n  const s=RF.state;if(!s||!RF.isBankTown?.(s))return;const held=V.packQty(s,id);if(!held)return;\n  const q=all?held:1;RF.takeItem(s,id,q);s.bank=s.bank||{};s.bank[id]=(s.bank[id]||0)+q;s.stats=s.stats||{};s.stats.bankTransfers=(s.stats.bankTransfers||0)+q;RF.save?.(s);RF.UI.render(s);\n};\n\n// V10.42 Vault transfer logic should move every actual Pack copy; the equipped copy no longer lives there.\nif(RF.V1042){\n  const B=RF.V1042;\n  B.packMovable=(s,id)=>V.packQty(s,id);\n  B.tileHtml=function(s,side,row){\n    const {id,qty,it}=row,movable=B.moveCount(s,side,id),cls=['v1042BankTile'];if(movable<1)cls.push('disabled');\n    return `<button type=\"button\" class=\"${cls.join(' ')}\" data-v1042-bank-tile=\"${B.escape(id)}\" data-v1042-bank-side=\"${side}\" data-v1042-bank-info=\"${B.escape(id)}\" aria-label=\"${B.escape(it.name)}\">\n      <div class=\"v1042TileIcon\">${it.icon||'📦'}</div><div class=\"v1042TileName\">${B.escape(it.name)}</div><div class=\"v1042TileMeta\">${side==='bank'?'Bank':'Pack'} ×${qty}</div>\n      <div class=\"v1042TileFoot\"><span class=\"v1042TileQty\">×${qty}</span>${movable<1?'<span class=\"v1042TileBadge muted\">LOCK</span>':'<span class=\"v1042TileBadge\">MOVE</span>'}</div>\n    </button>`;\n  };\n}\n\n// Main Pack grid contains carried items only. Loadout items vanish from it and therefore free slots.\nRF.UI.inventory=function(s){\n  const used=RF.packUsed(s),cap=V.cap(s),pct=Math.min(100,used/cap*100),cat=s.v93?.inventoryCategory||'all';\n  const sorted=(RF.V1012?.sortedEntries?RF.V1012.sortedEntries(s.inventory):Object.entries(s.inventory||{}));\n  const entries=sorted.filter(([,q])=>(+q||0)>0).filter(([id])=>cat==='all'||RF.v92Category(RF.DATA.items[id])===cat);\n  const tiles=entries.map(([id,q])=>{\n    const it=RF.DATA.items?.[id];if(!it)return'';\n    const can=it.tool?true:RF.canEquipItem?.(s,id),badge=(it.slot&&!can)?'<span class=\"v1042TileBadge muted\">LOCK</span>':'';\n    return `<button type=\"button\" class=\"v1042BankTile v1045PackTile\" data-item-detail=\"${V.escape(id)}\" aria-label=\"${V.escape(it.name)}\"><div class=\"v1042TileIcon\">${it.icon||'📦'}</div><div class=\"v1042TileName\">${V.escape(it.name)}</div><div class=\"v1042TileFoot\"><span class=\"v1042TileQty\">×${q}</span>${badge}</div></button>`;\n  }).join('');\n  const cats=RF.V1046?.categoryTabs?RF.V1046.categoryTabs('inventory',cat):RF.v93Select('inventory',cat);\n  return `<section class=\"card v1045PackCard\"><div class=\"questTitle\"><h2>Pack</h2><span class=\"packCount ${used>=cap?'full':''}\">${used}/${cap} slots</span></div><div class=\"packBar\"><div style=\"width:${pct}%\"></div></div>${cats}${RF.isBankTown(s)?`<button class=\"action bankOpen v1045BankOpen\" data-open-bank><b>🏦 Open Bank</b><small>Deposit or withdraw stored items</small></button>`:'<div class=\"tiny bankHint\">🏦 Bank access: Greenvale, Ironridge and Reedmere.</div>'}<div class=\"v1045PackGridWrap\"><div class=\"v1042VaultGrid v1045PackGrid\">${tiles||'<div class=\"v1042VaultEmpty\">Nothing in this category.</div>'}</div></div></section>`;\n};\n\n// Dedicated Loadout pages now own their item interaction, independent of Pack inventory quantities.\nif(RF.V1050){\n  RF.V1050.slotTile=function(s,slot,slotIcon,label){\n    const id=s.equipment?.[slot],it=id?RF.DATA.items?.[id]:null;\n    if(it)return `<button type=\"button\" class=\"v1050LoadoutTile equipped\" data-v1053-loadout-detail=\"${V.escape(id)}\" data-v1053-kind=\"equipment\" data-v1053-slot=\"${V.escape(slot)}\" aria-label=\"${V.escape(label)}: ${V.escape(it.name)}\"><div class=\"v1050TileIcon\">${it.icon||slotIcon}</div><div class=\"v1050TileLabel\">${V.escape(label)}</div><div class=\"v1050TileName\">${V.escape(it.name)}</div><div class=\"v1050TileFoot\"><span>EQUIPPED</span></div></button>`;\n    return `<div class=\"v1050LoadoutTile empty\"><div class=\"v1050TileIcon muted\">${slotIcon}</div><div class=\"v1050TileLabel\">${V.escape(label)}</div><div class=\"v1050TileName muted\">Empty slot</div><div class=\"v1050TileFoot\"><span>EMPTY</span></div></div>`;\n  };\n  RF.V1050.toolTile=function(s,type){\n    const id=s.toolbelt?.[type],it=id?RF.DATA.items?.[id]:null,label=RF.v103ToolLabel?.(type)||type;\n    if(it)return `<button type=\"button\" class=\"v1050LoadoutTile equipped\" data-v1053-loadout-detail=\"${V.escape(id)}\" data-v1053-kind=\"toolbelt\" data-v1053-slot=\"${V.escape(type)}\" aria-label=\"${V.escape(label)} tool: ${V.escape(it.name)}\"><div class=\"v1050TileIcon\">${it.icon||'🧰'}</div><div class=\"v1050TileLabel\">${V.escape(label)}</div><div class=\"v1050TileName\">${V.escape(it.name)}</div><div class=\"v1050TileFoot\"><span>Tier ${it.tier||1}</span></div></button>`;\n    return `<div class=\"v1050LoadoutTile empty\"><div class=\"v1050TileIcon muted\">${RF.V1050.toolIcon?.(type)||'🧰'}</div><div class=\"v1050TileLabel\">${V.escape(label)}</div><div class=\"v1050TileName muted\">Empty slot</div><div class=\"v1050TileFoot\"><span>EMPTY</span></div></div>`;\n  };\n}\n\nV.detailHtml=function(s,m){\n  const id=m.id,it=RF.DATA.items?.[id];if(!it)return'';\n  const isTool=m.kind==='toolbelt'||!!it.tool,req=RF.itemRequirement?.(it),stats=[];\n  if(it.damage)stats.push(`⚔️ ${it.damage} damage`);if(it.armor)stats.push(`🛡️ ${it.armor} armour`);if(it.tier)stats.push(`⭐ Tier ${it.tier}`);if(it.power!=null)stats.push(`⚙️ Work power ${it.power}`);if(it.control!=null)stats.push(`🎯 Control +${Math.round(it.control*100)}%`);if(it.value!=null)stats.push(`🪙 Base value ${it.value}g`);\n  const slotLabel=isTool?(RF.v103ToolLabel?.(m.slot)||m.slot):String(m.slot||it.slot||'').replace(/_/g,' ').replace(/\\b\\w/g,c=>c.toUpperCase());\n  return `<div class=\"modalBack\"><div class=\"modal itemModal\"><div class=\"itemHero\">${it.icon||'📦'}</div><span class=\"eyebrow\">${isTool?'TOOL BELT':'EQUIPPED'} • ${V.escape(slotLabel)}</span><h2>${V.escape(it.name)}</h2><div class=\"itemDesc\">${V.escape(it.desc||'No description recorded.')}</div>${stats.length?`<div class=\"itemStats\">${stats.map(x=>`<span>${x}</span>`).join('')}</div>`:''}${req?`<div class=\"requirement met\">✓ Requires ${V.escape(RF.DATA.skills?.[req.skill]?.name||req.skill)} Lv ${req.level}</div>`:''}<div class=\"notice\">This copy is stored in your ${isTool?'Tool Belt':'Equipment'} and does not use a Pack slot.</div><div class=\"choices\"><button class=\"choice\" data-v1053-unequip=\"${V.escape(id)}\" data-v1053-kind=\"${isTool?'toolbelt':'equipment'}\"><b>Return to Pack</b><small>Unequip this item and place it back in your Pack.</small></button><button class=\"choice\" data-v1053-close><b>Close</b></button></div></div></div>`;\n};\nconst modalBase=RF.UI.modalHtml.bind(RF.UI);\nRF.UI.modalHtml=function(s){\n  const m=this.modal;\n  if(m?.type==='v1053LoadoutDetail')return V.detailHtml(s,m);\n  if(m?.type==='itemDetail'&&V.packQty(s,m.id)<1){\n    const ref=V.loadoutRefs(s,m.id)[0];if(ref)return V.detailHtml(s,{type:'v1053LoadoutDetail',id:m.id,...ref});\n  }\n  return modalBase(s);\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  // Replace older equip handlers so a failed swap can keep its Pack Full / requirement message,\n  // while a successful swap opens the detached loadout copy rather than a now-empty Pack stack.\n  document.querySelectorAll('[data-equip-detail]').forEach(b=>b.onclick=()=>{\n    const id=b.dataset.equipDetail,ok=RF.equip(id);if(ok===false)return;\n    const ref=V.loadoutRefs(RF.state,id)[0];RF.UI.modal=ref?{type:'v1053LoadoutDetail',id,...ref}:null;RF.UI.render(RF.state);\n  });\n  document.querySelectorAll('[data-tool-equip]').forEach(b=>b.onclick=()=>{\n    const id=b.dataset.toolEquip,ok=RF.equipTool(id);if(ok===false)return;\n    const ref=V.loadoutRefs(RF.state,id)[0];RF.UI.modal=ref?{type:'v1053LoadoutDetail',id,...ref}:null;RF.UI.render(RF.state);\n  });\n  document.querySelectorAll('[data-v1053-loadout-detail]').forEach(b=>b.onclick=()=>{RF.UI.modal={type:'v1053LoadoutDetail',id:b.dataset.v1053LoadoutDetail,kind:b.dataset.v1053Kind,slot:b.dataset.v1053Slot};RF.UI.render(s)});\n  document.querySelectorAll('[data-v1053-unequip]').forEach(b=>b.onclick=()=>{const id=b.dataset.v1053Unequip,ok=b.dataset.v1053Kind==='toolbelt'?RF.unequipTool(id):RF.unequip(id);if(ok!==false){RF.UI.modal=null;RF.UI.render(RF.state)}});\n  document.querySelectorAll('[data-v1053-close]').forEach(b=>b.onclick=()=>{RF.UI.modal=null;RF.UI.render(RF.state)});\n};\n\nconst st=document.createElement('style');st.id='v1053-detached-loadout-style';st.textContent=`\n.v1050LoadoutTile.equipped{box-shadow:inset 0 1px rgba(255,255,255,.04),0 0 0 1px rgba(102,145,92,.08)}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_55.js":"window.RF=window.RF||{};\nRF.VERSION='10.55.0';\nRF.BUILD={\n  version:'10.55.0',\n  title:'Loadout Balance',\n  built:'17 Sep 2026 • 15:30 BST',\n  buildId:'20260917-1530-bst'\n};\nRF.V1055=RF.V1055||{};\n\n/* Realmforge V10.55 — Loadout Balance\n   - Every combat equipment slot now contributes both damage and armour when the item defines those stats.\n   - Weapons may carry smaller defensive bonuses; armour may carry smaller offensive bonuses.\n   - Rebalances/normalises all existing combat equipment without changing its primary progression stat.\n   - Preserves detached V10.53 loadouts and existing equipped item IDs during save migration.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1055;\nV.version='10.55.0';\nV.SLOTS=['main','off','head','chest','legs','boots','ring1','ring2'];\n\n// Primary progression values are intentionally kept at their existing levels so current\n// equipment requirements and friends' established loadouts do not jump tiers unexpectedly.\n// Secondary values add the new cross-stat identity requested for combat equipment.\nV.STATS=RF.Config.clone(\"equipment.statBalance\");\n\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.cleanDesc=function(desc){\n  return String(desc||'')\n    .replace(/\\+\\d+\\s+(?:melee|ranged)\\s+damage\\.?\\s*/gi,'')\n    .replace(/\\+\\d+\\s+damage\\.?\\s*/gi,'')\n    .replace(/\\+\\d+\\s+armou?r\\.?\\s*/gi,'')\n    .replace(/\\s{2,}/g,' ')\n    .trim();\n};\nV.applyItemStats=function(){\n  Object.entries(V.STATS).forEach(([id,stat])=>{\n    const it=RF.DATA.items?.[id];if(!it)return;\n    const lore=V.cleanDesc(it.desc);\n    it.damage=Math.max(0,+stat.damage||0);\n    it.armor=Math.max(0,+stat.armor||0);\n    const parts=[];\n    if(it.damage)parts.push(`+${it.damage} damage`);\n    if(it.armor)parts.push(`+${it.armor} armour`);\n    it.desc=`${lore?`${lore} `:''}${parts.join(' • ')}${parts.length?'.':''}`.trim();\n  });\n};\nV.applyItemStats();\n\nV.equipmentStats=function(s){\n  let damage=0,armor=0;\n  V.SLOTS.forEach(slot=>{\n    const id=s?.equipment?.[slot],it=id?RF.DATA.items?.[id]:null;\n    if(!it)return;\n    damage+=Math.max(0,+it.damage||0);\n    armor+=Math.max(0,+it.armor||0);\n  });\n  return {damage,armor};\n};\nRF.equipmentStats=V.equipmentStats;\nRF.equipmentDamage=s=>V.equipmentStats(s).damage;\nRF.equipmentArmor=s=>V.equipmentStats(s).armor;\n\n// Legacy callers use RF.weaponDamage as the player's equipment damage contribution.\n// From V10.55 it means ALL worn damage bonuses, not only the main-hand item.\nRF.weaponDamage=function(s){\n  let damage=RF.equipmentDamage(s);\n  if(s?.combat?.__researchBonus)damage+=Math.max(0,+s.combat.__researchBonus||0);\n  return damage;\n};\nRF.damageOutput=RF.weaponDamage;\n\n// Rebuild effective armour from the same ingredients the previous wrapper chain used:\n// worn armour + Defence passive + Bulwark perk, with V10.7's temporary enemy-resolution\n// effectiveness boost preserved. The important change is that ALL equipment slots contribute.\nRF.armor=function(s){\n  const equipment=RF.equipmentArmor(s);\n  const defence=Math.max(1,+s?.skills?.defence?.level||1);\n  const defencePassive=Math.floor(defence*.38);\n  const bulwark=(RF.perkRank?.(s,'bulwark')||0)*2;\n  let total=equipment+defencePassive+bulwark;\n  if(RF.V107?.enemyResolving)total*=1.35;\n  return total;\n};\n\n// V10.7 captured an older armour function for threat previews. Rebind the preview so the\n// displayed threat estimate sees the same complete V10.55 loadout as real enemy attacks.\nif(RF.V107){\n  RF.v107Threat=function(s,e){\n    const armour=RF.armor(s)||0,r=RF.v107EnemyDamageRange(e),mitigation=armour*.32*1.35;\n    const lo=Math.max(1,Math.round(r[0]-mitigation)),hi=Math.max(1,Math.round(r[1]-mitigation));\n    const avg=(lo+hi)/2,hits=(s.player.maxHp||100)/Math.max(1,avg);\n    let name='Low';\n    if(hits<2.8)name='Extreme';\n    else if(hits<4)name='Severe';\n    else if(hits<5.5)name='High';\n    else if(hits<8)name='Moderate';\n    return {name,range:[lo,hi]};\n  };\n}\n\nV.reconcileLoadout=function(s){\n  if(!s)return s;\n  s.equipment=s.equipment||{};\n  V.SLOTS.forEach(slot=>{if(!(slot in s.equipment))s.equipment[slot]=null});\n  s.toolbelt=s.toolbelt||{};\n  // V10.53 owns physical extraction from the Pack. Calling its migration is safe/idempotent\n  // and specifically protects older campaigns jumping directly to this build.\n  if(RF.V1053?.migrate)RF.V1053.migrate(s);\n  return s;\n};\nV.migrate=function(s){\n  if(!s)return s;\n  V.reconcileLoadout(s);\n  s.version='10.55.0';\n  s.v1055=s.v1055||{};\n  s.v1055.loadoutStats=true;\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// Loadout presentation: use the new terminology while retaining the existing page structure.\nif(RF.UI?.equipmentPage){\n  const equipmentPageBase=RF.UI.equipmentPage.bind(RF.UI);\n  RF.UI.equipmentPage=function(s){\n    let h=equipmentPageBase(s);\n    h=h.replace('⚔️ Weapon Damage','⚔️ Damage Output');\n    return h;\n  };\n}\n// Keep the same terminology anywhere the Character summary still exposes this stat.\nif(RF.UI?.character){\n  const characterBase=RF.UI.character.bind(RF.UI);\n  RF.UI.character=function(s){return characterBase(s).replace(/Weapon Damage/g,'Damage Output')};\n}\n\nconst st=document.createElement('style');st.id='v1055-loadout-balance-style';st.textContent=`\n.v1050Summary span:first-child b{color:#f1d49b}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v11_5.js":"window.RF=window.RF||{};\nRF.VERSION='11.5.0';\nRF.BUILD={\n  version:'11.5.0',\n  title:'Loadout Manager',\n  built:'17 Sep 2026 • 21:58 BST',\n  buildId:'20260917-2158-bst'\n};\nRF.V115=RF.V115||{};\n\n/* Realmforge V11.5 — Loadout Manager\n   - Equipment/tool detail screens compare carried gear against the item currently occupying its target slot.\n   - Rings may be explicitly equipped to Ring I or Ring II, including two copies of the same ring.\n   - Equipment and Tool Belt tiles, including empty tiles, become slot managers showing compatible Pack replacements.\n   - Equipped/tool-belt copies remain detached from the Pack and do not consume Pack slots.\n   - Existing loadouts and saves migrate in place without moving valid equipped items.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V115;\nV.version='11.5.0';\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nV.packQty=(s,id)=>Math.max(0,Number(s?.inventory?.[id])||0);\nV.EQUIP_SLOTS=RF.V1050?.EQUIP_SLOTS||[\n  ['main','⚔️','Main Hand'],['off','🛡️','Off Hand'],['head','🪖','Head'],['chest','🥋','Chest'],\n  ['legs','👖','Legs'],['boots','🥾','Boots'],['ring1','💍','Ring I'],['ring2','💍','Ring II']\n];\nV.slotMeta=slot=>V.EQUIP_SLOTS.find(x=>x[0]===slot)||[slot,'▫️',String(slot||'Slot').replace(/\\b\\w/g,c=>c.toUpperCase())];\nV.slotLabel=slot=>V.slotMeta(slot)[2];\nV.isRingItem=it=>!!it&&['ring','ring1','ring2'].includes(it.slot);\nV.compatibleEquipment=function(it,slot){\n  if(!it?.slot)return false;\n  if(V.isRingItem(it))return slot==='ring1'||slot==='ring2';\n  return it.slot===slot;\n};\nRF.equipmentSlotsForItem=function(it){\n  if(V.isRingItem(it))return ['ring1','ring2'];\n  return it?.slot?[it.slot]:[];\n};\nV.requirement=function(s,it){\n  const r=RF.itemRequirement?.(it);if(!r)return {req:null,met:true,have:0};\n  const have=Math.max(1,+s?.skills?.[r.skill]?.level||1);\n  return {req:r,met:have>=r.level,have};\n};\nV.delta=(next,current)=>Number(next||0)-Number(current||0);\nV.deltaText=n=>n>0?`+${n}`:n<0?`${n}`:'±0';\nV.deltaClass=n=>n>0?'good':n<0?'bad':'same';\nV.statValue=(it,key)=>Math.max(0,Number(it?.[key])||0);\nV.toolValue=(it,key)=>Number(it?.[key])||0;\nV.rarityRank=r=>({Common:0,Uncommon:1,Rare:2,Epic:3,Legendary:4})[r]??0;\n\nV.equipmentComparison=function(s,it,slot){\n  const oldId=s?.equipment?.[slot]||null,old=oldId?RF.DATA.items?.[oldId]:null;\n  return {\n    slot,oldId,old,\n    damage:V.delta(V.statValue(it,'damage'),V.statValue(old,'damage')),\n    armor:V.delta(V.statValue(it,'armor'),V.statValue(old,'armor'))\n  };\n};\nV.toolComparison=function(s,it,type){\n  const oldId=s?.toolbelt?.[type]||null,old=oldId?RF.DATA.items?.[oldId]:null;\n  return {\n    type,oldId,old,\n    tier:V.delta(V.toolValue(it,'tier'),V.toolValue(old,'tier')),\n    power:V.delta(V.toolValue(it,'power'),V.toolValue(old,'power')),\n    control:V.delta(Math.round(V.toolValue(it,'control')*100),Math.round(V.toolValue(old,'control')*100))\n  };\n};\nV.comparePill=(label,val,suffix='')=>`<span class=\"v115Delta ${V.deltaClass(val)}\"><small>${V.escape(label)}</small><b>${V.escape(V.deltaText(val))}${V.escape(suffix)}</b></span>`;\nV.equipmentCompareHtml=function(s,it,slot){\n  const c=V.equipmentComparison(s,it,slot),name=c.old?.name||'Empty slot';\n  return `<div class=\"v115CompareCard\"><div class=\"v115CompareHead\"><span>${V.escape(V.slotLabel(slot))}</span><b>${c.old?.icon||'▫️'} ${V.escape(name)}</b></div><div class=\"v115DeltaGrid\">${V.comparePill('Damage',c.damage)}${V.comparePill('Armour',c.armor)}</div></div>`;\n};\nV.toolCompareHtml=function(s,it,type){\n  const c=V.toolComparison(s,it,type),name=c.old?.name||'Empty slot';\n  return `<div class=\"v115CompareCard\"><div class=\"v115CompareHead\"><span>${V.escape(RF.v103ToolLabel?.(type)||type)}</span><b>${c.old?.icon||'▫️'} ${V.escape(name)}</b></div><div class=\"v115DeltaGrid v115ToolDelta\">${V.comparePill('Tier',c.tier)}${V.comparePill('Power',c.power)}${V.comparePill('Control',c.control,'%')}</div></div>`;\n};\n\n// ----- Explicit slot equipping -----\nRF.equipToSlot=function(id,slot){\n  const s=RF.state,it=RF.DATA.items?.[id];\n  if(!s||!it||!V.compatibleEquipment(it,slot)||V.packQty(s,id)<1)return false;\n  const rq=V.requirement(s,it);\n  if(!rq.met){\n    RF.UI.modal={type:'message',title:'Requirement Not Met',text:`Requires ${RF.DATA.skills?.[rq.req.skill]?.name||rq.req.skill} level ${rq.req.level}.`};\n    RF.UI.render(s);return false;\n  }\n  s.equipment=s.equipment||{};\n  const oldId=s.equipment[slot]||null;\n  if(oldId===id){\n    RF.UI.modal={type:'message',title:'Already Equipped',text:`${it.name} is already equipped in ${V.slotLabel(slot)}.`};RF.UI.render(s);return false;\n  }\n  // The incoming physical copy leaves Pack. The replaced detached copy returns to Pack.\n  if(RF.V1053?.removePackOne){if(!RF.V1053.removePackOne(s,id))return false}\n  else RF.takeItem?.(s,id,1);\n  if(oldId){\n    if(RF.V1053?.addPackOne)RF.V1053.addPackOne(s,oldId);\n    else RF.forceLoadoutItemToPack?.(s,oldId,1,'Loadout item returned to Pack');\n  }\n  s.equipment[slot]=id;\n  RF.log?.(s,oldId?`Equipped ${it.name} to ${V.slotLabel(slot)}; ${RF.DATA.items?.[oldId]?.name||oldId} returned to the Pack.`:`Equipped ${it.name} to ${V.slotLabel(slot)}.`,'good');\n  RF.save?.(s);RF.UI.render(s);return true;\n};\nRF.unequipSlot=function(slot){\n  const s=RF.state,id=s?.equipment?.[slot];if(!s||!id)return false;\n  if(RF.V1053?.addPackOne)RF.V1053.addPackOne(s,id);\n  else RF.forceLoadoutItemToPack?.(s,id,1,'Loadout item returned to Pack');\n  s.equipment[slot]=null;\n  RF.log?.(s,`${RF.DATA.items?.[id]?.name||id} returned to the Pack.`);\n  RF.save?.(s);RF.UI.render(s);return true;\n};\nRF.unequipToolSlot=function(type){\n  const s=RF.state,id=s?.toolbelt?.[type];if(!s||!id)return false;\n  if(RF.V1053?.addPackOne)RF.V1053.addPackOne(s,id);\n  else RF.forceLoadoutItemToPack?.(s,id,1,'Tool Belt item returned to Pack');\n  s.toolbelt[type]=null;\n  RF.log?.(s,`${RF.DATA.items?.[id]?.name||id} returned to the Pack.`);\n  RF.save?.(s);RF.UI.render(s);return true;\n};\n\n// Legacy generic equip remains useful outside the detail UI. Rings choose the first empty ring\n// before replacing Ring I, so direct callers no longer make Ring II effectively unreachable.\nconst equipBase=RF.equip;\nRF.equip=function(id){\n  const it=RF.DATA.items?.[id];\n  if(it?.tool)return RF.equipTool(id);\n  if(V.isRingItem(it)){\n    const s=RF.state,slot=!s?.equipment?.ring1?'ring1':!s?.equipment?.ring2?'ring2':'ring1';\n    return RF.equipToSlot(id,slot);\n  }\n  if(it?.slot)return RF.equipToSlot(id,it.slot);\n  return equipBase?.apply(this,arguments);\n};\n\n// ----- Slot managers -----\nV.equipmentCandidates=function(s,slot){\n  return Object.entries(s?.inventory||{}).filter(([,q])=>(+q||0)>0).map(([id,q])=>({id,q,it:RF.DATA.items?.[id]}))\n    .filter(x=>V.compatibleEquipment(x.it,slot))\n    .sort((a,b)=>{\n      const ar=RF.itemRequirement?.(a.it)?.level||0,br=RF.itemRequirement?.(b.it)?.level||0;\n      return (ar-br)||(V.rarityRank(a.it?.rarity)-V.rarityRank(b.it?.rarity))||String(a.it?.name||a.id).localeCompare(String(b.it?.name||b.id));\n    });\n};\nV.toolCandidates=function(s,type){\n  return Object.entries(s?.inventory||{}).filter(([,q])=>(+q||0)>0).map(([id,q])=>({id,q,it:RF.DATA.items?.[id]}))\n    .filter(x=>x.it?.tool===type)\n    .sort((a,b)=>(V.toolValue(a.it,'tier')-V.toolValue(b.it,'tier'))||String(a.it?.name||a.id).localeCompare(String(b.it?.name||b.id)));\n};\nV.candidateTile=function(x,kind,slot){\n  const it=x.it;if(!it)return'';\n  const meta=kind==='toolbelt'?`Tier ${it.tier||1} • Power ${it.power||0}`:`⚔️ ${V.statValue(it,'damage')} • 🛡️ ${V.statValue(it,'armor')}`;\n  return `<button type=\"button\" class=\"v115Candidate\" data-v115-candidate=\"${V.escape(x.id)}\" data-v115-kind=\"${kind}\" data-v115-slot=\"${V.escape(slot)}\"><span class=\"v115CandidateIcon\">${it.icon||'📦'}</span><span class=\"v115CandidateMeta\"><b>${V.escape(it.name)}</b><small>${V.escape(it.rarity||it.type||'Item')} • ${V.escape(meta)}</small></span><span class=\"v115CandidateQty\">×${x.q}</span><span class=\"chev\">›</span></button>`;\n};\nV.currentEquipmentHtml=function(s,slot){\n  const id=s?.equipment?.[slot],it=id?RF.DATA.items?.[id]:null;\n  if(!it)return `<div class=\"v115Current empty\"><span>${V.slotMeta(slot)[1]}</span><div><small>CURRENT</small><b>Empty ${V.escape(V.slotLabel(slot))}</b><p>Select any compatible item from your Pack below.</p></div></div>`;\n  const rq=V.requirement(s,it);\n  return `<div class=\"v115Current\"><span>${it.icon||'📦'}</span><div><small>CURRENT • ${V.escape(V.slotLabel(slot))}</small><b>${V.escape(it.name)}</b><p>${V.escape(it.desc||'No description recorded.')}</p><div class=\"v115MiniStats\"><i>⚔️ ${V.statValue(it,'damage')} damage</i><i>🛡️ ${V.statValue(it,'armor')} armour</i>${rq.req?`<i>${rq.met?'✓':'🔒'} ${V.escape(RF.DATA.skills?.[rq.req.skill]?.name||rq.req.skill)} ${rq.req.level}</i>`:''}</div></div></div>`;\n};\nV.currentToolHtml=function(s,type){\n  const id=s?.toolbelt?.[type],it=id?RF.DATA.items?.[id]:null,label=RF.v103ToolLabel?.(type)||type;\n  if(!it)return `<div class=\"v115Current empty\"><span>${RF.V1050?.toolIcon?.(type)||'🧰'}</span><div><small>CURRENT</small><b>Empty ${V.escape(label)} slot</b><p>Select a compatible tool from your Pack below.</p></div></div>`;\n  return `<div class=\"v115Current\"><span>${it.icon||'🧰'}</span><div><small>CURRENT • ${V.escape(label)}</small><b>${V.escape(it.name)}</b><p>${V.escape(it.desc||'No description recorded.')}</p><div class=\"v115MiniStats\"><i>⭐ Tier ${it.tier||1}</i><i>⚙️ Power ${it.power||0}</i><i>🎯 Control +${Math.round((it.control||0)*100)}%</i></div></div></div>`;\n};\nV.slotManagerHtml=function(s,m){\n  const kind=m.kind==='toolbelt'?'toolbelt':'equipment',slot=m.slot;\n  const currentId=kind==='toolbelt'?s.toolbelt?.[slot]:s.equipment?.[slot];\n  const candidates=kind==='toolbelt'?V.toolCandidates(s,slot):V.equipmentCandidates(s,slot);\n  const title=kind==='toolbelt'?(RF.v103ToolLabel?.(slot)||slot):V.slotLabel(slot);\n  const icon=kind==='toolbelt'?(RF.V1050?.toolIcon?.(slot)||'🧰'):V.slotMeta(slot)[1];\n  const current=kind==='toolbelt'?V.currentToolHtml(s,slot):V.currentEquipmentHtml(s,slot);\n  const rows=candidates.map(x=>V.candidateTile(x,kind,slot)).join('');\n  return `<div class=\"modalBack\"><div class=\"modal v115SlotModal\"><button type=\"button\" class=\"v1123CloseX v115TopClose\" data-v115-close aria-label=\"Close\">✕</button><span class=\"eyebrow\">${kind==='toolbelt'?'TOOL BELT':'EQUIPMENT'} SLOT</span><h2>${icon} ${V.escape(title)}</h2>${current}${currentId?`<button type=\"button\" class=\"v115Return\" data-v115-unequip-slot=\"${V.escape(slot)}\" data-v115-kind=\"${kind}\">Return current to Pack</button>`:''}<div class=\"v115AvailableHead\"><h3>Available in Pack</h3><span>${candidates.length}</span></div><div class=\"v115CandidateList\">${rows||'<div class=\"v115NoCandidates\">No compatible items are currently in your Pack.</div>'}</div><div class=\"notice\">Equipped copies live in ${kind==='toolbelt'?'your Tool Belt':'Equipment'} and do not consume Pack slots. Spare duplicate copies can still exist in the Pack.</div></div></div>`;\n};\n\n// ----- Detail / comparison modal -----\nV.itemStatsHtml=function(it){\n  const stats=[];\n  if(it.damage)stats.push(`⚔️ ${it.damage} damage`);\n  if(it.armor)stats.push(`🛡️ ${it.armor} armour`);\n  if(it.tier)stats.push(`⭐ Tier ${it.tier}`);\n  if(it.power!=null)stats.push(`⚙️ Work power ${it.power}`);\n  if(it.control!=null)stats.push(`🎯 Control +${Math.round((it.control||0)*100)}%`);\n  if(it.heal)stats.push(`❤️ Restores ${it.heal} HP`);\n  if(it.stamina)stats.push(`🟢 Restores ${it.stamina} stamina`);\n  if(it.value!=null)stats.push(`🪙 Base value ${it.value}g`);\n  return stats.length?`<div class=\"itemStats\">${stats.map(x=>`<span>${V.escape(x)}</span>`).join('')}</div>`:'';\n};\nV.equipButtons=function(s,id,it,targetSlot=null){\n  const q=V.packQty(s,id),rq=V.requirement(s,it),disabled=q<1||!rq.met;\n  if(it.tool){\n    const label=RF.v103ToolLabel?.(it.tool)||it.tool;\n    return q<1?`<div class=\"notice\">Withdraw a copy to your Pack before equipping it to the ${V.escape(label)} Tool Belt slot.</div>`:`<button class=\"choice\" data-v115-equip-tool=\"${V.escape(id)}\" ${disabled?'disabled':''}><b>${rq.met?`Equip to ${V.escape(label)}`:'Level requirement not met'}</b></button>`;\n  }\n  if(!it.slot)return'';\n  const slots=targetSlot?[targetSlot]:RF.equipmentSlotsForItem(it);\n  if(q<1)return `<div class=\"notice\">Withdraw a copy to your Pack before equipping it.</div>`;\n  return slots.map(slot=>{\n    const cur=s.equipment?.[slot],curName=RF.DATA.items?.[cur]?.name||'Empty';\n    return `<button class=\"choice\" data-v115-equip-slot=\"${V.escape(slot)}\" data-v115-equip-id=\"${V.escape(id)}\" ${disabled?'disabled':''}><b>${rq.met?`Equip to ${V.escape(V.slotLabel(slot))}`:'Level requirement not met'}</b><small>Currently: ${V.escape(curName)}</small></button>`;\n  }).join('');\n};\nV.detailHtml=function(s,id,opt={}){\n  const it=RF.DATA.items?.[id];if(!it)return'';\n  const q=V.packQty(s,id),rq=V.requirement(s,it),targetSlot=opt.targetSlot||null;\n  let compare='';\n  if(it.tool)compare=V.toolCompareHtml(s,it,it.tool);\n  else if(it.slot){\n    const slots=targetSlot?[targetSlot]:RF.equipmentSlotsForItem(it);\n    compare=`<div class=\"v115Compare\"><div class=\"v115CompareTitle\">Compared with worn gear</div>${slots.map(slot=>V.equipmentCompareHtml(s,it,slot)).join('')}</div>`;\n  }\n  const reqHtml=rq.req?`<div class=\"requirement ${rq.met?'met':'unmet'}\">${rq.met?'✓':'🔒'} Requires ${V.escape(RF.DATA.skills?.[rq.req.skill]?.name||rq.req.skill)} Lv ${rq.req.level} • You: ${rq.have}</div>`:'';\n  const back=opt.backToSlot?`<button class=\"choice\" data-v115-back-slot=\"${V.escape(opt.backToSlot)}\" data-v115-kind=\"${opt.kind||'equipment'}\"><b>Back to ${V.escape(opt.kind==='toolbelt'?(RF.v103ToolLabel?.(opt.backToSlot)||opt.backToSlot):V.slotLabel(opt.backToSlot))}</b></button>`:'';\n  const drop=q>0?`<button class=\"choice dangerChoice\" data-drop-item=\"${V.escape(id)}\"><b>Drop 1</b><small>Permanently discard one carried copy.</small></button>${q>1?`<button class=\"choice dangerChoice\" data-drop-all=\"${V.escape(id)}\"><b>Drop All (${q})</b></button>`:''}`:'';\n  return `<div class=\"modalBack\"><div class=\"modal itemModal v115ItemModal\"><div class=\"itemHero\">${it.icon||'📦'}</div><span class=\"eyebrow\">${V.escape(it.rarity||it.type||'ITEM')} • ${q?`PACK ×${q}`:'NOT IN PACK'}</span><h2>${V.escape(it.name)}</h2><div class=\"itemDesc\">${V.escape(it.desc||'No description recorded.')}</div>${V.itemStatsHtml(it)}${compare}${reqHtml}<div class=\"choices\">${V.equipButtons(s,id,it,targetSlot)}${back}${drop}<button class=\"choice\" data-v115-close><b>Close</b></button></div></div></div>`;\n};\n\n// Make every loadout tile, including empty ones, interactive.\nif(RF.V1050){\n  RF.V1050.slotTile=function(s,slot,slotIcon,label){\n    const id=s.equipment?.[slot],it=id?RF.DATA.items?.[id]:null;\n    return `<button type=\"button\" class=\"v1050LoadoutTile ${it?'equipped':'empty'}\" data-v115-open-slot=\"${V.escape(slot)}\" data-v115-kind=\"equipment\" aria-label=\"Manage ${V.escape(label)}\"><div class=\"v1050TileIcon ${it?'':'muted'}\">${it?.icon||slotIcon}</div><div class=\"v1050TileLabel\">${V.escape(label)}</div><div class=\"v1050TileName ${it?'':'muted'}\">${V.escape(it?.name||'Empty slot')}</div><div class=\"v1050TileFoot\"><span>${it?'EQUIPPED':'TAP TO EQUIP'}</span></div></button>`;\n  };\n  RF.V1050.toolTile=function(s,type){\n    const id=s.toolbelt?.[type],it=id?RF.DATA.items?.[id]:null,label=RF.v103ToolLabel?.(type)||type;\n    return `<button type=\"button\" class=\"v1050LoadoutTile ${it?'equipped':'empty'}\" data-v115-open-slot=\"${V.escape(type)}\" data-v115-kind=\"toolbelt\" aria-label=\"Manage ${V.escape(label)} Tool Belt slot\"><div class=\"v1050TileIcon ${it?'':'muted'}\">${it?.icon||RF.V1050.toolIcon?.(type)||'🧰'}</div><div class=\"v1050TileLabel\">${V.escape(label)}</div><div class=\"v1050TileName ${it?'':'muted'}\">${V.escape(it?.name||'Empty slot')}</div><div class=\"v1050TileFoot\"><span>${it?`TIER ${it.tier||1}`:'TAP TO EQUIP'}</span></div></button>`;\n  };\n  const equipmentPageBase=RF.UI.equipmentPage?.bind(RF.UI);\n  if(equipmentPageBase)RF.UI.equipmentPage=function(s){return equipmentPageBase(s).replace('Tap an equipped item for details, requirements and unequip controls.','Tap any slot to inspect the current item and see every compatible replacement in your Pack.')};\n  const toolbeltPageBase=RF.UI.toolbeltPage?.bind(RF.UI);\n  if(toolbeltPageBase)RF.UI.toolbeltPage=function(s){return toolbeltPageBase(s).replace('Tap an equipped tool for details or to unequip it.','Tap any Tool Belt slot to inspect it and choose from compatible tools currently in your Pack.')};\n}\n\n// Extend ordinary Pack item details for equipment/tools with live loadout comparisons.\nconst modalBase=RF.UI.modalHtml.bind(RF.UI);\nRF.UI.modalHtml=function(s){\n  const m=this.modal;\n  if(m?.type==='v115Slot')return V.slotManagerHtml(s,m);\n  if(m?.type==='v115Candidate')return V.detailHtml(s,m.id,{targetSlot:m.slot,backToSlot:m.slot,kind:m.kind});\n  if(m?.type==='v1053LoadoutDetail')return V.slotManagerHtml(s,{kind:m.kind||'equipment',slot:m.slot});\n  if(m?.type==='itemDetail'){\n    const it=RF.DATA.items?.[m.id];\n    if(it&&(it.slot||it.tool))return V.detailHtml(s,m.id,{});\n  }\n  return modalBase(s);\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('[data-v115-open-slot]').forEach(b=>b.onclick=()=>{RF.UI.modal={type:'v115Slot',kind:b.dataset.v115Kind,slot:b.dataset.v115OpenSlot};RF.UI.render(RF.state)});\n  document.querySelectorAll('[data-v115-candidate]').forEach(b=>b.onclick=()=>{RF.UI.modal={type:'v115Candidate',id:b.dataset.v115Candidate,kind:b.dataset.v115Kind,slot:b.dataset.v115Slot};RF.UI.render(RF.state)});\n  document.querySelectorAll('[data-v115-equip-slot]').forEach(b=>b.onclick=()=>{\n    const id=b.dataset.v115EquipId,slot=b.dataset.v115EquipSlot,ok=RF.equipToSlot(id,slot);if(ok===false)return;\n    RF.UI.modal={type:'v115Slot',kind:'equipment',slot};RF.UI.render(RF.state);\n  });\n  document.querySelectorAll('[data-v115-equip-tool]').forEach(b=>b.onclick=()=>{\n    const id=b.dataset.v115EquipTool,it=RF.DATA.items?.[id],ok=RF.equipTool(id);if(ok===false)return;\n    RF.UI.modal={type:'v115Slot',kind:'toolbelt',slot:it.tool};RF.UI.render(RF.state);\n  });\n  document.querySelectorAll('[data-v115-unequip-slot]').forEach(b=>b.onclick=()=>{\n    const slot=b.dataset.v115UnequipSlot,kind=b.dataset.v115Kind;\n    const ok=kind==='toolbelt'?RF.unequipToolSlot(slot):RF.unequipSlot(slot);if(ok===false)return;\n    RF.UI.modal={type:'v115Slot',kind,slot};RF.UI.render(RF.state);\n  });\n  document.querySelectorAll('[data-v115-back-slot]').forEach(b=>b.onclick=()=>{RF.UI.modal={type:'v115Slot',kind:b.dataset.v115Kind,slot:b.dataset.v115BackSlot};RF.UI.render(RF.state)});\n  document.querySelectorAll('[data-v115-close],[data-v115-close]').forEach(b=>b.onclick=()=>{RF.UI.modal=null;RF.UI.render(RF.state)});\n};\n\n// ----- Vault long-press equipment details -----\nif(RF.V1042){\n  const B=RF.V1042;\n  B.showInfo=function(id){\n    const s=RF.state,it=RF.DATA.items?.[id];if(!s||!it)return;\n    B.closeInfo();\n    const info=B.itemInfo(s,id),q=V.packQty(s,id),side=B.tab?.(s)||'pack',rq=V.requirement(s,it);\n    let compare='';\n    if(it.tool)compare=V.toolCompareHtml(s,it,it.tool);\n    else if(it.slot)compare=`<div class=\"v115Compare v115BankCompare\"><div class=\"v115CompareTitle\">Compared with worn gear</div>${RF.equipmentSlotsForItem(it).map(slot=>V.equipmentCompareHtml(s,it,slot)).join('')}</div>`;\n    let actions='';\n    if(it.tool||it.slot){\n      actions=q>0?`<div class=\"v115BankActions\">${it.tool?`<button type=\"button\" data-v115-bank-tool=\"${V.escape(id)}\" ${rq.met?'':'disabled'}>Equip to ${V.escape(RF.v103ToolLabel?.(it.tool)||it.tool)}</button>`:RF.equipmentSlotsForItem(it).map(slot=>`<button type=\"button\" data-v115-bank-equip=\"${V.escape(id)}\" data-v115-bank-slot=\"${V.escape(slot)}\" ${rq.met?'':'disabled'}>Equip to ${V.escape(V.slotLabel(slot))}</button>`).join('')}</div>`:`<div class=\"notice\">${side==='bank'?'Withdraw':'Move'} a copy to your Pack before equipping it.</div>`;\n    }\n    const back=document.createElement('div');\n    back.className='v1042BankInfoBack';\n    back.innerHTML=`<div class=\"v1042BankInfoModal v115BankInfo\" role=\"dialog\" aria-modal=\"true\" aria-label=\"${V.escape(info.name)} details\"><div class=\"v1042BankInfoHero\"><div class=\"v1042BankInfoIcon\">${info.icon}</div><div><span class=\"eyebrow\">ITEM DETAILS</span><h2>${V.escape(info.name)}</h2></div></div><p class=\"v1042BankInfoDesc\">${V.escape(info.desc)}</p><div class=\"v1042BankInfoRows\">${info.rows.map(([k,val])=>`<div><span>${V.escape(k)}</span><b>${V.escape(val)}</b></div>`).join('')}</div>${compare}${rq.req?`<div class=\"requirement ${rq.met?'met':'unmet'}\">${rq.met?'✓':'🔒'} Requires ${V.escape(RF.DATA.skills?.[rq.req.skill]?.name||rq.req.skill)} Lv ${rq.req.level} • You: ${rq.have}</div>`:''}${actions}<button class=\"v1042BankInfoClose\">Close</button></div>`;\n    document.body.appendChild(back);\n    back.addEventListener('click',e=>{\n      const eq=e.target.closest('[data-v115-bank-equip]');\n      if(eq){B.closeInfo();const ok=RF.equipToSlot(eq.dataset.v115BankEquip,eq.dataset.v115BankSlot);if(ok!==false)RF.UI.render(RF.state);return}\n      const tl=e.target.closest('[data-v115-bank-tool]');\n      if(tl){B.closeInfo();const ok=RF.equipTool(tl.dataset.v115BankTool);if(ok!==false)RF.UI.render(RF.state);return}\n      if(e.target===back||e.target.closest('.v1042BankInfoClose'))B.closeInfo();\n    });\n    navigator.vibrate?.(18);\n  };\n}\n\n// Migration is deliberately non-destructive. V10.53 remains the owner of detached-copy\n// extraction, so legitimate spare duplicate tools/rings in Pack are never guessed away.\nV.migrate=function(s){\n  if(!s)return s;\n  s.v115=s.v115||{};s.equipment=s.equipment||{};s.toolbelt=s.toolbelt||{};s.inventory=s.inventory||{};\n  V.EQUIP_SLOTS.forEach(([slot])=>{if(!(slot in s.equipment))s.equipment[slot]=null});\n  if(RF.V1053?.migrate)RF.V1053.migrate(s);\n  s.version='11.5.0';s.v115.loadoutManager=true;\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nconst oldStyle=document.getElementById('v115-loadout-manager-style');if(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');st.id='v115-loadout-manager-style';st.textContent=`\n.v1050LoadoutTile.empty{opacity:.78;cursor:pointer}.v1050LoadoutTile.empty:active{opacity:1}.v1050LoadoutTile.empty .v1050TileFoot{color:#b99f6f}\n.v115SlotModal{position:relative;width:min(620px,100%);max-height:90dvh;overflow:auto;padding:20px 16px 18px}.v115TopClose{position:absolute;top:12px;right:12px}.v115SlotModal>h2{padding-right:48px;margin:3px 0 12px}\n.v115Current{display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px;padding:13px;border:1px solid rgba(201,159,84,.22);border-radius:17px;background:linear-gradient(180deg,rgba(43,32,21,.72),rgba(19,14,10,.88));margin:10px 0}.v115Current>span{width:56px;height:56px;border-radius:15px;display:grid;place-items:center;font-size:34px;background:rgba(255,255,255,.035);border:1px solid rgba(223,183,104,.14)}.v115Current small{display:block;color:#ac9870;font-size:8px;font-weight:900;letter-spacing:.12em;margin-bottom:2px}.v115Current b{display:block;color:#f2dda9;font-size:16px}.v115Current p{margin:5px 0 0;color:#b9aa91;font-size:11px;line-height:1.4}.v115Current.empty{opacity:.78}\n.v115MiniStats{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.v115MiniStats i{font-style:normal;font-size:9px;color:#d6c49e;background:rgba(255,255,255,.04);border:1px solid rgba(202,163,91,.14);border-radius:999px;padding:4px 7px}\n.v115Return{width:100%;min-height:42px;border-radius:13px;border:1px solid rgba(199,155,80,.28);background:linear-gradient(180deg,rgba(66,47,27,.82),rgba(38,28,19,.92));color:#eddbb2;font:inherit;font-weight:750;margin-bottom:12px}.v115AvailableHead{display:flex;align-items:center;justify-content:space-between;margin:8px 0}.v115AvailableHead h3{margin:0}.v115AvailableHead span{min-width:28px;height:25px;padding:0 8px;border-radius:999px;display:grid;place-items:center;background:#294b2a;border:1px solid #6fa464;color:#d6edbd;font-size:10px;font-weight:850}\n.v115CandidateList{display:grid;gap:8px}.v115Candidate{appearance:none;width:100%;display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px;border:1px solid rgba(201,159,84,.18);border-radius:15px;background:linear-gradient(180deg,rgba(39,29,20,.86),rgba(18,13,10,.96));color:#f0dfb9;text-align:left}.v115CandidateIcon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:26px;border:1px solid rgba(223,183,104,.13);background:rgba(255,255,255,.03)}.v115CandidateMeta{min-width:0}.v115CandidateMeta b{display:block;font-size:12px}.v115CandidateMeta small{display:block;margin-top:2px;color:#aa9a80;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v115CandidateQty{font-size:11px;font-weight:800;color:#e7ce94}.v115NoCandidates{padding:22px 12px;text-align:center;color:#a99a83;border:1px dashed rgba(201,159,84,.18);border-radius:14px}\n.v115Compare{display:grid;gap:8px;margin:13px 0}.v115CompareTitle{font-size:9px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:#ae9870}.v115CompareCard{border:1px solid rgba(199,157,83,.2);border-radius:14px;padding:9px 10px;background:rgba(12,9,7,.25)}.v115CompareHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.v115CompareHead span{font-size:9px;color:#aa9878;text-transform:uppercase;letter-spacing:.08em}.v115CompareHead b{font-size:10px;color:#dfcda7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v115DeltaGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:8px}.v115ToolDelta{grid-template-columns:repeat(3,minmax(0,1fr))}.v115Delta{display:flex;align-items:center;justify-content:space-between;gap:5px;border-radius:10px;padding:6px 7px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}.v115Delta small{font-size:8px;color:#a99b84}.v115Delta b{font-size:10px}.v115Delta.good b{color:#9ed79a}.v115Delta.bad b{color:#e89b8e}.v115Delta.same b{color:#c4b69b}\n.v115BankCompare{margin:12px 0}.v115BankActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:12px}.v115BankActions button{min-height:42px;border-radius:12px;border:1px solid rgba(216,173,87,.35);background:linear-gradient(180deg,rgba(91,63,29,.9),rgba(52,36,21,.96));color:#f1deb4;font:inherit;font-weight:750;font-size:10px}.v115BankActions button:disabled{opacity:.4}\n@media(max-width:430px){.v115SlotModal{padding:17px 12px 14px}.v115Current{grid-template-columns:50px minmax(0,1fr);gap:10px}.v115Current>span{width:48px;height:48px;font-size:29px}.v115Current b{font-size:14px}.v115Candidate{grid-template-columns:40px minmax(0,1fr) auto auto;padding:9px 8px;gap:8px}.v115CandidateIcon{width:38px;height:38px;font-size:24px}.v115CandidateMeta b{font-size:11px}.v115BankActions{grid-template-columns:1fr}.v115ToolDelta{grid-template-columns:1fr 1fr 1fr}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n"};
+  const installed=[];
+  const installedSet=new Set();
+  function runClassic(name) {
+    if(installedSet.has(name)) return false;
+    const source=sources[name];
+    if(typeof source!=='string') throw new Error(`Unknown canonical Equipment stage: ${name}`);
+    const script=document.createElement('script');
+    script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-stage',name);
+    script.textContent=source+`\n//# sourceURL=realmforge-canonical:///equipment/${name.replace(/^js\//,'')}\n`;
+    (document.head||document.documentElement).appendChild(script);
+    script.remove();
+    installedSet.add(name);installed.push(name);
+    return true;
+  }
+  const api={
+
+    damageOutput: state => RF.weaponDamage(state),
+    armour: state => RF.armor(state),
+    canEquip: (state,id) => typeof RF.canEquipItem==='function' ? RF.canEquipItem(state,id) : true,
+    equip: id => RF.equip(id),
+    equipToSlot: (id,slot) => typeof RF.equipToSlot==='function' ? RF.equipToSlot(id,slot) : RF.equip(id),
+    unequipSlot: slot => typeof RF.unequipSlot==='function' ? RF.unequipSlot(slot) : false,
+    equipTool: id => typeof RF.equipTool==='function' ? RF.equipTool(id) : false,
+    unequipTool: type => typeof RF.unequipToolSlot==='function' ? RF.unequipToolSlot(type) : (typeof RF.unequipTool==='function' ? RF.unequipTool(type) : false),
+    slotsFor: item => typeof RF.equipmentSlotsForItem==='function' ? RF.equipmentSlotsForItem(item) : (item?.slot?[item.slot]:[]),
+    installHistoricalStage: runClassic,
+    installedStages: installed,
+    ownsStage: name => Object.prototype.hasOwnProperty.call(sources,name),
+    stageNames: () => Object.keys(sources)
+  };
+  RF.Systems.Equipment=RF.Modules.register('systems.equipment',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(sources).length,extractedIn:'11.13.0'});
+})();
+
+/* ===== js/systems/combat.js ===== */
+/* Realmforge V11.13.0 — Canonical Combat implementation stages.
+   Owns the mature historical combat cadence, battle presentation/intel and tab/frame layers extracted in V11.13. Earlier mixed V4/V8 combat bootstrap seams remain in compatibility until their unrelated world/social code is split.
+   Exact historical stage source is executed at its original chronological boundary. */
+(() => {
+  'use strict';
+  const RF=window.RF;
+  const sources={"js/v8_1.js":"window.RF = window.RF || {};\nRF.VERSION = '8.1.0';\n\n/* Realmforge V8.1 — Combat & Cadence Patch\n   - exact 2 second combat recovery with clean expiry\n   - deeper Attack / Strength / Defence combat identities\n   - more player and enemy techniques\n   - once-per-battle special attack\n   - butchered active work resets progress to zero\n*/\n\nRF.V8 = RF.V8 || {};\nRF.V8.actionCooldowns = RF.V8.actionCooldowns || {};\nRF.V8.actionCooldowns.combat = 2000;\n\nRF.migrateV81=function(s){\n  if(!s)return s;\n  s.version='8.1.0';\n  s.stats=s.stats||{};\n  if(s.stats.specialAttacks==null)s.stats.specialAttacks=0;\n  if(s.stats.guardActions==null)s.stats.guardActions=0;\n  if(s.combat){\n    s.combat.specialUsed=!!s.combat.specialUsed;\n    if((s.combat.v8CooldownUntil||0)<=Date.now())s.combat.v8CooldownUntil=0;\n  }\n  return s;\n};\nif(RF.state)RF.migrateV81(RF.state);\n\n// ---------- Combat identity ----------\n// Defence now contributes directly to effective armour, so levelling it is useful even without pressing Guard.\nconst v81ArmorBase=RF.armor;\nRF.armor=function(s){\n  const base=v81ArmorBase(s);\n  const defence=s?.skills?.defence?.level||1;\n  return base+Math.floor(defence*.38);\n};\n\nRF.Content.applyLegacyBlock(\"v8_1@L39\");\n\n// Execute gains its advertised finishing bonus.\nconst v81DamageBase=RF.playerAttackDamage;\nRF.playerAttackDamage=function(s,a,magic=false){\n  let r=v81DamageBase(s,a,magic);\n  if(a?.v81Execute && s.combat && s.combat.hp/s.combat.maxHp<=.32)r.dmg=Math.max(1,Math.round(r.dmg*1.65));\n  if(a?.special){\n    const atk=s.skills.attack.level||1,str=s.skills.strength.level||1;\n    r.dmg=Math.max(1,Math.round(r.dmg*(1+Math.min(.22,(atk+str)/500))));\n  }\n  return r;\n};\n\n// V8 wrapped battleAbility with cadence. Keep that machinery, but validate first,\n// enforce once-per-battle specials, and award XP to the combat skill that actually did the work.\nconst v81BattleAbilityBase=RF.battleAbility;\nRF.battleAbility=function(id){\n  const s=RF.state,c=s?.combat,a=RF.DATA.abilities[id];\n  if(!s||!c||c.phase!=='player'||!a)return;\n  if((c.v8CooldownUntil||0)>Date.now()){RF.animateDenied('.abilityGrid');return;}\n  if(!RF.unlockedAbilities(s).some(x=>x.id===id))return;\n  if((c.cooldowns[id]||0)>0||s.player.stamina<a.cost)return;\n  if(a.oncePerBattle&&c.specialUsed){RF.animateDenied(`[data-ability=\"${id}\"]`);return;}\n\n  if(a.oncePerBattle){c.specialUsed=true;s.stats.specialAttacks++;}\n  const combatRef=c;\n  const out=v81BattleAbilityBase(id);\n\n  // Supplemental XP creates distinct Attack / Strength / Defence growth without taking away existing XP.\n  if(id==='attack'){\n    RF.addXp(s,'strength',6);\n  }else if(['precision','bleeding_cut','feint','tactical_cut','executioner'].includes(id)){\n    RF.addXp(s,'strength',3);\n  }else if(['power','cleave','sunder','crushing_blow','reckless'].includes(id)){\n    RF.addXp(s,'attack',6);\n  }else if(['guard','brace','riposte','iron_wall'].includes(id)){\n    RF.addXp(s,'defence',id==='iron_wall'?14:id==='riposte'?12:10);\n    s.stats.guardActions++;\n  }else if(id==='shield_bash'){\n    RF.addXp(s,'strength',4);\n  }else if(id==='adrenaline_break'){\n    RF.addXp(s,'attack',14);RF.addXp(s,'strength',14);\n  }\n\n  // Additional supported effects run before the delayed enemy turn fires.\n  if(RF.state?.combat===combatRef){\n    if(a.v81Stamina)s.player.stamina=Math.min(s.player.maxStamina,s.player.stamina+a.v81Stamina);\n    if(a.v81WeakenEnemy)RF.addStatus({statuses:combatRef.enemyStatuses},'weakened',2);\n    RF.save(s);RF.UI.render(s);\n  }\n  return out;\n};\n\n// ---------- Enemy move expansion ----------\nRF.Content.applyLegacyBlock(\"v8_1@L105\");\nfunction v81AddMoves(id,moves){const e=RF.DATA.enemies[id];if(!e)return;e.moves=[...new Set([...(e.moves||[]),...moves])];}\nv81AddMoves('rat',['lunge','feint']);\nv81AddMoves('wolf',['rend','lunge','war_cry']);\nv81AddMoves('bandit',['lunge','feint','shield_rush']);\nv81AddMoves('brute',['headbutt','maul','war_cry']);\nv81AddMoves('cave_spider',['venom_spray','skitter']);\nv81AddMoves('blackthorn_scout',['feint','lunge']);\nv81AddMoves('captain_voss',['shield_rush','feint','war_cry']);\nv81AddMoves('skeleton',['lunge','rend','brace']);\nv81AddMoves('crypt_guard',['shield_rush','stone_guard','rend']);\nv81AddMoves('gravewarden',['stone_guard','royal_gaze','drowned_grip']);\nv81AddMoves('ridge_raider',['lunge','rend','war_cry']);\nv81AddMoves('magma_crawler',['ember_breath','tail_sweep']);\nv81AddMoves('meadow_boar',['headbutt','maul']);\nv81AddMoves('thorn_adder',['venom_spray','lunge']);\nv81AddMoves('feral_hound',['rend','war_cry']);\nv81AddMoves('hill_troll',['maul','headbutt','war_cry']);\nv81AddMoves('ash_wisp',['ember_breath','drift']);\nv81AddMoves('mudcrab',['pincer','stone_guard']);\nv81AddMoves('bog_spider',['venom_spray','skitter','web']);\nv81AddMoves('mire_wolf',['rend','lunge','war_cry']);\nv81AddMoves('fen_croc',['crushing_bite','tail_sweep','undertow']);\nv81AddMoves('lantern_wisp',['feint','drift','hex']);\nv81AddMoves('drowned_sentinel',['drowned_grip','undertow','stone_guard']);\nv81AddMoves('marsh_raider',['feint','lunge','shield_rush']);\nv81AddMoves('heron_keeper',['stone_beak','flood_call','royal_gaze','stone_guard']);\nv81AddMoves('rogue_stag',['horn_charge','hoof_feint']);\nv81AddMoves('quarry_drake',['tail_sweep','acid_spit','stone_guard']);\nv81AddMoves('ember_hound',['flame_pounce','ember_breath','rend']);\n\n// ---------- Exact cooldown expiry ----------\n// V8's old ticker stopped before doing a final ready-state render. This one explicitly\n// zeroes expired timers and renders once more, preventing the UI sticking at 0.1s.\nif(RF.v8ActionTicker){clearTimeout(RF.v8ActionTicker);RF.v8ActionTicker=null;}\nRF.cooldownRemaining=function(g){\n  if(!g)return 0;\n  const rem=(g.v8CooldownUntil||0)-Date.now();\n  if(rem<=25){g.v8CooldownUntil=0;return 0;}\n  return rem;\n};\nRF.ensureCooldownTicker=function(){\n  if(RF.v8ActionTicker)return;\n  const tick=()=>{\n    RF.v8ActionTicker=null;\n    const s=RF.state;if(!s)return;\n    const g=RF.actionGame,c=s.combat;\n    const grem=g?RF.cooldownRemaining(g):0;\n    let crem=0;\n    if(c){crem=Math.max(0,(c.v8CooldownUntil||0)-Date.now());if(crem<=25){c.v8CooldownUntil=0;crem=0;}}\n    RF.UI.render(s);\n    if(grem>0||crem>0)RF.v8ActionTicker=setTimeout(tick,50);\n  };\n  RF.v8ActionTicker=setTimeout(tick,50);\n};\nRF.combatReady=function(){\n  const c=RF.state?.combat;if(!c)return false;\n  const now=Date.now(),until=c.v8CooldownUntil||0;\n  if(until>now+25){RF.animateDenied('.abilityGrid');return false;}\n  c.v8CooldownUntil=now+2000;\n  c.v8CooldownMs=2000;\n  RF.state.stats.cooldownActions++;\n  RF.ensureCooldownTicker();\n  return true;\n};\n\n// ---------- Butchered actions reset progress ----------\nfunction resetOnFreshMishap(name,check){\n  const base=RF[name];if(typeof base!=='function')return;\n  RF[name]=function(...args){\n    const g=RF.actionGame,beforeLast=g?.last,beforeMsg=g?.message;\n    const out=base.apply(RF,args);\n    const now=RF.actionGame;\n    if(now&&check(now,beforeLast,beforeMsg)){\n      now.progress=0;\n      const field='last' in now?'last':'message';\n      now[field]=`${now[field]} Progress reset to 0%.`;\n      RF.save(RF.state);RF.UI.render(RF.state);\n    }\n    return out;\n  };\n}\nresetOnFreshMishap('workTap',(g,last)=>g.type==='work'&&g.mishap&&g.last!==last&&/BUTCHERED/.test(g.last||''));\nresetOnFreshMishap('productionTap',(g,last)=>g.type==='production'&&g.mishap&&g.last!==last&&/BUTCHERED/.test(g.last||''));\nresetOnFreshMishap('hammerForge',(g,last,msg)=>g.type==='forge'&&g.message!==msg&&/workpiece cracks|Material is lost/i.test(g.message||''));\n\n// ---------- UI polish ----------\nconst v81CombatPopupBase=RF.UI.combatPopup.bind(RF.UI);\nRF.UI.combatPopup=function(s){\n  let h=v81CombatPopupBase(s),c=s.combat;\n  // Never display an expired cooldown, even if a render lands exactly on the boundary.\n  if(c&&(c.v8CooldownUntil||0)<=Date.now()+25)c.v8CooldownUntil=0;\n  if(RF.DATA.abilities.adrenaline_break){\n    h=h.replace('class=\"abilityBtn ', 'class=\"abilityBtn '); // harmless anchor for older saves/builds\n    h=h.replace(/<button class=\"abilityBtn ([^\"]*)\" data-ability=\"adrenaline_break\"/,\n      `<button class=\"abilityBtn $1 specialAbility\" data-ability=\"adrenaline_break\"`);\n    if(c?.specialUsed){\n      h=h.replace(/<button class=\"abilityBtn ([^\"]*)specialAbility([^\"]*)\" data-ability=\"adrenaline_break\"(?! disabled)/,\n        `<button disabled class=\"abilityBtn $1specialAbility$2\" data-ability=\"adrenaline_break\"`);\n      h=h.replace('SPECIAL • Once per battle. A committed attack scaling from Attack and Strength.','SPECIAL USED • Available again next battle.');\n    }\n  }\n  return h;\n};\n\n// Version notice once on this build.\nif(RF.state){\n  RF.migrateV81(RF.state);\n  if(!RF.state.flags.v81PatchSeen){\n    RF.state.flags.v81PatchSeen=true;\n    RF.log(RF.state,'V8.1 combat patch: deeper combat skills, expanded move pools, exact 2s recovery and progress-reset mishaps are active.','important');\n    RF.save(RF.state);\n  }\n  RF.UI.render(RF.state);\n}\n","js/v10_35.js":"window.RF=window.RF||{};\nRF.VERSION='10.35.0';\nRF.BUILD={\n  version:'10.35.0',\n  title:'Battle Lines',\n  built:'16 Sep 2026 • 02:38 BST',\n  buildId:'20260916-0238-bst'\n};\nRF.V1035=RF.V1035||{};\n\n/* Realmforge V10.35 — Battle Lines\n   - Rebuilds the tactical combat popup for a compact phone-first layout.\n   - Player and enemy now face each other side by side, player left / enemy right.\n   - Combat actions and usable items are compact 3-column tile grids.\n   - Combat training focus persists between battles instead of resetting to Attack.\n*/\n\n(()=>{\nconst V=RF.V1035;\nV.FOCI=['attack','strength','defence'];\n\nV.validFocus=f=>V.FOCI.includes(f)?f:'attack';\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.35.0';\n  s.v1035=s.v1035||{};\n  // If the update lands during a battle, preserve what the player is using right now.\n  const live=s.combat?.v9Focus;\n  s.v1035.combatFocus=V.validFocus(live||s.v1035.combatFocus||s.v9?.combatFocus||'attack');\n  s.v9=s.v9||{};\n  s.v9.combatFocus=s.v1035.combatFocus;\n  if(s.combat)s.combat.v9Focus=s.v1035.combatFocus;\n  return s;\n};\n\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// Persist the chosen training focus immediately. V9 originally stored this only on the\n// temporary combat object, which disappears at the end of every fight.\nconst focusBase=RF.v9SetFocus;\nRF.v9SetFocus=function(f){\n  f=V.validFocus(f);\n  const s=RF.state;\n  if(s){\n    s.v1035=s.v1035||{};s.v1035.combatFocus=f;\n    s.v9=s.v9||{};s.v9.combatFocus=f;\n  }\n  const out=focusBase?.call(RF,f);\n  if(s?.combat)s.combat.v9Focus=f;\n  RF.save?.(s);\n  return out;\n};\n\n// Every new battle inherits the last selected focus. Do this after the full older startBattle\n// chain has initialised combat so old V9's default-to-Attack cannot overwrite it.\nconst startBase=RF.startBattle;\nRF.startBattle=function(id,opts={}){\n  const s=RF.state;\n  const wanted=V.validFocus(s?.v1035?.combatFocus||s?.v9?.combatFocus||'attack');\n  const out=startBase?.apply(this,arguments);\n  if(RF.state?.combat){\n    RF.state.combat.v9Focus=wanted;\n    RF.state.v1035=RF.state.v1035||{};RF.state.v1035.combatFocus=wanted;\n    RF.state.v9=RF.state.v9||{};RF.state.v9.combatFocus=wanted;\n    RF.save?.(RF.state);\n    RF.UI.render?.(RF.state);\n  }\n  return out;\n};\n\nV.statuses=t=>(t||[]).map(x=>`<span class=\"statusChip ${x.id}\">${RF.statusName(x.id)} ${x.turns}</span>`).join('');\nV.usableItems=s=>Object.entries(s.inventory||{}).filter(([id,q])=>q>0&&RF.DATA.items[id]&&(RF.DATA.items[id].heal||RF.DATA.items[id].stamina)).map(([id,q])=>({id,q,it:RF.DATA.items[id]}));\nV.hpPct=(n,max)=>Math.max(0,Math.min(100,100*n/Math.max(1,max)));\n\n// Final combat renderer. It deliberately keeps the established playerPane/enemyPane,\n// abilityBtn and data-* hooks so hit animations, cooldowns and all existing battle logic remain intact.\nRF.UI.combatPopup=function(s){\n  const c=s.combat;if(!c)return'';\n  const e=RF.DATA.enemies[c.id];if(!e)return'';\n  const statuses=V.statuses;\n  const abilities=RF.unlockedAbilities(s);\n  const items=V.usableItems(s);\n  const focus=V.validFocus(c.v9Focus||s.v1035?.combatFocus||s.v9?.combatFocus||'attack');\n  const pool=c.v9XpPool||{attack:0,strength:0,defence:0};\n  const rem=Math.max(0,(c.v8CooldownUntil||0)-Date.now());\n  const globallyLocked=c.phase!=='player'||rem>20;\n  const def=s.skills.defence?.level||1;\n  const parryChance=Math.round(Math.min(.88,.32+def*.022+(s.skills.attack?.level||1)*.0035)*100);\n  const parryReflect=Math.round(Math.min(.72,.16+def*.021)*100);\n  const companion=s.companion?`<div class=\"v1035Companion\">${RF.DATA.npcs[s.companion.id]?.icon||'🧭'} ${RF.DATA.npcs[s.companion.id]?.name||'Companion'} • Bond ${s.companion.bond}</div>`:'';\n\n  const actionTiles=abilities.map(a=>{\n    const cd=c.cooldowns[a.id]||0;\n    const used=!!(a.oncePerBattle&&c.specialUsed);\n    const disabled=globallyLocked||s.player.stamina<a.cost||cd>0||used;\n    const cost=a.cost?`${a.cost} STA`:'FREE';\n    const note=used?'USED':cd?`CD ${cd}`:cost;\n    return `<button class=\"v1035ActionTile abilityBtn ${a.id==='attack'?'primary':''} ${a.special?'specialAbility':''}\" data-ability=\"${a.id}\" ${disabled?'disabled':''}><span class=\"v1035TileIcon\">${a.icon}</span><b>${a.name}</b><small>${note}</small></button>`;\n  }).join('')+\n  `<button class=\"v1035ActionTile abilityBtn v1035Parry\" data-parry ${globallyLocked?'disabled':''}><span class=\"v1035TileIcon\">🛡️</span><b>Parry</b><small>~${parryChance}% catch</small></button>`+\n  `<button class=\"v1035ActionTile v1035Flee\" data-v4-flee ${globallyLocked?'disabled':''}><span class=\"v1035TileIcon\">🏃</span><b>Flee</b><small>Attempt escape</small></button>`;\n\n  const itemTiles=items.map(({id,q,it})=>{\n    let effect=[];if(it.heal)effect.push(`+${it.heal} HP`);if(it.stamina)effect.push(`+${it.stamina} STA`);\n    return `<button class=\"v1035ItemTile\" data-battle-item=\"${id}\" ${globallyLocked?'disabled':''}><span class=\"v1035TileIcon\">${it.icon}</span><b>${it.name}</b><small>×${q}${effect.length?` • ${effect.join(' / ')}`:''}</small></button>`;\n  }).join('');\n\n  return `<div class=\"modalBack battleBack v1035BattleBack\"><div class=\"modal battleModal v1035BattleModal\">\n    <div class=\"v1035BattleTop\"><span class=\"eyebrow\">TACTICAL BATTLE • TURN ${c.turn}</span><span class=\"phaseTag\">${c.phase==='player'?'YOUR TURN':'ENEMY TURN'}</span></div>\n    <div class=\"v1035Faceoff\">\n      <div class=\"playerPane v1035Fighter v1035Player\">\n        <div class=\"v1035FighterHead\"><span class=\"v1035Portrait\">${s.player.avatar}</span><div><b>${s.player.name}</b><small>Lv ${s.player.level}</small></div></div>\n        <div class=\"v1035HpLine\"><span>HP</span><b>${Math.max(0,Math.ceil(s.player.hp))}/${s.player.maxHp}</b></div>\n        <div class=\"bar\"><div class=\"fill hp\" style=\"width:${V.hpPct(s.player.hp,s.player.maxHp)}%\"></div></div>\n        <div class=\"v1035Resource\">⚡ ${Math.floor(s.player.stamina)}/${s.player.maxStamina} STA</div>\n        <div class=\"statusRow\">${statuses(c.playerStatuses)}</div>${companion}\n      </div>\n      <div class=\"v1035Vs\">⚔️</div>\n      <div class=\"enemyPane v1035Fighter v1035Enemy\">\n        <div class=\"v1035FighterHead enemy\"><span class=\"v1035Portrait\">${e.icon}</span><div><b>${e.name}</b><small>Lv ${e.level} • ${e.temperament||'hostile'}</small></div></div>\n        <div class=\"v1035HpLine\"><span>HP</span><b>${Math.max(0,Math.ceil(c.hp))}/${c.maxHp}</b></div>\n        <div class=\"bar\"><div class=\"fill hp\" style=\"width:${V.hpPct(c.hp,c.maxHp)}%\"></div></div>\n        <div class=\"v1035Resource\">🛡️ ${e.armor||0} ARMOUR</div>\n        <div class=\"statusRow\">${statuses(c.enemyStatuses)}</div>\n      </div>\n    </div>\n    <div class=\"battleLog v1035BattleLog\">${c.log.map(x=>`<div class=\"${x.type||''}\">${typeof x==='string'?x:x.text}</div>`).join('')}</div>\n    <div class=\"combatFocus v1035Focus\"><div class=\"v1035SectionHead\"><span class=\"eyebrow\">COMBAT TRAINING</span><span>${RF.DATA.skills[focus]?.icon||'⚔️'} ${RF.DATA.skills[focus]?.name||focus}</span></div><div class=\"focusBtns\">${V.FOCI.map(f=>`<button data-combat-focus=\"${f}\" class=\"${focus===f?'active':''}\" ${c.phase!=='player'?'disabled':''}>${RF.DATA.skills[f].icon} ${RF.DATA.skills[f].name}<small>${Math.round(pool[f]||0)} XP</small></button>`).join('')}</div></div>\n    ${rem>20?`<div class=\"v1035Recover\">Recovering ${(rem/1000).toFixed(1)}s</div>`:''}\n    <div class=\"battleSectionTitle v1035SectionTitle\">Actions</div>\n    <div class=\"v1035ActionGrid\">${actionTiles}</div>\n    ${items.length?`<div class=\"battleSectionTitle v1035SectionTitle\">Items</div><div class=\"v1035ItemGrid\">${itemTiles}</div>`:''}\n    <div class=\"v1035ParryNote\">Parry: ~${parryChance}% catch chance • reflection scales with Defence (~${parryReflect}% of blocked force).</div>\n  </div></div>`;\n};\n\n// CSS is injected here so the GitHub patch remains just the usual small JS layer.\nconst st=document.createElement('style');st.id='v1035-combat-style';st.textContent=`\n.v1035BattleBack{padding:6px;align-items:center}\n.v1035BattleModal{width:min(680px,calc(100vw - 12px));max-width:680px;max-height:97vh;padding:12px 12px calc(12px + env(safe-area-inset-bottom));overflow:auto}\n.v1035BattleTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}\n.v1035Faceoff{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:6px;align-items:stretch;margin-bottom:7px}\n.v1035Fighter{min-width:0;padding:8px;border:1px solid #49392b;border-radius:12px;background:#14110ed9}\n.v1035Player{border-color:#5b694d}.v1035Enemy{border-color:#6d4438}\n.v1035FighterHead{display:flex;align-items:center;gap:7px;min-width:0;margin-bottom:6px}.v1035FighterHead.enemy{justify-content:flex-start}\n.v1035Portrait{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:50%;font-size:22px;background:#211a13;border:1px solid #554230}\n.v1035FighterHead div{min-width:0}.v1035FighterHead b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f0dfba}.v1035FighterHead small{display:block;font-size:8px;color:#9f9481;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n.v1035HpLine{display:flex;justify-content:space-between;gap:5px;font-size:8px;color:#948b7c;margin-bottom:3px}.v1035HpLine b{color:#dacbae;font-size:9px}\n.v1035Faceoff .bar{height:7px}.v1035Resource{font-size:8px;color:#aaa08d;margin-top:4px}.v1035Faceoff .statusRow{margin-top:4px;min-height:0}.v1035Faceoff .statusChip{font-size:7px;padding:2px 4px}\n.v1035Vs{display:grid;place-items:center;font-size:15px;opacity:.65}.v1035Companion{font-size:7px;color:#c8ad7c;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n.v1035BattleLog{max-height:74px;margin:6px 0 7px;padding:6px;font-size:9px}.v1035BattleLog div{padding:2px 0}\n.v1035Focus{margin:6px 0 7px;padding:7px}.v1035SectionHead{display:flex;align-items:center;justify-content:space-between;gap:7px;font-size:9px;color:#e5cc96}.v1035Focus .focusBtns{margin:5px 0 0;gap:5px}.v1035Focus .focusBtns button{min-height:45px;padding:5px 2px;font-size:9px}.v1035Focus .focusBtns small{font-size:7px}\n.v1035SectionTitle{margin:8px 0 5px}\n.v1035ActionGrid,.v1035ItemGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}\n.v1035ActionTile,.v1035ItemTile{min-width:0;min-height:67px;border:1px solid #493d2f;background:#191611;color:#eadfc5;border-radius:12px;padding:7px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.05}\n.v1035ActionTile.primary{border-color:#a67536;background:#302416}.v1035ActionTile.specialAbility{border-color:#7d668e}.v1035Parry{border-color:#5f7f99!important}.v1035Flee{border-color:#6b4038;background:#241714}\n.v1035ActionTile:active,.v1035ItemTile:active{transform:scale(.985)}.v1035ActionTile:disabled,.v1035ItemTile:disabled{opacity:.34;filter:grayscale(.45) saturate(.45);transform:none!important}\n.v1035TileIcon{font-size:20px;line-height:1.1}.v1035ActionTile b,.v1035ItemTile b{font-size:9px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v1035ActionTile small,.v1035ItemTile small{font-size:7px;color:#9e9484;line-height:1.1;width:100%;overflow:hidden;text-overflow:ellipsis}\n.v1035Recover{text-align:center;font-size:8px;color:#bfa977;margin:2px 0 4px}.v1035ParryNote{margin-top:7px;text-align:center;font-size:7px;color:#847b6e;line-height:1.3}\n@media(max-width:390px){.v1035BattleModal{padding:9px}.v1035Faceoff{grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);gap:4px}.v1035Fighter{padding:6px}.v1035Portrait{width:30px;height:30px;flex-basis:30px;font-size:19px}.v1035ActionGrid,.v1035ItemGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.v1035ActionTile,.v1035ItemTile{min-height:63px;padding:6px 3px}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){\n  V.migrate(RF.state);\n  RF.save?.(RF.state);\n  setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0);\n}\n})();\n","js/v10_36.js":"window.RF=window.RF||{};\nRF.VERSION='10.36.0';\nRF.BUILD={\n  version:'10.36.0',\n  title:'Battle Intel',\n  built:'16 Sep 2026 • 02:51 BST',\n  buildId:'20260916-0251-bst'\n};\nRF.V1036=RF.V1036||{};\n\n/* Realmforge V10.36 — Battle Intel\n   - Press and hold any combat Action tile for 2 seconds to open its information card.\n   - Normal taps remain instant combat actions.\n   - Adds a clear \"Hold 2s for more info\" hint beside Actions.\n   - Long-press information remains available even while an action is temporarily unavailable.\n*/\n\n(()=>{\nconst V=RF.V1036;\nV.HOLD_MS=2000;\nV.MOVE_CANCEL_PX=14;\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.36.0';\n  s.v1036=s.v1036||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nV.escape=function(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]))};\nV.pct=n=>`${Math.round((+n||0)*100)}%`;\nV.kindLabel=k=>({attack:'Weapon attack',magic:'Magic attack',guard:'Defensive stance',riposte:'Counter stance',heal:'Recovery',status:'Status technique',volley:'Ranged attack'}[k]||'Combat technique');\n\nV.abilityInfo=function(id,s){\n  const a=RF.DATA.abilities?.[id];\n  if(!a)return null;\n  const reqSkill=a.skill;\n  const reqName=reqSkill?RF.DATA.skills?.[reqSkill]?.name||reqSkill:'Character';\n  const have=reqSkill?s?.skills?.[reqSkill]?.level:s?.player?.level;\n  const rows=[];\n  rows.push(['Type',V.kindLabel(a.kind)]);\n  rows.push(['Requirement',`${reqName} Lv ${a.level||1}${have!=null?` • You: ${have}`:''}`]);\n  rows.push(['Stamina',a.cost?`${a.cost} STA`:'Free']);\n  rows.push(['Cooldown',a.oncePerBattle?'Once per battle':(a.cooldown?`${a.cooldown} turn${a.cooldown===1?'':'s'}`:'None')]);\n  if(a.requiresBow)rows.push(['Weapon','Requires a bow']);\n  if(['attack','magic'].includes(a.kind)){\n    rows.push(['Base accuracy',V.pct(a.accuracy == null ? .9 : a.accuracy)]);\n    rows.push(['Damage',`${(a.power||1).toFixed(2).replace(/\\.00$/,'')}× base`]);\n    rows.push(['Base crit',V.pct(a.crit == null ? .08 : a.crit)]);\n  }\n  if(a.kind==='volley')rows.push(['Effect','Two rapid bow hits']);\n  if(a.status)rows.push(['On hit',`${RF.statusName?.(a.status.id)||a.status.id} • ${V.pct(a.status.chance==null?1:a.status.chance)} • ${a.status.turns} turn${a.status.turns===1?'':'s'}`]);\n  if(a.targetStatus)rows.push(['Effect',`${RF.statusName?.(a.targetStatus.id)||a.targetStatus.id} for ${a.targetStatus.turns} turn${a.targetStatus.turns===1?'':'s'}`]);\n  if(a.v81Stamina)rows.push(['Bonus',`Recover ${a.v81Stamina} Stamina`]);\n  if(a.v81WeakenEnemy)rows.push(['Bonus','Weakens the enemy after guarding']);\n  if(a.v81Execute)rows.push(['Finisher','Deals much more damage below 32% enemy HP']);\n  return {icon:a.icon||'⚔️',name:a.name||id,eyebrow:a.special?'SPECIAL ABILITY':'COMBAT ABILITY',desc:a.desc||'A combat technique.',rows};\n};\n\nV.parryInfo=function(s){\n  const def=s?.skills?.defence?.level||1,atk=s?.skills?.attack?.level||1;\n  const chance=Math.min(.88,.32+def*.022+atk*.0035);\n  const minReduce=Math.min(.88,.48+def*.012),maxReduce=Math.min(.98,.68+def*.012);\n  const reflect=Math.min(.72,.16+def*.021),perfect=Math.min(.36,.035+def*.011);\n  return {icon:'🛡️',name:'Parry',eyebrow:'DEFENCE ACTION',desc:'Read the incoming strike and try to catch it. A successful parry prevents part of the damage and throws force back at the attacker.',rows:[\n    ['Training','Banks Defence XP'],\n    ['Catch chance',V.pct(chance)],\n    ['Damage stopped',`${V.pct(minReduce)}–${V.pct(maxReduce)} on a normal success`],\n    ['Perfect parry',`${V.pct(perfect)} chance after a successful catch`],\n    ['Reflection',`Up to about ${V.pct(reflect)} of blocked force`],\n    ['Cost','No Stamina cost']\n  ]};\n};\n\nV.fleeInfo=function(s){\n  const c=s?.combat;\n  let chance=c?.forced?.45:.72;\n  const smoke=!!(RF.perkRank?.(s,'vanish')&&(s?.inventory?.smoke_bomb||0)>0);\n  if(smoke)chance=1;\n  return {icon:'🏃',name:'Flee',eyebrow:'ESCAPE ACTION',desc:'Try to disengage from the fight. Failure gives the enemy an immediate opening to act.',rows:[\n    ['Current escape chance',V.pct(chance)],\n    ['Encounter',c?.forced?'Forced / ambush':'Voluntary fight'],\n    ['Failure','Enemy immediately takes its turn'],\n    ...(smoke?[['Vanish','Smoke Bomb available • escape becomes guaranteed']]:[])\n  ]};\n};\n\nV.infoFor=function(id,s){\n  if(id==='parry')return V.parryInfo(s);\n  if(id==='flee')return V.fleeInfo(s);\n  return V.abilityInfo(id,s);\n};\n\nV.closeInfo=function(){\n  document.querySelector('.v1036InfoBack')?.remove();\n};\n\nV.showInfo=function(id){\n  const s=RF.state,info=V.infoFor(id,s);\n  if(!info)return;\n  V.closeInfo();\n  const back=document.createElement('div');\n  back.className='v1036InfoBack';\n  back.innerHTML=`<div class=\"v1036InfoModal\" role=\"dialog\" aria-modal=\"true\" aria-label=\"${V.escape(info.name)} information\">\n    <div class=\"v1036InfoHero\"><div class=\"v1036InfoIcon\">${info.icon}</div><div><span class=\"eyebrow\">${V.escape(info.eyebrow)}</span><h2>${V.escape(info.name)}</h2></div></div>\n    <p class=\"v1036InfoDesc\">${V.escape(info.desc)}</p>\n    <div class=\"v1036InfoRows\">${info.rows.map(([k,v])=>`<div><span>${V.escape(k)}</span><b>${V.escape(v)}</b></div>`).join('')}</div>\n    <button class=\"v1036InfoClose\">Close</button>\n  </div>`;\n  document.body.appendChild(back);\n  back.addEventListener('click',e=>{if(e.target===back||e.target.closest('.v1036InfoClose'))V.closeInfo()});\n  navigator.vibrate?.(18);\n};\n\n// Keep V10.35's compact renderer and only add the information affordances.\nconst combatBase=RF.UI.combatPopup.bind(RF.UI);\nRF.UI.combatPopup=function(s){\n  let h=combatBase(s);\n  if(!h)return h;\n  h=h.replace('<div class=\"battleSectionTitle v1035SectionTitle\">Actions</div>',\n    '<div class=\"battleSectionTitle v1035SectionTitle v1036ActionHead\"><span>Actions</span><small>Press & hold 2s for more info</small></div>');\n  h=h.replace(/(<button[^>]*data-ability=\"([^\"]+)\"[^>]*)>/g,(m,start,id)=>`${start} data-combat-info=\"${id}\">`);\n  h=h.replace(/(<button[^>]*data-parry[^>]*)>/g,(m,start)=>`${start} data-combat-info=\"parry\">`);\n  h=h.replace(/(<button[^>]*data-v4-flee[^>]*)>/g,(m,start)=>`${start} data-combat-info=\"flee\">`);\n  return h;\n};\n\nV.bindTile=function(btn){\n  if(!btn||btn.dataset.v1036Bound==='1')return;\n  btn.dataset.v1036Bound='1';\n\n  // Native disabled buttons do not reliably receive long-press pointer events on Android.\n  // Preserve their unavailable state ourselves so information remains inspectable at any time.\n  const locked=!!btn.disabled;\n  btn.dataset.v1036Locked=locked?'1':'0';\n  if(locked){\n    btn.disabled=false;\n    btn.setAttribute('aria-disabled','true');\n    btn.classList.add('v1036Locked');\n  }\n\n  let timer=0,startX=0,startY=0,longFired=false,activePointer=null;\n  const cancel=()=>{if(timer){clearTimeout(timer);timer=0}btn.classList.remove('v1036Holding');activePointer=null};\n\n  btn.addEventListener('pointerdown',e=>{\n    if(e.pointerType==='mouse'&&e.button!==0)return;\n    cancel();\n    longFired=false;\n    activePointer=e.pointerId;\n    startX=e.clientX;startY=e.clientY;\n    btn.classList.add('v1036Holding');\n    timer=setTimeout(()=>{\n      timer=0;\n      longFired=true;\n      btn.classList.remove('v1036Holding');\n      V.showInfo(btn.dataset.combatInfo);\n    },V.HOLD_MS);\n  });\n  btn.addEventListener('pointermove',e=>{\n    if(activePointer!==e.pointerId)return;\n    if(Math.hypot(e.clientX-startX,e.clientY-startY)>V.MOVE_CANCEL_PX)cancel();\n  });\n  btn.addEventListener('pointerup',cancel);\n  btn.addEventListener('pointercancel',cancel);\n  btn.addEventListener('lostpointercapture',cancel);\n  btn.addEventListener('contextmenu',e=>e.preventDefault());\n\n  // Capture before the older combat onclick handlers. A completed long press must never\n  // accidentally fire the combat move when the finger is released.\n  btn.addEventListener('click',e=>{\n    if(longFired){\n      longFired=false;\n      e.preventDefault();e.stopImmediatePropagation();\n      return;\n    }\n    if(btn.dataset.v1036Locked==='1'){\n      e.preventDefault();e.stopImmediatePropagation();\n      RF.animateDenied?.(btn);\n    }\n  },true);\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('.v1035ActionTile[data-combat-info]').forEach(V.bindTile);\n};\n\n// Clean up a stale help card if combat is closed by another system.\nconst renderBase=RF.UI.render.bind(RF.UI);\nRF.UI.render=function(s){\n  if(!s?.combat)V.closeInfo();\n  return renderBase(s);\n};\n\nconst st=document.createElement('style');st.id='v1036-battle-intel-style';st.textContent=`\n.v1036ActionHead{display:flex;align-items:center;justify-content:space-between;gap:8px}\n.v1036ActionHead small{font-size:7px;font-weight:500;color:#a89b84;text-transform:none;letter-spacing:.01em;text-align:right}\n.v1035ActionTile[data-combat-info]{position:relative;overflow:hidden;-webkit-touch-callout:none;user-select:none;touch-action:manipulation}\n.v1035ActionTile.v1036Locked{opacity:.34;filter:grayscale(.45) saturate(.45)}\n.v1035ActionTile.v1036Holding{outline:1px solid #bc8b45;box-shadow:0 0 0 1px #bc8b4528 inset}\n.v1035ActionTile.v1036Holding:after{content:'';position:absolute;left:0;bottom:0;height:3px;background:#d8ae63;animation:v1036HoldFill 2s linear forwards;pointer-events:none}\n@keyframes v1036HoldFill{from{width:0}to{width:100%}}\n.v1036InfoBack{position:fixed;inset:0;z-index:140;background:#080604c9;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}\n.v1036InfoModal{width:min(430px,100%);max-height:88vh;overflow:auto;border:1px solid #775c38;border-radius:18px;background:linear-gradient(180deg,#21190f,#15110d);box-shadow:0 22px 60px #000b;padding:17px}\n.v1036InfoHero{display:flex;align-items:center;gap:12px;margin-bottom:10px}.v1036InfoIcon{width:58px;height:58px;display:grid;place-items:center;border-radius:16px;font-size:34px;background:#2a2117;border:1px solid #6b5438}\n.v1036InfoHero h2{margin:2px 0 0;color:#f0d99f;font-size:25px}.v1036InfoDesc{margin:7px 0 13px;color:#c4b79f;line-height:1.45;font-size:13px}\n.v1036InfoRows{border:1px solid #463729;border-radius:13px;overflow:hidden}.v1036InfoRows>div{display:grid;grid-template-columns:minmax(95px,.8fr) minmax(0,1.4fr);gap:10px;padding:9px 10px;border-bottom:1px solid #392d23}.v1036InfoRows>div:last-child{border-bottom:0}.v1036InfoRows span{font-size:10px;color:#958976}.v1036InfoRows b{font-size:10px;color:#e5d5b5;text-align:right;line-height:1.3}\n.v1036InfoClose{width:100%;margin-top:13px;min-height:46px;border-radius:12px;border:1px solid #745630;background:#302215;color:#f2dfb7;font-weight:700}\n@media(max-width:390px){.v1036ActionHead small{max-width:145px;font-size:6.5px}.v1036InfoBack{padding:10px}.v1036InfoModal{padding:14px}.v1036InfoHero h2{font-size:22px}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_57.js":"window.RF=window.RF||{};\nRF.VERSION='10.57.0';\nRF.BUILD={\n  version:'10.57.0',\n  title:'Battle Categories',\n  built:'17 Sep 2026 • 15:58 BST',\n  buildId:'20260917-1558-bst'\n};\nRF.V1057=RF.V1057||{};\n\n/* Realmforge V10.57 — Battle Categories\n   - Adds Magic as a first-class navigation tab with a Coming Soon page.\n   - Tightens Tactical Battle actions/items to four columns on mobile.\n   - Splits combat Actions into Aggressive / Defensive / Abilities / Magic categories.\n   - Preserves all existing combat hooks, long-press intel, unidentified-enemy secrecy and loadout/save state.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1057;\nV.CATS=[\n  ['aggressive','⚔️','Aggressive'],\n  ['defensive','🛡️','Defensive'],\n  ['abilities','✨','Abilities'],\n  ['magic','🔮','Magic']\n];\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.57.0';\n  s.v1057=s.v1057||{};\n  if(!V.CATS.some(([id])=>id===s.v1057.combatCategory))s.v1057.combatCategory='aggressive';\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nV.escape=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\n\n// ---------- Magic navigation ----------\nV.magicPage=function(){\n  return `<section class=\"card v1057MagicCard\">\n    <div class=\"questTitle\"><div><span class=\"eyebrow\">ARCANE ARTS</span><h2>🔮 Magic</h2></div><span class=\"tag v1057SoonTag\">COMING SOON</span></div>\n    <div class=\"v1057MagicHero\"><div class=\"v1057Orb\">🔮</div><h3>Magic is coming soon.</h3><p>The spellbook is still sealed. Future updates will open spellcasting, arcane combat actions and utility magic here.</p></div>\n  </section>`;\n};\nconst pageBase=RF.UI.page.bind(RF.UI);\nRF.UI.page=function(s){\n  if(this.tab==='magic')return V.magicPage(s);\n  return pageBase(s);\n};\n\nV.withMagicArray=function(items){\n  const clean=(items||[]).filter(x=>x&&x[0]!=='shop'&&x[0]!=='magic').map(x=>[...x]);\n  const magic=['magic','🔮','Magic'];\n  const i=clean.findIndex(x=>x[0]==='skills');\n  clean.splice(i>=0?i+1:clean.length,0,magic);\n  return clean;\n};\nif(RF.V95?.navItems)RF.V95.navItems=V.withMagicArray(RF.V95.navItems);\nif(RF.V1038){\n  const clean=(RF.V1038.items||[]).filter(x=>x?.id!=='shop'&&x?.id!=='magic').map(x=>({...x}));\n  const i=clean.findIndex(x=>x.id==='skills');\n  clean.splice(i>=0?i+1:clean.length,0,{id:'magic',icon:'🔮',label:'Magic'});\n  RF.V1038.items=clean;\n  RF.V1038.meta={\n    ...(RF.V1038.meta||{}),\n    magic:'Spellcasting and arcane arts. Coming soon.'\n  };\n  delete RF.V1038.meta.shop;\n}\nif(RF.UI.tab==='shop')RF.UI.tab='world';\n\n// ---------- Categorised Tactical Battle ----------\nV.categoryForButton=function(btnHtml){\n  if(/data-parry\\b/.test(btnHtml)||/data-v4-flee\\b/.test(btnHtml))return 'defensive';\n  const m=btnHtml.match(/data-ability=\"([^\"]+)\"/);if(!m)return 'abilities';\n  const id=m[1],a=RF.DATA.abilities?.[id];\n  if(a?.kind==='magic'||a?.skill==='magic')return 'magic';\n  if(['guard','brace','riposte','iron_wall','shield_bash'].includes(id)||a?.skill==='defence'||['guard','riposte'].includes(a?.kind))return 'defensive';\n  if(['second_wind','feint','hunters_mark','adrenaline_break'].includes(id)||['heal','status'].includes(a?.kind)||a?.special)return 'abilities';\n  return 'aggressive';\n};\nV.actionCategoryHtml=function(s,buttons){\n  const active=V.CATS.some(([id])=>id===s?.v1057?.combatCategory)?s.v1057.combatCategory:'aggressive';\n  const grouped={aggressive:[],defensive:[],abilities:[],magic:[]};\n  buttons.forEach(b=>grouped[V.categoryForButton(b)]?.push(b));\n  const tabs=V.CATS.map(([id,icon,label])=>`<button type=\"button\" class=\"v1057CombatCat ${active===id?'active':''}\" data-v1057-combat-cat=\"${id}\"><span>${icon}</span><b>${label}</b><small>${grouped[id].length}</small></button>`).join('');\n  const body=grouped[active].length?grouped[active].join(''):`<div class=\"v1057EmptyCombatCat\">${active==='magic'?'🔮 No combat magic is available yet.':'No actions are available in this category.'}</div>`;\n  return `<div class=\"v1057CombatCats\">${tabs}</div><div class=\"v1035ActionGrid v1057CategorisedGrid\">${body}</div>`;\n};\n\nconst combatBase=RF.UI.combatPopup.bind(RF.UI);\nRF.UI.combatPopup=function(s){\n  let h=combatBase(s);if(!h||!s?.combat)return h;\n  h=h.replace(/<div class=\"v1035ActionGrid\">([\\s\\S]*?)<\\/div>/,(whole,inside)=>{\n    const buttons=inside.match(/<button[\\s\\S]*?<\\/button>/g)||[];\n    return V.actionCategoryHtml(s,buttons);\n  });\n  return h;\n};\n\n// A fresh fight always opens on Aggressive. Changing category never spends a turn.\nconst startBattleBase=RF.startBattle;\nif(startBattleBase)RF.startBattle=function(){\n  if(RF.state){RF.state.v1057=RF.state.v1057||{};RF.state.v1057.combatCategory='aggressive'}\n  return startBattleBase.apply(this,arguments);\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('[data-v1057-combat-cat]').forEach(b=>b.onclick=()=>{\n    if(!s?.combat)return;\n    s.v1057=s.v1057||{};\n    s.v1057.combatCategory=b.dataset.v1057CombatCat;\n    RF.save?.(s);RF.UI.render(s);\n  });\n};\n\nconst oldStyle=document.getElementById('v1057-battle-categories-style');if(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');st.id='v1057-battle-categories-style';st.textContent=`\n.v1057MagicCard{display:grid;gap:14px}.v1057SoonTag{white-space:nowrap}.v1057MagicHero{min-height:310px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid rgba(198,158,83,.17);border-radius:20px;background:radial-gradient(circle at 50% 35%,rgba(90,62,124,.16),transparent 42%),linear-gradient(180deg,rgba(16,12,10,.34),rgba(9,7,6,.45));padding:28px 20px}.v1057Orb{width:94px;height:94px;display:grid;place-items:center;border-radius:50%;font-size:58px;background:radial-gradient(circle at 38% 30%,rgba(255,255,255,.09),rgba(92,62,126,.14) 42%,rgba(18,13,22,.6));border:1px solid rgba(157,126,184,.25);box-shadow:0 18px 48px #0006}.v1057MagicHero h3{margin:18px 0 6px;color:#efd69d;font-size:22px}.v1057MagicHero p{max-width:440px;margin:0;color:#ac9e87;line-height:1.5;font-size:12px}\n.v1057CombatCats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:5px 0 6px}.v1057CombatCat{min-width:0;min-height:38px;border:1px solid #44382b;border-radius:10px;background:#17130f;color:#b9ad97;padding:4px 2px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:3px;font:inherit}.v1057CombatCat>span{font-size:12px}.v1057CombatCat>b{min-width:0;font-size:7.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v1057CombatCat>small{font-size:6.5px;color:#897e6e}.v1057CombatCat.active{border-color:#b78949;background:linear-gradient(180deg,#49341d,#2c2116);color:#f0ddba}.v1057CombatCat.active small{color:#d3bd92}\n.v1057EmptyCombatCat{grid-column:1/-1;min-height:58px;display:grid;place-items:center;text-align:center;border:1px dashed #46392c;border-radius:11px;color:#958a79;font-size:8px;padding:10px}\n.v1035ActionGrid,.v1035ItemGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important}.v1035ActionTile,.v1035ItemTile{min-height:59px!important;padding:5px 3px!important;border-radius:10px!important}.v1035TileIcon{font-size:18px!important}.v1035ActionTile b,.v1035ItemTile b{font-size:8px!important;white-space:normal!important;line-height:1.04!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.v1035ActionTile small,.v1035ItemTile small{font-size:6.3px!important;line-height:1.05!important;white-space:nowrap!important}.v1035SectionTitle{margin:6px 0 3px!important}.v1035ParryNote{display:none!important}\n@media(max-width:390px){.v1057CombatCats{gap:4px}.v1057CombatCat{min-height:36px;padding:3px 2px}.v1057CombatCat>b{font-size:7px}.v1057CombatCat>span{font-size:11px}.v1035ActionGrid,.v1035ItemGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important}.v1035ActionTile,.v1035ItemTile{min-height:56px!important;padding:4px 2px!important}.v1035TileIcon{font-size:17px!important}.v1035ActionTile b,.v1035ItemTile b{font-size:7.5px!important}.v1035ActionTile small,.v1035ItemTile small{font-size:6px!important}}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_58.js":"window.RF=window.RF||{};\nRF.VERSION='10.58.0';\nRF.BUILD={\n  version:'10.58.0',\n  title:'Battle Tabs',\n  built:'17 Sep 2026 • 16:12 BST',\n  buildId:'20260917-1612-bst'\n};\nRF.V1058=RF.V1058||{};\n\n/* Realmforge V10.58 — Battle Tabs\n   - Restyles V10.57 combat categories as one full-width gold segmented tab bar.\n   - Visually separates category navigation from the action tiles below it.\n   - Suppresses the battle-modal entrance animation when switching categories so tab changes no longer jolt the screen.\n   - Leaves combat state, Equipment, Tool Belt, Pack and Bank data untouched.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1058;\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.58.0';\n  s.v1058=s.v1058||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nV.switchCategory=function(s,id){\n  if(!s?.combat||!RF.V1057?.CATS?.some(([cat])=>cat===id))return;\n  s.v1057=s.v1057||{};\n  s.v1057.combatCategory=id;\n  RF.save?.(s);\n\n  // RF.UI.render recreates the battle modal. The legacy .battleModal entrance animation\n  // is desirable when a fight first opens, but looked like an impact shake when merely\n  // switching action categories. Disable it for exactly this render cycle.\n  document.documentElement.classList.add('v1058CategorySwitch');\n  RF.UI.render(s);\n  requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('v1058CategorySwitch')));\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('[data-v1057-combat-cat]').forEach(btn=>{\n    btn.onclick=e=>{\n      e.preventDefault();\n      e.stopPropagation();\n      V.switchCategory(s,btn.dataset.v1057CombatCat);\n    };\n  });\n};\n\nconst oldStyle=document.getElementById('v1058-battle-tabs-style');if(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');st.id='v1058-battle-tabs-style';st.textContent=`\n/* One continuous segmented control instead of four action-looking tiles. */\n.v1057CombatCats{\n  display:grid!important;\n  grid-template-columns:repeat(4,minmax(0,1fr))!important;\n  gap:0!important;\n  width:100%;\n  margin:5px 0 10px!important;\n  padding:3px!important;\n  border:1px solid rgba(210,164,83,.58)!important;\n  border-radius:12px!important;\n  background:linear-gradient(180deg,rgba(116,78,31,.92),rgba(66,43,21,.96))!important;\n  box-shadow:inset 0 1px rgba(255,239,189,.16),0 5px 15px rgba(0,0,0,.24)!important;\n  overflow:hidden;\n}\n.v1057CombatCat{\n  min-width:0!important;\n  min-height:35px!important;\n  margin:0!important;\n  padding:4px 3px!important;\n  border:0!important;\n  border-right:1px solid rgba(244,211,145,.16)!important;\n  border-radius:8px!important;\n  background:transparent!important;\n  color:#d7c29a!important;\n  box-shadow:none!important;\n  display:grid!important;\n  grid-template-columns:auto minmax(0,1fr) auto!important;\n  align-items:center!important;\n  gap:3px!important;\n  transform:none!important;\n}\n.v1057CombatCat:last-child{border-right:0!important}\n.v1057CombatCat>span{font-size:12px!important;filter:saturate(.85)}\n.v1057CombatCat>b{font-size:7.5px!important;font-weight:800!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;color:inherit!important}\n.v1057CombatCat>small{font-size:6.5px!important;color:#a99168!important}\n.v1057CombatCat.active{\n  color:#fff0c8!important;\n  background:linear-gradient(180deg,rgba(220,170,80,.38),rgba(137,91,35,.55))!important;\n  box-shadow:inset 0 0 0 1px rgba(255,218,142,.28),inset 0 1px rgba(255,244,213,.14),0 2px 7px rgba(0,0,0,.22)!important;\n}\n.v1057CombatCat.active small{color:#f2d59f!important}\n.v1057CombatCat:active{transform:none!important;filter:brightness(1.08)}\n\n/* Give the actual action grid a clean visual break below navigation. */\n.v1057CategorisedGrid{margin-top:0!important;padding-top:0!important}\n.v1036ActionHead{margin-bottom:2px!important}\n\n/* Category switches are UI navigation, not combat impacts. */\n.v1058CategorySwitch .battleModal{animation:none!important}\n\n@media(max-width:390px){\n  .v1057CombatCats{margin-bottom:8px!important;padding:3px!important}\n  .v1057CombatCat{min-height:33px!important;padding:3px 2px!important}\n  .v1057CombatCat>b{font-size:7px!important}\n  .v1057CombatCat>span{font-size:11px!important}\n  .v1057CombatCat>small{font-size:6px!important}\n}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_59.js":"window.RF=window.RF||{};\nRF.VERSION='10.59.0';\nRF.BUILD={\n  version:'10.59.0',\n  title:'Stable Battle Tabs',\n  built:'17 Sep 2026 • 16:44 BST',\n  buildId:'20260917-1644-bst'\n};\nRF.V1059=RF.V1059||{};\n\n/* Realmforge V10.59 — Stable Battle Tabs\n   - Category switching is now DOM-only: no combat/modal re-render, so there is no camera-style jolt.\n   - All four action categories remain mounted and simply show/hide in place.\n   - Enlarges category emojis and moves/lifts the action-count numbers closer to the labels.\n   - Leaves combat turns, cooldowns, Equipment, Tool Belt, Pack and save data untouched.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1059;\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.59.0';\n  s.v1059=s.v1059||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\n// Override V10.57's category renderer so every category exists in the DOM at once.\n// Switching category then becomes a class/display toggle instead of reconstructing the battle modal.\nif(RF.V1057){\n  RF.V1057.actionCategoryHtml=function(s,buttons){\n    const C=RF.V1057.CATS||[];\n    const active=C.some(([id])=>id===s?.v1057?.combatCategory)?s.v1057.combatCategory:'aggressive';\n    const grouped={aggressive:[],defensive:[],abilities:[],magic:[]};\n    (buttons||[]).forEach(b=>grouped[RF.V1057.categoryForButton(b)]?.push(b));\n    const tabs=C.map(([id,icon,label])=>`<button type=\"button\" class=\"v1057CombatCat ${active===id?'active':''}\" data-v1057-combat-cat=\"${id}\" aria-selected=\"${active===id?'true':'false'}\"><span class=\"v1059CatIcon\">${icon}</span><b>${label}</b><small class=\"v1059CatCount\">${grouped[id].length}</small></button>`).join('');\n    const groups=C.map(([id])=>{\n      const body=grouped[id].length?grouped[id].join(''):`<div class=\"v1057EmptyCombatCat\">${id==='magic'?'🔮 No combat magic is available yet.':'No actions are available in this category.'}</div>`;\n      return `<div class=\"v1035ActionGrid v1057CategorisedGrid v1059CombatGroup ${active===id?'active':''}\" data-v1059-combat-group=\"${id}\" ${active===id?'':'hidden'}>${body}</div>`;\n    }).join('');\n    return `<div class=\"v1057CombatCats\">${tabs}</div>${groups}`;\n  };\n}\n\nV.switchCategory=function(s,id){\n  if(!s?.combat||!RF.V1057?.CATS?.some(([cat])=>cat===id))return;\n  s.v1057=s.v1057||{};\n  s.v1057.combatCategory=id;\n  RF.save?.(s);\n\n  // No RF.UI.render here. Keeping the existing battle DOM in place is what eliminates\n  // the camera/entrance-motion effect completely.\n  document.querySelectorAll('[data-v1057-combat-cat]').forEach(btn=>{\n    const on=btn.dataset.v1057CombatCat===id;\n    btn.classList.toggle('active',on);\n    btn.setAttribute('aria-selected',on?'true':'false');\n  });\n  document.querySelectorAll('[data-v1059-combat-group]').forEach(group=>{\n    const on=group.dataset.v1059CombatGroup===id;\n    group.hidden=!on;\n    group.classList.toggle('active',on);\n  });\n};\n\nconst bindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){\n  bindBase(s);\n  document.querySelectorAll('[data-v1057-combat-cat]').forEach(btn=>{\n    btn.onclick=e=>{\n      e.preventDefault();\n      e.stopPropagation();\n      V.switchCategory(s,btn.dataset.v1057CombatCat);\n    };\n  });\n};\n\nconst oldStyle=document.getElementById('v1059-stable-battle-tabs-style');if(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');st.id='v1059-stable-battle-tabs-style';st.textContent=`\n/* Keep inactive action groups mounted but genuinely out of layout. */\n.v1059CombatGroup[hidden]{display:none!important}\n.v1059CombatGroup.active{display:grid!important}\n\n/* Centre each category's icon/label/count as one compact cluster. This pulls the count\n   inward from the far edge while giving both icon and count more presence. */\n.v1057CombatCat{\n  grid-template-columns:auto auto auto!important;\n  justify-content:center!important;\n  align-content:center!important;\n  column-gap:4px!important;\n}\n.v1057CombatCat>.v1059CatIcon,.v1057CombatCat>span{\n  font-size:15px!important;\n  line-height:1!important;\n  width:auto!important;\n  min-width:0!important;\n}\n.v1057CombatCat>b{\n  width:auto!important;\n  min-width:0!important;\n  font-size:7.7px!important;\n}\n.v1057CombatCat>.v1059CatCount,.v1057CombatCat>small{\n  width:auto!important;\n  min-width:0!important;\n  margin-left:0!important;\n  font-size:8px!important;\n  line-height:1!important;\n  font-weight:800!important;\n  color:#bca476!important;\n}\n.v1057CombatCat.active>.v1059CatCount,.v1057CombatCat.active>small{color:#ffe0a5!important}\n\n/* Category selection itself has no motion/transform feedback. */\n.v1057CombatCat,.v1057CombatCat:active,.v1057CombatCat.active{transform:none!important;animation:none!important}\n\n@media(max-width:390px){\n  .v1057CombatCat{column-gap:3px!important}\n  .v1057CombatCat>.v1059CatIcon,.v1057CombatCat>span{font-size:14px!important}\n  .v1057CombatCat>b{font-size:7.2px!important}\n  .v1057CombatCat>.v1059CatCount,.v1057CombatCat>small{font-size:7.5px!important}\n}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v10_60.js":"window.RF=window.RF||{};\nRF.VERSION='10.60.0';\nRF.BUILD={\n  version:'10.60.0',\n  title:'Full Battle Frame',\n  built:'17 Sep 2026 • 19:38 BST',\n  buildId:'20260917-1938-bst'\n};\nRF.V1060=RF.V1060||{};\n\n/* Realmforge V10.60 — Full Battle Frame\n   - Fixes Tactical Battle to a stable full-height viewport frame.\n   - Category changes no longer alter the popup's outer height.\n   - Longer battle content scrolls inside the fixed battle frame.\n   - Leaves combat state, Equipment, Tool Belt, Pack, Bank and progression untouched.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1060;\n\nV.migrate=function(s){\n  if(!s)return s;\n  s.version='10.60.0';\n  s.v1060=s.v1060||{};\n  return s;\n};\n/* V11.8: legacy save/migration wrapper extracted to canonical core. */\n\nconst oldStyle=document.getElementById('v1060-full-battle-frame-style');if(oldStyle)oldStyle.remove();\nconst st=document.createElement('style');st.id='v1060-full-battle-frame-style';st.textContent=`\n/* The battle shell now owns a fixed viewport-sized frame. Category groups can become\n   shorter or longer without resizing/recentring the modal itself. */\n.v1035BattleBack{\n  align-items:center!important;\n  padding:6px!important;\n  overflow:hidden!important;\n}\n.v1035BattleModal{\n  height:calc(100dvh - 12px)!important;\n  min-height:calc(100dvh - 12px)!important;\n  max-height:calc(100dvh - 12px)!important;\n  overflow-y:auto!important;\n  overflow-x:hidden!important;\n  overscroll-behavior:contain!important;\n  -webkit-overflow-scrolling:touch!important;\n  box-sizing:border-box!important;\n  scrollbar-gutter:stable;\n}\n\n/* Keep the frame stable even on browsers that only expose legacy vh. */\n@supports not (height:100dvh){\n  .v1035BattleModal{\n    height:calc(100vh - 12px)!important;\n    min-height:calc(100vh - 12px)!important;\n    max-height:calc(100vh - 12px)!important;\n  }\n}\n\n@media(min-width:900px){\n  .v1035BattleModal{\n    height:min(calc(100dvh - 20px),900px)!important;\n    min-height:min(calc(100dvh - 20px),900px)!important;\n    max-height:min(calc(100dvh - 20px),900px)!important;\n  }\n}\n`;\ndocument.head.appendChild(st);\n\nif(RF.state){V.migrate(RF.state);RF.save?.(RF.state);setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n","js/v11_3_2.js":"window.RF=window.RF||{};\nRF.VERSION='11.3.2';\nRF.BUILD={\n  version:'11.3.2',\n  title:'Battle Reward Flow',\n  built:'17 Sep 2026 • 22:05 BST',\n  buildId:'20260917-2205-bst'\n};\nRF.V1132=RF.V1132||{};\n\n/* Realmforge V11.3.2 — Battle Reward Flow\n   - Removes the nested scrolling region from post-combat reward lists.\n   - Long reward lists expand naturally inside the battle-summary modal.\n   - The battle summary itself is the only vertical scrolling surface, with Continue remaining after the final reward.\n*/\n\n(()=>{\n'use strict';\nconst V=RF.V1132;\nV.version='11.3.2';\n\nconst old=document.getElementById('v1132-battle-reward-flow-style');if(old)old.remove();\nconst st=document.createElement('style');\nst.id='v1132-battle-reward-flow-style';\nst.textContent=`\n/* V10 originally capped the reward list at 38vh. That created a second scroller inside\n   the battle-summary popup. Let the rewards grow normally and leave scrolling to .modal. */\n.battleSummary .resultGains{\n  max-height:none!important;\n  height:auto!important;\n  overflow:visible!important;\n  overscroll-behavior:auto!important;\n}\n.battleSummary{\n  overflow-y:auto!important;\n  overflow-x:hidden!important;\n  -webkit-overflow-scrolling:touch;\n  overscroll-behavior:contain!important;\n}\n.battleSummary .startBtn{\n  position:static!important;\n  width:100%;\n  margin-top:14px;\n}\n`;\ndocument.head.appendChild(st);\n\n// Presentation-only patch: no save migration and no loadout/inventory mutation.\nif(RF.state){setTimeout(()=>{if(RF.state&&!RF.V101?.mainMenu)RF.UI.render(RF.state)},0)}\n})();\n"};
+  const installed=[];
+  const installedSet=new Set();
+  function runClassic(name) {
+    if(installedSet.has(name)) return false;
+    const source=sources[name];
+    if(typeof source!=='string') throw new Error(`Unknown canonical Combat stage: ${name}`);
+    const script=document.createElement('script');
+    script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-stage',name);
+    script.textContent=source+`\n//# sourceURL=realmforge-canonical:///combat/${name.replace(/^js\//,'')}\n`;
+    (document.head||document.documentElement).appendChild(script);
+    script.remove();
+    installedSet.add(name);installed.push(name);
+    return true;
+  }
+  const api={
+
+    start: (...args) => typeof RF.startBattle==='function' ? RF.startBattle(...args) : RF.spawnEnemy(...args),
+    spawn: id => RF.spawnEnemy(id),
+    action: action => RF.combatAction(action),
+    ability: (...args) => typeof RF.battleAbility==='function' ? RF.battleAbility(...args) : null,
+    enemyTurn: () => RF.enemyBattleTurn ? RF.enemyBattleTurn() : RF.enemyTurn(),
+    win: () => RF.winCombat(),
+    flee: () => typeof RF.fleeV4==='function' ? RF.fleeV4() : RF.combatAction('flee'),
+    useItem: id => typeof RF.useBattleItem==='function' ? RF.useBattleItem(id) : RF.useItem(id),
+    damageOutput: state => RF.weaponDamage(state),
+    armour: state => RF.armor(state),
+    installHistoricalStage: runClassic,
+    installedStages: installed,
+    ownsStage: name => Object.prototype.hasOwnProperty.call(sources,name),
+    stageNames: () => Object.keys(sources)
+  };
+  RF.Systems.Combat=RF.Modules.register('systems.combat',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(sources).length,extractedIn:'11.13.0'});
+})();
