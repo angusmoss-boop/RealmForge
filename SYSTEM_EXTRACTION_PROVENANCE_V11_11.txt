@@ -1,0 +1,18 @@
+REALMFORGE V11.11.0 — SYSTEM EXTRACTION PROVENANCE
+
+Canonical Commerce source:
+bfeeb443730fef10eef8a1ace4a704814aa5270faa481a509efacbe916bf53b4  24145 bytes  js/systems/commerce.js
+Source lineage: active transformed V10.54 implementation from V11.10 compatibility runtime.
+
+Canonical Dungeons source:
+f52bd7dbe0326a6e39f6b55c8e86624b236e14a39ff739a8fa5f2c6001c45211  25841 bytes  js/systems/dungeons.js
+Source lineage: active transformed V11.0 implementation from V11.10 compatibility runtime.
+
+Compatibility runtime:
+V11.10 bytes: 1074126
+V11.11 bytes: 1026996
+Removed: 47130
+
+Historical marker replacements:
+- js/v10_54.js -> canonical Commerce installer call
+- js/v11.js -> canonical Dungeons installer call

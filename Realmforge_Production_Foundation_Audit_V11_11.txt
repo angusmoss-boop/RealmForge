@@ -1,0 +1,55 @@
+REALMFORGE V11.11.0 — PRODUCTION FOUNDATION AUDIT
+Canonical Commerce & Dungeons
+Date: 2026-09-19
+
+OBJECTIVE
+Move the first mature gameplay implementations out of the historical compatibility runtime without changing gameplay or the save schema.
+
+EXTRACTED SYSTEM OWNERSHIP
+- Commerce implementation is now owned by js/systems/commerce.js.
+- Dungeon Gauntlet implementation is now owned by js/systems/dungeons.js.
+- Historical V10.54 and V11.0 compatibility entries are now 354-byte chronological installer markers.
+- Later historical enrichments continue to target RF.V1054 and RF.V1062 at their original points.
+
+ACTIVE PRODUCTION LOAD ORDER
+1. js/data/base_content.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_11.js
+5. js/dist/data_core_v11_11.js
+6. js/legacy/base/main.js
+7. js/dist/systems_core_v11_11.js
+8. js/legacy/compat_gameplay_systems_trimmed_v1153.js
+9. js/dist/canonical_v11_11.js
+
+COMPATIBILITY RUNTIME SHRINK
+V11.10 active compatibility runtime: 1,074,126 bytes
+V11.11 active compatibility runtime: 1,026,996 bytes
+Removed from active compatibility: 47,130 bytes
+
+AUTOMATED VALIDATION
+- JavaScript syntax: 161 files checked, 0 failures.
+- Historical content equivalence V11.8→V11.9: PASS.
+- Historical config equivalence V11.9→V11.10: PASS.
+- Save Core compatibility/recovery regression suite: PASS.
+- V11.10→V11.11 Commerce behavioural equivalence: PASS across all 10 markets.
+- Deterministic market stock, buy prices, sell prices and buy limits: PASS.
+- Live Commerce trade mutation parity: PASS.
+- V11.10→V11.11 Dungeon definition equivalence: PASS across all 8 dungeons.
+- Dungeon encounter sequence parity: PASS across all 8 dungeons.
+- Dungeon record behaviour parity: PASS.
+- Canonical ownership verifier: PASS.
+- V11.10 campaign → V11.11: PASS.
+- Equipment preserved: PASS.
+- Tool Belt preserved: PASS.
+- Pack/Bank preserved: PASS.
+- Research/world flags preserved: PASS.
+- Dungeon records preserved: PASS.
+- Market state preserved: PASS.
+- Save schema remains 11.5.3.
+
+KNOWN HEADLESS-HARNESS ARTIFACT
+The historical v10_9 modalHTML error remains visible in the minimal Node DOM harness in both the V11.10 reference runtime and V11.11 runtime. It is an existing test-environment limitation, not a V11.11 behavioural difference. Real-device smoke testing remains the final deployment check.
+
+PRODUCTION RULE GOING FORWARD
+New Commerce and Dungeon features must be implemented in canonical systems plus canonical RF.Config / RF.Catalog data. Do not reintroduce version-patch implementations for these systems.

@@ -1,5 +1,5 @@
-version=11.10.0
-title=Canonical World Config
-built=2026-09-19T06:18:00+01:00
-build_id=20260919-0618-bst
-notes=Static world/gameplay configuration including markets, ecosystems, dungeon tables, exploration/chest tables, burglary balance, bank/facility definitions and equipment stat balance moved into canonical data.config ownership. Save schema remains 11.5.3.
+version=11.11.0
+title=Canonical Commerce & Dungeons
+built=2026-09-19T07:05:00+01:00
+build_id=20260919-0705-bst
+notes=Commerce and Dungeon gameplay implementations now live in canonical systems modules. Historical V10.54/V11.0 compatibility patches are reduced to chronological install markers. Save schema remains 11.5.3.
