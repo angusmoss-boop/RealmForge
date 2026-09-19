@@ -1,0 +1,36 @@
+REALMFORGE V11.14.0 — RESEARCH / SKILLS / CRAFTING EXTRACTION PROVENANCE
+
+CANONICAL RESEARCH SOURCE
+js/systems/research.js
+
+EXTRACTED RESEARCH STAGES
+- js/v10_48.js
+- js/v10_49.js
+- js/v11_5_2.js
+- js/v11_5_3.js
+
+CANONICAL CRAFTING SOURCE
+js/systems/crafting.js
+
+EXTRACTED CRAFTING STAGES
+- js/v10_15.js
+- js/v10_18.js
+- js/v10_19.js
+- js/v10_28.js
+
+CANONICAL SKILLS SOURCE
+js/systems/skills.js
+
+EXTRACTED SKILLS STAGES
+- js/v10_37.js
+- js/v11_2.js
+
+ACTIVE COMPATIBILITY
+js/legacy/compat_gameplay_research_skills_trimmed_v1153.js
+
+Each extracted boundary remains in the 93-stage historical timeline as a canonical installer call. The exact V11.13 compatibility-stage source is retained inside the owning canonical module.
+
+DELIBERATE NON-EXTRACTIONS
+- V5/V6/V7 remain mixed multi-system foundations.
+- V10.24 Hearth & Home remains mixed Cooking/property/resting history.
+- Older superseded research/skill hooks inside mixed patches remain until those owning systems are split.

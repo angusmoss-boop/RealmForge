@@ -1,5 +1,5 @@
-version=11.13.0
-title=Canonical Combat & Loadouts
-built=2026-09-19T06:20:00+01:00
-build_id=20260919-0620-bst
-notes=Mature combat presentation/cadence plus modern Equipment, Tool Belt, Pack, Vault and over-encumbrance stages now execute from canonical systems. Save schema remains 11.5.3.
+version=11.14.0
+title=Canonical Research & Mastery
+built=2026-09-19T06:13:00+01:00
+build_id=20260919-0613-bst
+notes=Field Research/Living Encounters, modern Crafting/Workshop stages and Skills/Mastery/requirement integrity now execute from canonical systems. Save schema remains 11.5.3.

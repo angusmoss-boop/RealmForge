@@ -1,0 +1,79 @@
+REALMFORGE V11.14.0 — PRODUCTION FOUNDATION IX AUDIT
+
+Scope
+-----
+Canonical extraction of mature Research/Living Encounters, Workshop/Crafting and Skills/Mastery/requirement-integrity implementation stages from active compatibility.
+
+Compatibility reduction
+-----------------------
+V11.13 active compatibility: 780,574 bytes
+V11.14 active compatibility: 690,619 bytes
+Removed from compatibility: 89,955 bytes
+Historical stages extracted: 10
+Historical timeline entries retained: 93
+
+Canonical Research
+------------------
+4 stages now owned by js/systems/research.js:
+- V10.48 Field Identification
+- V10.49 Unknown Entity
+- V11.5.2 Fieldcraft Research
+- V11.5.3 Living Encounters
+
+Canonical Crafting
+------------------
+4 stages now owned by js/systems/crafting.js:
+- V10.15 Crafting Requirements
+- V10.18 Forge & Filters
+- V10.19 Greenvale Workshop
+- V10.28 Village Workshop
+
+Canonical Skills
+----------------
+2 stages now owned by js/systems/skills.js:
+- V10.37 Mastery Grid
+- V11.2 Requirement Integrity
+
+Historical execution contract
+-----------------------------
+Each extracted stage is still represented at its original chronological boundary by a tiny installer marker. Exact V11.13 stage source is stored by the canonical owner and executed at that boundary, preserving later wrapper dependencies and runtime order.
+
+Deliberate frozen seams
+-----------------------
+V5/V6/V7 remain in compatibility because they mix gathering, fishing, hunting, firemaking, cooking, crafting, crime, exploration, research, combat and UI in single historical patches. V10.24 Hearth & Home remains because it mixes Cooking with property/resting. These are intentionally not moved wholesale.
+
+Save / migration contract
+-------------------------
+Application version: 11.14.0
+Save schema: 11.5.3
+No player-state migration is required.
+Existing research ranks/notes and V11.5.3 encounter-hour stamps are preserved.
+Existing skill XP/levels remain valid; V11.2 canonical normalization preserves the highest earned representation and never reduces progress.
+Existing Equipment and Tool Belt assignments are preserved. Pack overflow remains lossless.
+
+Validation completed
+--------------------
+PASS — 190 JavaScript production/test files pass syntax validation with 0 failures.
+PASS — V11.13 ↔ V11.14 hourly encounter generation equivalence.
+PASS — Fieldcraft safety/insight profile equivalence.
+PASS — research-note/rank progression equivalence.
+PASS — Field Research HTML equivalence.
+PASS — Nearby Creatures secrecy/identification HTML equivalence.
+PASS — stale skill level/XP effective-level normalization equivalence.
+PASS — exact-level requirement text/semantics equivalence.
+PASS — Mastery Grid Skills page HTML equivalence.
+PASS — Village Workshop craft-analysis equivalence.
+PASS — Village Workshop rendering equivalence.
+PASS — batch crafting start-state equivalence.
+PASS — canonical ownership verifier for Research, Crafting and Skills.
+PASS — advanced V11.13 campaign loads into V11.14 with Equipment, Tool Belt, Pack, Bank, skill XP/levels, research ranks/notes, encounter-hour stamps, progression flags, dungeon history and over-capacity state preserved.
+PASS — runtime contract V11.14.
+PASS — all retained Node regression harnesses from prior foundation builds.
+
+Known harness-only warning
+--------------------------
+The historical V10.9 `modalHTML` / `modalHtml` mismatch still emits the same error in the simplified Node fake-DOM harness for both the V11.13 reference and V11.14 candidate. It is not a V11.14 behavioural difference and has not reproduced in the Samsung/browser runtime.
+
+Result
+------
+V11.14 is suitable for Samsung/browser sanity testing as Production Foundation IX.
