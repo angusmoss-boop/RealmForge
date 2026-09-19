@@ -1,0 +1,35 @@
+REALMFORGE V11.12.0 — PRODUCTION FOUNDATION AUDIT
+TITLE: Canonical Roads & Quests
+
+SCOPE
+- Extract V9 world routing from compatibility into systems.travel.
+- Extract V10.16 Travel Recovery, V10.17 Travel Overlay, V10.20 Waypoint Journeys and V11.2.2 Clock Sentinel into systems.travel.
+- Extract V9.3 quest journal/offer/detail/accept/abandon implementation into systems.quests.
+- Extract V11.5.1 Wayfinder Hints into systems.wayfinder.
+- Preserve historical execution order through installer markers.
+- Preserve save schema 11.5.3.
+
+COMPATIBILITY LAYER
+V11.11: 1,026,996 bytes
+V11.12:   960,222 bytes
+Removed:    66,774 bytes
+
+VALIDATION
+- Full JavaScript syntax pass: PASS (155 JS files, 0 failures at packaging time before test-only JS count).
+- V11.11 vs V11.12 route graph equivalence across Crossroads, Eastwatch, Northwatch, Ironridge, Quarry, Emberdeep, Mossbound and Drowned Heron routes: PASS.
+- Locked-route / narrative lock text equivalence: PASS.
+- Wayfinder hint equivalence across current locked destinations: PASS.
+- Quest offer list equivalence: PASS.
+- Quest journal HTML equivalence: PASS.
+- Quest accept / abandon mutation equivalence: PASS.
+- Travel Overlay normalized-output equivalence: PASS.
+- Waypoint remaining-route behaviour: PASS.
+- Clock Sentinel blocker behaviour: PASS.
+- Canonical ownership verifier: PASS.
+- V11.11 advanced campaign save -> V11.12 preservation of Equipment, Tool Belt, Pack, Bank, Research, world flags, dungeon records, route plan, active quest and abandoned quest state: PASS.
+
+KNOWN HEADLESS-HARNESS ARTIFACT
+The historical V10.9 `modalHTML` typo still throws in the Node fake-DOM harness in both reference and extracted runtimes. This is a pre-existing test-environment artifact and is not introduced by V11.12. Real-device sanity testing remains authoritative for browser/PWA behaviour.
+
+RESULT
+PASS — ready for Samsung/PWA sanity testing.

@@ -1,0 +1,28 @@
+REALMFORGE V11.12.0 — ROAD / QUEST EXTRACTION PROVENANCE
+
+CANONICAL TRAVEL SOURCE
+js/systems/travel.js
+
+EXTRACTED HISTORICAL STAGES
+- V9 World Map / Routing section
+- V10.16 Travel Recovery
+- V10.17 Travel Overlay
+- V10.20 Waypoint Journeys
+- V11.2.2 Clock Sentinel
+
+CANONICAL QUEST SOURCE
+js/systems/quests.js
+
+EXTRACTED HISTORICAL QUEST STAGE
+- V9.3 quest metadata / offer rules / journal / detail modal / accept / abandon / quest UI bindings
+
+CANONICAL WAYFINDER SOURCE
+js/systems/wayfinder.js
+
+EXTRACTED HISTORICAL WAYFINDER STAGE
+- V11.5.1 Wayfinder Hints
+
+ACTIVE COMPATIBILITY
+js/legacy/compat_gameplay_world_quest_trimmed_v1153.js
+
+The compatibility timeline still preserves all 93 historical patch boundaries. Extracted boundaries execute canonical installers instead of embedded implementation code.

@@ -24,5 +24,12 @@
   <script defer src="js/legacy/compat_gameplay_world_quest_trimmed_v1153.js"></script>
 
   <script defer src="js/dist/canonical_v11_12.js"></script>
+
+<script>
+window.addEventListener('load',()=>setTimeout(()=>{
+  const vals={version:window.RF&&RF.VERSION,build:window.RF&&RF.BUILD&&RF.BUILD.version,travel:RF.Modules?.info?.('systems.travel')?.meta?.status,quests:RF.Modules?.info?.('systems.quests')?.meta?.status,wayfinder:RF.Modules?.info?.('systems.wayfinder')?.meta?.status,ownership:RF.PRODUCTION_FOUNDATION?.systemOwnership?.valid};
+  document.documentElement.setAttribute('data-probe',JSON.stringify(vals));
+},500));
+</script>
 </body>
 </html>
