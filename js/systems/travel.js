@@ -707,7 +707,7 @@
     V.STALL_MS=1600;
 
     V.nowPerf=()=>typeof performance!=='undefined'&&performance.now?performance.now():Date.now();
-    V.visible=()=>typeof document==='undefined'||document.visibilityState!=='hidden';
+    V.visible=()=>RF.Platform?.active?.isVisible?.() ?? (typeof document==='undefined'||document.visibilityState!=='hidden');
     V.over=s=>!!RF.isOverEncumbered?.(s);
     V.selectOpen=()=>typeof document!=='undefined'&&document.activeElement?.tagName==='SELECT';
 
@@ -899,10 +899,11 @@
     if(V.watchdog)clearInterval(V.watchdog);
     V.watchdog=setInterval(()=>V.recoverIfStalled(),V.WATCH_MS);
 
-    ['visibilitychange','pageshow','focus'].forEach(name=>window.addEventListener(name,()=>{
-      if(name==='visibilitychange'&&!V.visible())return;
+    V.resumeUnsubscribe?.();
+    V.resumeUnsubscribe=RF.Platform?.active?.onResume?.(()=>{
+      if(!V.visible())return;
       V.repairOnResume();
-    },{passive:true}));
+    })||(()=>{});
 
     if(RF.state){
       V.migrate(RF.state);
