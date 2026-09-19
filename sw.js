@@ -1,4 +1,4 @@
-const CACHE='realmforge-v11-7-0';
+const CACHE='realmforge-v11-8-0';
 const FILES=[
   './',
   './index.html',
@@ -7,9 +7,10 @@ const FILES=[
   './js/legacy/base/data.js',
   './js/legacy/base/state.js',
   './js/legacy/base/ui.js',
+  './js/dist/save_core_v11_8.js',
   './js/legacy/base/main.js',
-  './js/legacy/compat_v1153.js',
-  './js/dist/canonical_v11_7.js',
+  './js/legacy/compat_gameplay_v1153.js',
+  './js/dist/canonical_v11_8.js',
   './version.txt'
 ];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));

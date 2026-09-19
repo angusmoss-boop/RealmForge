@@ -1,0 +1,37 @@
+REALMFORGE V11.8.0 - SAVE CORE EXTRACTION PROVENANCE
+
+Frozen / archived pre-extraction references:
+5c05a4625086a18da56850faf837ba3e39edc0f9b39455992fe517449fe8c6be  archive/legacy-save-core/base_state_v1153.js
+c3a15ff41cbce04527335120f61bbb99e589c30513e34d7158b2108c7267bdfb  archive/legacy-save-core/compat_v1153_full.js
+
+Active post-extraction legacy boundary:
+a142e2f0d3a4d312370bf080b41c2805763682a4c4412faca1421a690f2fb297  js/legacy/base/state.js
+071cd7913be78625f09db09f5618ca0b64caf1d6402cc8615a0abbd8d66916ea  js/legacy/compat_gameplay_v1153.js
+
+Canonical save ownership source:
+8e8a5efa03683c795655155314fce573e166d8c53224aa59c028ca375fcfa66d  js/core/bootstrap.js
+9a17a70e43cb1530b119401b00b3ebea9d83b3f913dcd02bf7627a776f4c7a7a  js/platform/browser.js
+e4bbad3c6b9cae4b5efddb09e13e5f14f803b162fc4f01b53e28358f559bb029  js/core/migrations.js
+67aed73486577cb34bd67ca95b8853c35bdbf0d28f32e558621a35321b856365  js/core/storage.js
+e591e106744a5e961b016a48e157125c200b97ee899a6a719367536caa2fb575  js/core/campaigns.js
+364e1325346da1b9d8f880e8ff1ff8e7abd3a61de8a2ddaa0d354b8439b01810  js/core/state.js
+1af2520a081c3bd06c5943a2f13edc531677acdd49ba08f20ed3d03b713025d8  js/core/save_boot.js
+9722c11a2c5c4a1e66cf1d0c6e50bd9aa66ae202208baee7e1f8329112253d8d  js/core/finalize.js
+
+Production bundles:
+783dc05e7718314f393949a3b4d498002fa2bac79a8f2c5cadb27a9f03a8b389  js/dist/save_core_v11_8.js
+ebd72e61b3fa8edcb09f3693e7afc5b59e5e3ff72d135a64ea11cfe3c28a8c0e  js/dist/canonical_v11_8.js
+
+Runtime order:
+"js/legacy/base/data.js"
+"js/legacy/base/state.js"
+"js/legacy/base/ui.js"
+"js/dist/save_core_v11_8.js"
+"js/legacy/base/main.js"
+"js/legacy/compat_gameplay_v1153.js"
+"js/dist/canonical_v11_8.js"
+
+Ownership audit:
+- active js/legacy/base/state.js contains no RF.save/RF.load/RF.exportSave/RF.importSave assignments
+- active js/legacy/compat_gameplay_v1153.js contains no RF.save/RF.load/RF.exportSave/RF.importSave/RF.newGame or RF.V95.migrate/SCHEMA assignments
+- direct canonical localStorage access is confined to js/platform/browser.js

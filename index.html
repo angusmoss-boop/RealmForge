@@ -5,21 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#16130f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Realmforge V11.7.0: Wanderer's Rise - Canonical Architecture</title>
+  <title>Realmforge V11.8.0: Wanderer's Rise - Canonical Save Core</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="app"></div>
 
-  <!-- Frozen compatibility baseline reproducing the proven V11.5.3 behaviour. -->
+  <!-- Foundation data/state/UI primitives. Persistence has been removed from legacy state.js. -->
   <script defer src="js/legacy/base/data.js"></script>
   <script defer src="js/legacy/base/state.js"></script>
   <script defer src="js/legacy/base/ui.js"></script>
-  <script defer src="js/legacy/base/main.js"></script>
-  <script defer src="js/legacy/compat_v1153.js"></script>
 
-  <!-- Generated production bundle built from the canonical source modules. -->
-  <script defer src="js/dist/canonical_v11_7.js"></script>
+  <!-- Canonical persistence is online BEFORE the legacy main bootstrap loads a campaign. -->
+  <script defer src="js/dist/save_core_v11_8.js"></script>
+
+  <!-- Mature V11.5.3 gameplay baseline, now stripped of save/storage/migration ownership. -->
+  <script defer src="js/legacy/base/main.js"></script>
+  <script defer src="js/legacy/compat_gameplay_v1153.js"></script>
+
+  <!-- Canonical modules + historical migration registration + final build metadata. -->
+  <script defer src="js/dist/canonical_v11_8.js"></script>
 </body>
 </html>

@@ -1,0 +1,195 @@
+REALMFORGE V11.8.0 - PRODUCTION FOUNDATION III / CANONICAL SAVE CORE AUDIT
+
+PURPOSE
+=======
+Move Save, Storage and migration-chain ownership out of the historical V11.5.3 compatibility runtime without changing the save schema or intentionally changing gameplay.
+
+RESULT
+======
+PASS. Persistence ownership is now canonical.
+
+APPLICATION VERSION
+===================
+11.8.0 - Canonical Save Core
+
+SAVE SCHEMA
+===========
+11.5.3 - unchanged
+
+ACTIVE RUNTIME ORDER
+====================
+1. js/legacy/base/data.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_8.js
+5. js/legacy/base/main.js
+6. js/legacy/compat_gameplay_v1153.js
+7. js/dist/canonical_v11_8.js
+
+WHY SAVE CORE LOADS BEFORE MAIN
+===============================
+The old main bootstrap attempts to find/load a campaign during startup. V11.8 installs the canonical persistence facade first, so startup can retain mature bootstrap behaviour without allowing legacy code to own Save/Storage.
+
+OWNERSHIP MOVED TO CANONICAL CORE
+=================================
+core.storage
+- Owns low-level persistence calls.
+- Uses RF.Platform.active.storage.
+- No gameplay system needs to know whether the backend is browser localStorage or a future Android/Capacitor implementation.
+
+core.campaigns
+- Owns campaign index and active slot.
+- Owns checksum envelopes.
+- Owns primary, backup, recovery and temporary verified writes.
+- Owns slot create/rename/delete/duplicate/load/save-now.
+- Preserves the V9.5 storage-key format exactly.
+
+core.state
+- Owns RF.newGame.
+- Owns RF.save.
+- Owns RF.load.
+- Owns RF.exportSave.
+- Owns RF.importSave.
+- Owns new-campaign and import entry points.
+
+core.migrations
+- Owns historical-normalizer ordering.
+- Owns all future explicit schema migrations.
+- RF.V95.migrate now delegates to the canonical migration owner.
+
+core.saveBoot
+- Installs the historical migration registry after gameplay compatibility definitions exist.
+- Re-normalizes and reconciles loaded state under the single canonical chain.
+
+WHAT WAS PHYSICALLY REMOVED FROM ACTIVE LEGACY OWNERSHIP
+========================================================
+- RF.save/RF.load/RF.exportSave/RF.importSave definitions were removed from active js/legacy/base/state.js.
+- The V9.5 campaign persistence implementation was removed from the active gameplay compatibility runtime.
+- Historical wrappers that repeatedly replaced RF.newGame, RF.load and RF.importSave for migration purposes were removed from the active gameplay compatibility runtime.
+- Historical RF.V95.migrate wrapper stacking was removed from active ownership.
+
+The active gameplay compatibility runtime is now js/legacy/compat_gameplay_v1153.js.
+The prior full js/legacy/compat_v1153.js is retained only for archive/audit comparison.
+
+HISTORICAL NORMALIZERS
+======================
+78 historical migration/repair functions are registered by core.migrations in their established order.
+
+Their function bodies remain temporarily beside the old gameplay patches where some depend on patch-local helpers/data. They no longer determine migration order or wrap public persistence APIs. Removing/reimplementing these bodies will happen naturally as the corresponding gameplay systems are migrated to canonical modules.
+
+This distinction is deliberate: migration OWNERSHIP is fully canonical, while old normalization IMPLEMENTATIONS are compatibility dependencies until their systems are extracted.
+
+STORAGE FORMAT COMPATIBILITY
+============================
+Preserved keys:
+- realmforge_v95_slots
+- realmforge_v95_active
+- realmforge_v95_<id>_primary
+- realmforge_v95_<id>_backup
+- realmforge_v95_<id>_recovery
+- realmforge_v95_<id>_temp
+- realmforge_v95_<id>_recovery_at
+- realmforge_save
+
+No installed campaign needs to be re-keyed or manually imported.
+
+WRITE SAFETY
+============
+Canonical campaign writes preserve:
+- checksum verification
+- temporary-write verification
+- previous primary -> backup rotation
+- periodic/forced recovery snapshots
+- primary post-write verification
+- slot metadata
+- active slot
+- legacy mirror during bootstrap transition
+
+READ RECOVERY ORDER
+===================
+primary -> backup -> recovery
+
+TEST 1 - FULL JS SYNTAX
+=======================
+PASS - 135 JavaScript files, 0 syntax failures.
+
+TEST 2 - CANONICAL RUNTIME CONTRACT
+===================================
+PASS for all ownership assertions:
+- version 11.8.0
+- schema 11.5.3
+- canonical storage
+- canonical campaigns
+- canonical migrations ready
+- historical registry populated
+- late V11 systems present
+- modern nav metadata retained
+- Wayfinder retained
+- campaign slot created and verified
+- canonical load round trip
+- export/import round trip
+- RF.save canonical
+- RF.V95.migrate canonical
+
+The synthetic VM still reports the same historical V10.9 modalHTML harness artifact seen by V11.7. It is not a new V11.8 regression and does not stop later isolated compatibility patches from loading.
+
+TEST 3 - V11.7 -> V11.8 CAMPAIGN COMPATIBILITY
+================================================
+PASS.
+
+A real V11.7-format campaign was created with the V11.7 runtime and populated with representative advanced state:
+- Character Lv 29
+- 14,795g
+- Ironridge location
+- high-tier detached Equipment
+- Tool Belt selections
+- Pack contents
+- Bank contents
+- North Road / Voss / Emberdeep progression flags
+- Research 3/3 state
+- Emberdeep dungeon history
+
+The exact same storage was then loaded through V11.8 canonical persistence.
+
+Preserved:
+- slot identity: PASS
+- player/name: PASS
+- level: PASS
+- gold: PASS
+- location: PASS
+- Equipment byte-equivalent: PASS
+- Tool Belt byte-equivalent: PASS
+- Pack values: PASS
+- Bank values: PASS
+- research: PASS
+- world flags: PASS
+- dungeon records: PASS
+- save schema 11.5.3: PASS
+- canonical ownership marker: PASS
+- unexpected new runtime errors versus V11.7 reference: NONE
+
+TEST 4 - CORRUPTION / RECOVERY
+==============================
+PASS.
+
+- Primary, backup and recovery copies were first verified as valid.
+- Corrupted primary -> canonical reader selected backup: PASS.
+- Corrupted primary + backup -> canonical reader selected recovery: PASS.
+- Campaign state remained readable from both fallback copies: PASS.
+
+DIRECT STORAGE AUDIT
+====================
+Active canonical gameplay persistence contains no direct localStorage calls outside js/platform/browser.js.
+This is intentional and establishes the future Android storage boundary.
+
+ARCHAEOLOGICAL SHRINK
+=====================
+The active compatibility source no longer carries the V9.5 save manager or the repeated save/load/import migration wrapper stack. Approximately 28.8 KB of historical source responsibility was stripped while preserving the gameplay sequence.
+
+The compatibility layer still contains mature gameplay and historical normalizer bodies. Subsequent extractions can now shrink that layer system by system without touching campaign persistence.
+
+NEXT RECOMMENDED EXTRACTION
+===========================
+Data registries/content definitions.
+
+This is the best next target before V12 because the planned Sagas, Magic/Sigilcrafting, regions, rare creatures, expanded crafting and equipment tiers will add a large amount of content data. Moving those definitions behind RF.Catalog before expansion prevents the compatibility layer from becoming the content database for V12.

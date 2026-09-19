@@ -1,45 +1,64 @@
-Realmforge: Wanderer's Rise — V11.7.0 Canonical Architecture
+Realmforge: Wanderer's Rise - V11.8.0 Canonical Save Core
 
-PRODUCTION FOUNDATION II
-V11.7.0 is an infrastructure-only refactor. It deliberately does not change gameplay or save data.
+PRODUCTION FOUNDATION III
+V11.8.0 moves persistence ownership out of the historical compatibility runtime while preserving the proven V11.5.3 campaign format and gameplay behaviour.
 
-ACTIVE ARCHITECTURE
-The shipped browser runtime loads six JavaScript files. Five reproduce the frozen V11.5.3 baseline and one generated bundle contains the canonical production modules.
+ACTIVE RUNTIME
+The shipped browser build now loads seven JavaScript files in this order:
 
-1. Frozen compatibility baseline (proven V11.5.3 behaviour)
-   js/legacy/base/data.js
-   js/legacy/base/state.js
-   js/legacy/base/ui.js
-   js/legacy/base/main.js
-   js/legacy/compat_v1153.js
+1. js/legacy/base/data.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_8.js
+5. js/legacy/base/main.js
+6. js/legacy/compat_gameplay_v1153.js
+7. js/dist/canonical_v11_8.js
 
-2. Canonical production source modules
-   js/core/bootstrap.js
-   js/platform/browser.js
-   js/core/state.js
-   js/core/migrations.js
-   js/data/catalog.js
-   js/systems/*.js
-   js/ui/shell.js
-   js/core/finalize.js
+WHY SAVE CORE LOADS EARLY
+The canonical save/storage facade must exist before legacy main.js attempts to load a campaign. This prevents the historical patch chain from owning persistence during startup.
 
-WHY THE LEGACY LAYER STILL EXISTS
-A behaviour-identical rewrite of years of wrapper-based patches in one jump would be needlessly risky. V11.7 uses a strangler architecture: the stable V11.5.3 implementation is frozen behind explicit canonical contracts. New V12 code must be written against those contracts. Existing systems can then be migrated out of the compatibility layer one at a time with regression tests, until the legacy layer can be deleted safely.
+CANONICAL SAVE OWNERSHIP
+- js/core/storage.js owns low-level persistence access through RF.Platform.active.storage.
+- js/core/campaigns.js owns verified campaign slots, checksums, primary/backup/recovery copies and slot metadata.
+- js/core/state.js owns RF.newGame, RF.save, RF.load, RF.exportSave, RF.importSave and campaign creation/import entry points.
+- js/core/migrations.js owns the migration chain and all future schema-step registration.
+- js/core/save_boot.js registers the historical compatibility normalizers after gameplay definitions exist, then reconciles the loaded campaign through the canonical chain.
 
-RULE GOING FORWARD
-Do not add new v12_x.js override patches around legacy global functions.
-New content/data goes through RF.Catalog.
-New save migrations go through RF.Core.Migrations.
-New system code lives under js/systems/.
-New platform-specific behaviour lives under js/platform/.
-New interface ownership lives under js/ui/.
+COMPATIBILITY FORMAT PRESERVED
+Existing browser saves keep the exact V9.5 storage keys and envelope format:
+- realmforge_v95_slots
+- realmforge_v95_active
+- realmforge_v95_<slot>_primary
+- realmforge_v95_<slot>_backup
+- realmforge_v95_<slot>_recovery
+- realmforge_save legacy mirror
 
-SAVE COMPATIBILITY
-Application version: 11.7.0
+Application version: 11.8.0
 Save schema: 11.5.3
-No gameplay-state migration is introduced.
 
-See REALMFORGE_ARCHITECTURE_V11_7.md for the module ownership map and migration plan.
+WHAT LEFT THE LEGACY LAYER
+- The base state file no longer owns save/load/export/import.
+- The old V9.5 save/storage/campaign-manager implementation was removed from the active gameplay compatibility runtime.
+- Historical RF.newGame/RF.load/RF.importSave migration-wrapper ownership was removed from the active compatibility runtime.
+- RF.V95.migrate is now canonical and delegates to RF.Core.Migrations.
 
-PRODUCTION BUNDLE
-The readable canonical source modules are generated into `js/dist/canonical_v11_7.js` for the shipped build. See CANONICAL_BUNDLE_PROVENANCE_V11_7.txt for exact source hashes and bundle provenance.
+WHAT REMAINS TEMPORARILY
+The historical per-version migration function bodies still exist as compatibility normalizers beside the gameplay code that originally defined their required helpers/data. They no longer own loading or migration order. RF.Core.Migrations invokes them centrally. These bodies can be retired incrementally as each corresponding gameplay system becomes canonical.
+
+PRODUCTION RULES
+- New save migrations register through RF.Core.Migrations.
+- New gameplay code must not wrap RF.save, RF.load, RF.importSave or RF.newGame.
+- Gameplay systems must not call localStorage directly.
+- New platform persistence goes through RF.Platform.
+- New V12 features belong in canonical modules, not v12_x.js monkey patches.
+
+VALIDATION
+- Full-source JavaScript syntax check: PASS - 135 files, 0 failures.
+- V11.7 -> V11.8 representative long-running campaign compatibility: PASS.
+- Equipment / Tool Belt / Pack / Bank preservation: PASS.
+- Research / world flags / dungeon records preservation: PASS.
+- Save schema remains 11.5.3: PASS.
+- Primary save corruption fallback to verified backup: PASS.
+- Primary + backup corruption fallback to recovery copy: PASS.
+
+See REALMFORGE_ARCHITECTURE_V11_8.md and Realmforge_Production_Foundation_Audit_V11_8.txt for details.

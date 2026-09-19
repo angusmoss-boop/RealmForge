@@ -1,0 +1,27 @@
+REALMFORGE V11.8.0 — CANONICAL BUNDLE PROVENANCE
+
+js/dist/save_core_v11_8.js
+8e8a5efa03683c795655155314fce573e166d8c53224aa59c028ca375fcfa66d      1215 bytes  js/core/bootstrap.js
+9a17a70e43cb1530b119401b00b3ebea9d83b3f913dcd02bf7627a776f4c7a7a      1563 bytes  js/platform/browser.js
+e4bbad3c6b9cae4b5efddb09e13e5f14f803b162fc4f01b53e28358f559bb029      6074 bytes  js/core/migrations.js
+67aed73486577cb34bd67ca95b8853c35bdbf0d28f32e558621a35321b856365       894 bytes  js/core/storage.js
+e591e106744a5e961b016a48e157125c200b97ee899a6a719367536caa2fb575      7190 bytes  js/core/campaigns.js
+364e1325346da1b9d8f880e8ff1ff8e7abd3a61de8a2ddaa0d354b8439b01810      2759 bytes  js/core/state.js
+Bundle SHA-256: 783dc05e7718314f393949a3b4d498002fa2bac79a8f2c5cadb27a9f03a8b389
+
+js/dist/canonical_v11_8.js
+1af2520a081c3bd06c5943a2f13edc531677acdd49ba08f20ed3d03b713025d8       805 bytes  js/core/save_boot.js
+60b3be527bfaf60645533ab9b253a45c63492d1323124508820ff320ce0beb52      1380 bytes  js/data/catalog.js
+063689b3949c4d21c535680689a1a7b79f866a9c00c3cac82d013b493eceb7aa       873 bytes  js/systems/inventory.js
+8efec5d2e930efda6839f2a3eb938c94e015ccb8ca9a526863af6488c65371cc      1044 bytes  js/systems/equipment.js
+8ceadab1cc4c1d2fa2ab4d03ce82515750f9cf422ec04d1ca4aa5af9e956b09b       847 bytes  js/systems/travel.js
+30145aa18e9100dfed5f9bbafaac5a3afcb3bf2ea970866fca5e1a180a6b5e09       908 bytes  js/systems/combat.js
+b290afe4f5e988aa900f065db4c1020ee23123cd4816fc1f1518a5de1ee99cb6       711 bytes  js/systems/research.js
+1ba4a325339c1db398407b503394fc71ec6bf56f7ec2770116d0340229d0ffe2       749 bytes  js/systems/quests.js
+4371764359e1a93ad889f9f810bbbdb94830257d1e0e9e8d2e5bc6b36785373e       821 bytes  js/systems/crafting.js
+2e85bafc3c8d5fdb9f831d52fbc66ca19905e000c34e4716a867518136999fa9       621 bytes  js/systems/dungeons.js
+4fd859cf53b8ab932f6a51b50918c4c5910dadc0f48419bbe4f8e4e8ccce82cb       707 bytes  js/systems/commerce.js
+2911cfb8c0f3439cec0534c0e8c1c29e7d51306bb4e017ec0a01c0349d0197ca       804 bytes  js/ui/shell.js
+9722c11a2c5c4a1e66cf1d0c6e50bd9aa66ae202208baee7e1f8329112253d8d       770 bytes  js/core/finalize.js
+Bundle SHA-256: ebd72e61b3fa8edcb09f3693e7afc5b59e5e3ff72d135a64ea11cfe3c28a8c0e
+
