@@ -1,4 +1,4 @@
-/* Realmforge V11.10.0 — canonical configuration validation / ownership contract. */
+/* Realmforge V11.11.0 — canonical configuration validation / ownership contract. */
 (() => {
   'use strict';
   const RF=window.RF,C=RF.Config;
@@ -15,7 +15,7 @@
     if(rows.length!==8)issues.push(`ecosystem ${loc} has ${rows.length} species, expected 8`);
     for(const [id] of rows)if(!enemies[id])issues.push(`ecosystem ${loc} references missing enemy ${id}`);
   }
-  const liveDungeons=RF.V1062?.DUNGEONS||{};
+  const liveDungeons=RF.Systems?.Dungeons?.definitions?.()||RF.V1062?.DUNGEONS||{};
   for(const [loc,d] of Object.entries(liveDungeons)){
     if(!locations[loc])issues.push(`dungeon missing location ${loc}`);
     if(!enemies[d.boss])issues.push(`dungeon ${loc} boss missing ${d.boss}`);
