@@ -1,0 +1,35 @@
+REALMFORGE V11.17.0 — SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.16.0
+Save schema: 11.5.3 (unchanged)
+
+TIME / ENERGY WHOLE STAGES
+- js/v10_22.js -> systems.timeEnergy (with exact continuous-gathering fragment delegated to systems.gathering at its original position)
+- js/v10_23.js -> systems.timeEnergy
+
+UI FOCUS / CLOCK WHOLE STAGE
+- js/v9_6.js -> ui.focusClock
+
+TIME / ENERGY MIXED FRAGMENTS
+- v8-time-controls: Pause / 1x / limited 2x speed control and top clock UI
+- v8_3-manual-pause: deliberate manual-pause tracking wrapper
+- v10-energy-core: Energy spend wrappers, passive base recovery, campfire recovery and Energy UI
+- v10_2-world-clock: 0.8 game-minutes/sec master cadence
+- v10_26-combat-clock: non-travel combat clock capture/restore bridge transferred from systems.exploration
+
+GATHERING MIXED FRAGMENT
+- v10_22-continuous-gathering -> systems.gathering
+
+LEFTOVER GLUE CLEANUP
+- v10_2-pickpocket-feedback -> systems.crime
+- v10_2-pickpocket-ui -> systems.crime
+- v10 inn-location helper -> folded into systems.property v10-inn-rest fragment
+
+OWNERSHIP LEFT IN PLACE
+- Travel routing/overlay/recovery/Clock Sentinel remains systems.travel.
+- Inn/home actions and full-rest behaviour remain systems.property.
+- Over-encumbrance time/travel guards remain systems.inventory because encumbrance policy owns the block.
+- Explore expedition Energy cost remains systems.exploration because it is an Explore action rule.
+
+METHOD
+Historical source is installed synchronously at its original version boundary. Mixed fragments are exact source slices from the V11.16 transformed compatibility runtime. V10.22 retains its historical stage ordering while delegating only its exact gathering slice to systems.gathering. No gameplay formula was intentionally rewritten.

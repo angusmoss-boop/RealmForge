@@ -1,5 +1,5 @@
-version=11.16.0
-title=Canonical Exploration, Crime & Homesteads
-built=2026-09-19T10:55:00+01:00
-build_id=20260919-1055-bst
-notes=Exploration, shared Locks, mature Crime and Property/Resting now execute from canonical systems. V10.24 Hearth & Home ownership moved from Fieldcraft to Property. Save schema remains 11.5.3.
+version=11.17.0
+title=Canonical Time & Energy
+built=2026-09-19T17:10:00+01:00
+build_id=20260919-1710-bst
+notes=Cross-cutting clock cadence, modal/select time locks, Energy spending/recovery and V10.22 travel fatigue now execute from canonical owners. Travel Clock Sentinel remains systems.travel; inns/homes remain systems.property. Save schema remains 11.5.3.

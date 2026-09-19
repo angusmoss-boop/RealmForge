@@ -1,0 +1,41 @@
+REALMFORGE V11.17.0 — CANONICAL BUNDLE PROVENANCE
+
+Runtime bundles are generated concatenations of readable canonical source files.
+
+save_core_v11_17.js sha256 ff5581e2a5a967bc7c1c60f2039be1bb0cb4539e45954e14a9685e7f3c728c54
+data_core_v11_17.js sha256 ac95c2380106b4784c0b17e12264f4fc4fd6967df4b03bada2e378072c18ef23
+systems_core_v11_17.js sha256 849cb6e5410c8b769a669f635043e69b25144fb9388aa5a21f7dc9d2d3cb9a92
+canonical_v11_17.js sha256 3278b4fe910760e4a842eba7eea6acc7b7fed003208cb152f1ff1c79360b5cd4
+compat_gameplay_time_energy_trimmed_v1153.js sha256 d33312a4a54e355d06d7fff60bafad08674c99593b319fb63c39912783da74c1
+
+SYSTEMS CORE SOURCE ORDER
+- js/systems/fieldcraft.js
+- js/systems/property.js
+- js/systems/gathering.js
+- js/systems/fishing.js
+- js/systems/hunting.js
+- js/systems/cooking.js
+- js/ui/focus_clock.js
+- js/systems/time_energy.js
+- js/systems/exploration.js
+- js/systems/locks.js
+- js/systems/crime.js
+- js/systems/commerce.js
+- js/systems/dungeons.js
+- js/systems/travel.js
+- js/systems/quests.js
+- js/systems/wayfinder.js
+- js/systems/inventory.js
+- js/systems/equipment.js
+- js/systems/combat.js
+- js/systems/research.js
+- js/systems/crafting.js
+- js/systems/skills.js
+
+FINALISATION BUNDLE SOURCE ORDER
+- js/core/save_boot.js
+- js/data/finalize.js
+- js/data/config_finalize.js
+- js/ui/shell.js
+- js/core/system_ownership_v11_17.js
+- js/core/finalize.js

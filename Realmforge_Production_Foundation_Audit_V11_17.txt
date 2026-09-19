@@ -1,0 +1,133 @@
+REALMFORGE V11.17.0 — PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.16.0 Canonical Exploration, Crime & Homesteads
+Target: V11.17.0 Canonical Time & Energy
+Save schema: 11.5.3 (unchanged)
+
+AUDIT CONCLUSION
+The safe V11.17 boundary is the cross-cutting clock/Energy spine plus two small pieces of leftover Crime/Property glue. Travel's Clock Sentinel and route recovery are already canonical and must remain under systems.travel. Inn/home behavior is already canonical under systems.property. Over-encumbrance time blocking is correctly owned by systems.inventory. Explore expedition Energy remains an Exploration rule.
+
+EXTRACTION SCOPE
+Whole historical stages moved to canonical owners: 3
+- js/v9_6.js -> ui.focusClock
+- js/v10_22.js -> systems.timeEnergy
+- js/v10_23.js -> systems.timeEnergy
+
+Time/Energy mixed fragments moved: 5
+- v8-time-controls
+- v8_3-manual-pause
+- v10-energy-core
+- v10_2-world-clock
+- v10_26-combat-clock
+
+Adjacent ownership cleanup:
+- V10.22 continuous-gathering fragment -> systems.gathering
+- V10.2 failed-pickpocket feedback behavior -> systems.crime
+- V10.2 failed-pickpocket feedback UI/binding -> systems.crime
+- V10 inn-location helper -> systems.property v10-inn-rest fragment
+
+SOURCE MOVED/REHOMED
+Whole-stage source: 29,975 chars
+Mixed/adjacent exact fragments: 20,408 chars
+These counts overlap the V10.22 whole stage because its 7,845-char gathering fragment is rehomed from inside that canonical stage to Gathering rather than duplicated.
+
+COMPATIBILITY RUNTIME SIZE
+V11.16: 471,105 bytes
+V11.17: 428,249 bytes
+Reduction: 42,856 bytes (9.1%)
+Cumulative reduction from the approximately 1.19 MB pre-extraction compatibility era is now well over 60%.
+
+ACTIVE RUNTIME
+9/9 active JavaScript references present:
+1. js/data/base_content.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_17.js
+5. js/dist/data_core_v11_17.js
+6. js/legacy/base/main.js
+7. js/dist/systems_core_v11_17.js
+8. js/legacy/compat_gameplay_time_energy_trimmed_v1153.js
+9. js/dist/canonical_v11_17.js
+
+SAFETY RULES
+- No gameplay redesign or rebalance.
+- Save schema remains 11.5.3.
+- No valid Equipment or Tool Belt item is unequipped, deleted or recreated.
+- Ring I and Ring II remain independent detached physical copies.
+- Deliberate Pack overflow remains lossless and continues to pause/block time/travel.
+- Historical execution order is preserved by synchronous installer markers.
+- Travel route/Clock Sentinel ownership is not duplicated.
+- Property home/inn ownership is not duplicated.
+
+PARITY / REGRESSION VALIDATION
+- Pause: PASS
+- 1× speed: PASS
+- limited 2× speed / burst state: PASS
+- Energy consumption: PASS
+- exact +1 Energy / 3 game-minute recovery: PASS
+- 0.8 game-minutes/sec world cadence contract: PASS
+- activity duration/time-cost state: PASS
+- modal clock lock/capture/release: PASS
+- native-select clock lock/capture/release: PASS
+- combat clock capture/restore: PASS
+- travel start + progressive Energy accounting: PASS
+- Travel/Clock Sentinel blocker behavior: PASS
+- inn rest: PASS
+- home rest: PASS
+- campfire rest: PASS
+- Explore Energy/time start behavior: PASS
+- excavation: PASS
+- pickpocketing: PASS
+- burglary target/cooldown behavior: PASS
+- Property home/inn UI contract: PASS
+- over-encumbrance blocks world time and 1× resume: PASS
+- canonical ownership verifier: PASS
+
+SAVE COMPATIBILITY VALIDATION
+Three V11.16 fixtures were loaded through V11.17:
+1. Advanced established campaign with deliberate Pack overflow.
+2. Active travel campaign with route plan, partial progress and travel-Energy state.
+3. Active combat campaign with interrupted-clock snapshot and combat-category state.
+
+Preserved across fixtures:
+- Character level / XP / gold.
+- Pack and Bank.
+- All occupied Equipment slots.
+- Two identical Ring slots.
+- Non-empty Mining/Woodcutting/Fishing/Firemaking Tool Belt.
+- Skill levels and XP.
+- Field Research ranks/notes.
+- Quest state and Wayfinder-driving progression flags.
+- Market state.
+- Dungeon history.
+- Crime/bounty state and burglary cooldowns.
+- Exploration chest/excavation state.
+- Resource charges.
+- Property/home state.
+- Active buffs.
+- Energy and recovery-minute carry.
+- Active travel/route plan.
+- Active combat/clock snapshot.
+- Deliberate Pack overflow.
+
+VALIDATION COUNTS
+- JavaScript files under js/: 197
+- JavaScript test files: 34
+- Other JavaScript runtime/support files: 3
+- Total node --check files: 234
+- Syntax failures: 0
+- Executable Node regression harnesses run: 23
+- Harness failures: 0
+- V11.17 runtime contract: PASS
+- V11.16 -> V11.17 system equivalence: PASS
+- V11.16 -> V11.17 advanced/active-state save compatibility: PASS
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM `modalHTML` warning appears once in both the V11.16 reference and V11.17 candidate Node harnesses. It is unchanged and is not a V11.17 regression.
+
+WHAT REMAINS IN COMPATIBILITY
+The largest remaining layers are genuinely mixed foundations or UI presentation stacks, notably V4, V7, V9/V9.2, V8.3, V10.33 and the V10.39 Living Vistas/UI family. Remaining mentions of time/Energy/Explore/Crime/Property are mainly integration consumers: road interruptions/cooldowns, developer controls, old multi-domain context panels and mixed social/world logic. They were not removed by name alone.
+
+RECOMMENDED NEXT EXTRACTION
+V11.18 — Canonical UI Shell / Database & World Presentation.
+Prioritise V10.38 navigation, V10.39–V10.41 vistas, V11.2.1 modal scroll lock, V11.2.3 close normalisation, V9.4 + V10.61 Database, V11.1 location facilities and V11.3 Dungeon Codex. These are comparatively coherent whole-stage UI owners and can shrink compatibility materially before tackling the deeply interleaved V3/V4/V7/V9 foundations.
