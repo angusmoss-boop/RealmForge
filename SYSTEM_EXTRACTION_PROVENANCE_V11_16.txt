@@ -1,0 +1,37 @@
+REALMFORGE V11.16.0 — SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.15.0
+Save schema: 11.5.3 (unchanged)
+
+EXPLORATION WHOLE STAGES
+- js/v10_25.js
+- js/v10_26.js
+- js/v10_34.js
+
+LOCK ENGINE WHOLE STAGES
+- js/v10_27.js
+- js/v10_29.js
+- js/v10_32.js
+
+CRIME WHOLE STAGES
+- js/v10_4.js
+- js/v10_5.js
+- js/v10_6.js
+- js/v10_8.js
+- js/v10_30.js
+- js/v10_31.js
+
+MIXED FRAGMENTS
+- Exploration: v7-excavation
+- Crime: v3-crime-base
+- Crime: v4-bounty-resolution
+- Crime: v9_2-crime-foundation
+- Crime: v10-pickpocket-tuning
+- Property: v4-home-actions
+- Property: v10-inn-rest
+
+PROPERTY OWNERSHIP TRANSFER
+- js/v10_24.js: exact V11.15 canonical Fieldcraft stage source moved to systems.property.
+
+METHOD
+Whole stages are replaced by canonical installer markers. Mixed fragments are exact source slices from the transformed V11.15 compatibility runtime and are invoked at the same historical location. No stage source was semantically rewritten during extraction.

@@ -21,11 +21,7 @@
   <script defer src="js/legacy/compat_gameplay_exploration_crime_property_trimmed_v1153.js"></script>
   <script defer src="js/dist/canonical_v11_16.js"></script>
 
-<script>
-window.addEventListener('load',()=>setTimeout(()=>{
-  const vals={version:window.RF&&RF.VERSION,build:window.RF&&RF.BUILD&&RF.BUILD.version,fieldcraft:RF.Modules?.info?.('systems.fieldcraft')?.meta?.status,gathering:RF.Modules?.info?.('systems.gathering')?.meta?.status,hunting:RF.Modules?.info?.('systems.hunting')?.meta?.status,fishing:RF.Modules?.info?.('systems.fishing')?.meta?.status,cooking:RF.Modules?.info?.('systems.cooking')?.meta?.status,ownership:RF.PRODUCTION_FOUNDATION?.systemOwnership?.valid};
-  document.documentElement.setAttribute('data-probe',JSON.stringify(vals));
-},500));
-</script>
+<script src="tests/runtime_contract_v1116.js"></script>
+<script>window.addEventListener('load',()=>setTimeout(()=>{document.documentElement.setAttribute('data-v1116-test',JSON.stringify(window.RF_TEST_V1116||{}));},600));</script>
 </body>
 </html>

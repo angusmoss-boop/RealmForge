@@ -1,5 +1,5 @@
-version=11.15.0
-title=Canonical Fieldcraft Foundations
-built=2026-09-19T06:56:00+01:00
-build_id=20260919-0656-bst
-notes=V5/V6 fieldcraft foundations, V7 rare/cooking fragments and V10.24 station/home cooking now execute from canonical systems. Save schema remains 11.5.3.
+version=11.16.0
+title=Canonical Exploration, Crime & Homesteads
+built=2026-09-19T10:55:00+01:00
+build_id=20260919-1055-bst
+notes=Exploration, shared Locks, mature Crime and Property/Resting now execute from canonical systems. V10.24 Hearth & Home ownership moved from Fieldcraft to Property. Save schema remains 11.5.3.

@@ -1,0 +1,37 @@
+REALMFORGE V11.16.0 — PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.15.0 Canonical Fieldcraft Foundations
+Target: V11.16.0 Canonical Exploration, Crime & Homesteads
+Save schema: 11.5.3 (unchanged)
+
+EXTRACTION SCOPE
+Exploration whole stages: 3
+Shared-lock whole stages: 3
+Crime whole stages: 6
+Mixed historical fragments: 7
+V10.24 ownership transfer: Fieldcraft -> Property (exact source preserved)
+
+COMPATIBILITY RUNTIME SIZE
+V11.15: 627,695 bytes
+V11.16: 471,105 bytes
+Reduction: 156,590 bytes
+Whole-stage source moved out this pass: 148,278 chars
+Mixed-fragment source moved out this pass: 13,212 chars
+
+SAFETY RULES
+- No gameplay redesign in this build.
+- No save-schema change.
+- No deletion or forced unequip of valid Equipment/Tool Belt items.
+- Existing over-capacity Pack state remains legal and lossless.
+- Historical execution order remains exact through installer markers.
+
+VALIDATION RESULTS
+- Production JavaScript files: 189
+- JavaScript test files: 30
+- Total syntax checks: 219
+- Syntax failures: 0
+- V11.16 runtime contract: PASS
+- V11.15 -> V11.16 Exploration/Locks/Crime/Property equivalence: PASS
+- V11.15 -> V11.16 advanced-save compatibility: PASS
+- Active runtime references: 9/9 files present
+- Known V10.9 fake-DOM modalHTML warning appears identically in reference and candidate Node harnesses; it is not a V11.16 regression.
