@@ -1,4 +1,4 @@
-/* Realmforge V11.9.0 — canonical content finalizer / ownership contract. */
+/* Realmforge V11.10.0 — canonical content finalizer / ownership contract. */
 (() => {
   'use strict';
   const RF=window.RF;

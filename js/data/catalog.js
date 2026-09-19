@@ -1,4 +1,4 @@
-/* Realmforge V11.9.0 — canonical content catalog. Future V12 content registers here. */
+/* Realmforge V11.10.0 — canonical content catalog. Future V12 content registers here. */
 (() => {
   'use strict';
   const RF=window.RF;
