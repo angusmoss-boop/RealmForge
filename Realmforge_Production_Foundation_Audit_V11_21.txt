@@ -1,0 +1,116 @@
+REALMFORGE V11.21.0 — PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.20.0 Canonical Platform & Lifecycle
+Target: V11.21.0 Canonical World & Social Foundations
+Save schema: 11.5.3 (unchanged)
+
+AUDIT TARGET
+Trace the largest remaining mixed historical stages by concrete responsibility, prioritising world simulation, NPC/social state, dialogue, Wayfarer contracts, encounter ecology and presentation seams while preserving already-canonical Combat, Travel, Crime, Property and other domain ownership.
+
+EXTRACTION RESULT
+Canonical systems.world:
+- Whole transformed V2 Living World stage: 10,346 chars.
+- V9.2 encounter/ecology fragment: 2,609 chars.
+
+Canonical systems.social:
+- V4 social core: 6,841 chars.
+- V4 dialogue UI primitives: 2,005 chars.
+- V4 People Nearby UI: 887 chars.
+- V4 Wayfarer Guild UI/quest integration: 1,080 chars.
+- V4 generic Talk routing: 428 chars.
+- V9.2 multi-stage dialogue: 6,816 chars.
+
+Canonical ui.presentation:
+- V9.1 weather/time-responsive scene bridge: 593 chars.
+
+Total exact historical source transferred: 31,605 chars.
+
+COMPATIBILITY RUNTIME SIZE
+V11.20: 314,471 bytes
+V11.21: 284,029 bytes
+Reduction: 30,442 bytes
+Reduction from V11.20 compatibility: 9.68%
+
+WHY V2 MOVED AS A WHOLE STAGE
+The transformed V2 stage is the historical Living World substrate. It establishes NPC schedules, world pulse/news/markets/reputation and early integration hooks as one chronological unit. Later mature systems supersede/enrich its old Shop/Combat/Travel-facing wrappers. Keeping the exact stage source together under systems.world is safer than rewriting or artificially splitting this foundational wrapper chain.
+
+WHY V4 REMAINS PARTLY IN COMPATIBILITY
+V4 is genuinely mixed. Its tactical combat engine, enemy encounter mechanics, combat specialization, bounty modal branch, Property/UI pieces and mixed binding wrapper do not belong to Social. V11.21 therefore moves only exact audited social fragments and leaves the rest in chronological compatibility.
+
+OWNERSHIP SAFETY
+- systems.combat remains tactical Combat owner.
+- systems.travel remains routing / Clock Sentinel owner.
+- systems.crime remains bounty/pickpocket/burglary owner.
+- systems.property remains home/inn owner.
+- systems.world owns world simulation/NPC schedule/ecology substrate.
+- systems.social owns relationships/passers/dialogue/contracts substrate.
+- ui.presentation owns the old weather/time scene bridge plus later Living Vistas stack.
+
+ACTIVE RUNTIME
+9/9 active production JavaScript references exist and are service-worker precached:
+1. js/data/base_content.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_21.js
+5. js/dist/data_core_v11_21.js
+6. js/legacy/base/main.js
+7. js/dist/systems_core_v11_21.js
+8. js/legacy/compat_gameplay_world_social_trimmed_v1153.js
+9. js/dist/canonical_v11_21.js
+
+PARITY / REGRESSION VALIDATION
+V11.20 -> V11.21 equivalence: 33/33 PASS.
+Coverage includes app shell/developer/build behavior, navigation/database/world/vista output, NPC schedule results, deterministic passers, social/Wayfarer UI, canonical ownership, platform/lifecycle preservation, save schema/version and known-warning equivalence.
+
+SAVE COMPATIBILITY VALIDATION
+52/52 assertions PASS across established, active-travel and active-combat fixtures. Coverage includes:
+- level / XP / gold;
+- Pack and Bank;
+- all occupied Equipment slots;
+- identical Ring I/Ring II loadout;
+- populated Mining/Woodcutting/Fishing/Firemaking Tool Belt;
+- skills and skill XP;
+- research ranks/notes;
+- quests and world flags;
+- market state;
+- dungeon history;
+- crime/bounty/burglary cooldowns;
+- exploration/excavation state;
+- resource charges;
+- home/property state and buffs;
+- Energy/recovery state;
+- active route/travel state;
+- active combat/category/interrupted-clock state;
+- deliberate Pack overflow.
+
+VALIDATION COUNTS
+- JavaScript files checked with node --check: 286
+- Syntax failures: 0
+- Executable Node regression harnesses: 44
+- Harness failures: 0
+- V11.21 runtime contract: PASS
+- V11.20 -> V11.21 parity: 33/33 PASS
+- V11.20 -> V11.21 save compatibility: 52/52 PASS
+- Active runtime/precache references: 9/9 PASS
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM `modalHTML` warning occurs identically in V11.20 reference and V11.21 candidate VM runtimes. It is not a V11.21 browser regression.
+
+WHAT REMAINS IN COMPATIBILITY
+Active compatibility is now 284,029 bytes. The largest remaining mixed stages include V4 tactical-combat/world remnants, V7 specialist foundations, V9 combat/economy remnants, V8.3 deliberate-touch/travel/UI repair, V3 perks/progression mixture, V8.2 Pack/mastery/combat foundation, V10 Energy-era presentation/foundation residue, V9.3 residual category/developer glue and V9.1 inspect-first encounter/combat UI.
+
+These stages are increasingly cross-domain and should continue to be split by proven responsibility seams, not removed wholesale.
+
+RECOMMENDED NEXT EXTRACTION
+V11.22 — Canonical Encounter & Residual Interface Foundations audit. Focus on V9.1 inspect-first wild encounter UI, remaining V8.3 UI/travel-repair seams, V9.3 residual category/developer glue, and additional clean V4/V7 fragments while preserving current canonical system owners.
+
+FINAL UPDATE / PACKAGING GATE
+- GitHub update pack contains 25 changed/new files relative to the V11.20.0 full-source baseline; no baseline file deletion is required.
+- Fresh V11.20.0 Full Current Source + only the V11.21.0 GitHub Update Pack: PASS.
+- Reconstructed-install V11.21 runtime contract: PASS.
+- Reconstructed-install V11.20 -> V11.21 parity: 33/33 PASS.
+- Reconstructed-install V11.20 -> V11.21 advanced/active-state save compatibility: 52/52 PASS.
+- Reconstructed-install active runtime and service-worker precache references: 9/9 PASS.
+- All four V11.21 production bundles reproduce byte-for-byte from their documented canonical source order and bundle header convention: PASS.
+- Final GitHub update ZIP archive integrity: PASS.
+- Final Full Current Source ZIP archive integrity: PASS.

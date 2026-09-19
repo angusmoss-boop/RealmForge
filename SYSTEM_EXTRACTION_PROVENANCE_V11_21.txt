@@ -1,0 +1,52 @@
+REALMFORGE V11.21.0 — SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.20.0
+Save schema: 11.5.3 (unchanged)
+
+WHOLE HISTORICAL STAGE
+Destination: js/systems/world.js
+- js/v2.js — exact transformed V11.20 compatibility source, 10,346 chars.
+
+WORLD FRAGMENT
+Destination: js/systems/world.js
+- v9_2-encounter-ecology — exact V9.2 source slice beginning with the legacy drop/ecology enrichment and ending after the encounter-density refresh wrapper, 2,609 chars.
+
+SOCIAL FRAGMENTS
+Destination: js/systems/social.js
+- v4-social-core — relationships, deterministic passers, dialogue core and Wayfarer contract logic, 6,841 chars.
+- v4-dialogue-ui — dialogue/dialogue-end/private-trade renderer primitives, 2,005 chars.
+- v4-people-ui — People Nearby renderer, 887 chars.
+- v4-guild-ui — Wayfarer Guild panel + quest-page integration, 1,080 chars.
+- v4-talk-action — generic Talk routing into named NPC/passers, 428 chars.
+- v9_2-dialogue — deeper multi-stage dialogue/followup system and effect routing, 6,816 chars.
+
+PRESENTATION FRAGMENT
+Destination: js/ui/presentation.js
+- v9_1-weather-scene — weather/time-responsive scene class bridge, 593 chars.
+
+TOTAL EXACT SOURCE TRANSFERRED
+31,605 characters.
+
+METHOD
+- Whole stages/fragments are stored as exact classic-script source inside canonical owners.
+- The compatibility runtime retains small guarded installer calls at the original chronological boundaries.
+- Canonical modules are loaded before compatibility but do not execute historical bodies until their markers are reached.
+- No extracted historical source body was semantically rewritten.
+
+OWNERSHIP BOUNDARIES DELIBERATELY NOT CROSSED
+- V4 tactical combat remains outside Social.
+- V4 bounty resolution/UI remains Crime-owned or in mixed compatibility as already established.
+- V4 Home actions remain Property-owned.
+- V9.2 crime foundation remains Crime-owned.
+- V9.2 death/XP loss remains in compatibility.
+- V9.2 inventory/shop category layer remains in compatibility.
+- V9.1 Parry/combat and inspect-first encounter UI remain outside Presentation.
+- Travel / Clock Sentinel ownership is unchanged.
+
+COMPATIBILITY RESULT
+V11.20: 314,471 bytes
+V11.21: 284,029 bytes
+Reduction: 30,442 bytes
+
+ACTIVE COMPATIBILITY SHA-256
+c90444bc9ca1029ca5bdb9fbb45af40a557db5a175655fa9493c22d8e066c304

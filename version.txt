@@ -1,5 +1,5 @@
-version=11.20.0
-title=Canonical Platform & Lifecycle
-built=2026-09-19T18:50:00+01:00
-build_id=20260919-v1120-platform-lifecycle
-notes=Base startup/offline catch-up now belongs to canonical core.lifecycle; resume/visibility, dialogs and haptics route through RF.Platform while Travel Clock Sentinel and Time/Energy retain gameplay ownership. Save schema remains 11.5.3.
+version=11.21.0
+title=Canonical World & Social Foundations
+built=2026-09-19T19:16:00+01:00
+build_id=20260919-v1121-world-social
+notes=V2 Living World, V4 social/dialogue/contracts, V9.2 deeper dialogue/ecology and V9.1 weather-scene foundations now execute from canonical World/Social/Presentation owners. Save schema remains 11.5.3.
