@@ -1,0 +1,23 @@
+(() => {
+  const RF=window.RF;const fail=[];const check=(ok,msg)=>{if(!ok)fail.push(msg);};
+  check(RF.Core?.contract?.appVersion==='11.12.0','app version');
+  check(RF.Core?.contract?.saveSchema==='11.5.3','save schema');
+  check(RF.Modules?.info?.('systems.travel')?.meta?.status==='canonical','travel ownership');
+  check(RF.Modules?.info?.('systems.quests')?.meta?.status==='canonical','quest ownership');
+  check(RF.Modules?.info?.('systems.wayfinder')?.meta?.status==='canonical','wayfinder ownership');
+  check(RF.Systems?.Travel?.installedStages?.includes('v9-routing'),'V9 routing installed');
+  check(RF.Systems?.Travel?.installedStages?.includes('js/v10_16.js'),'Travel Recovery installed');
+  check(RF.Systems?.Travel?.installedStages?.includes('js/v10_17.js'),'Travel Overlay installed');
+  check(RF.Systems?.Travel?.installedStages?.includes('js/v10_20.js'),'Waypoint Journeys installed');
+  check(RF.Systems?.Travel?.installedStages?.includes('js/v11_2_2.js'),'Clock Sentinel installed');
+  check(RF.Systems?.Quests?.installed===true,'V9.3 quests installed');
+  check(RF.Systems?.Wayfinder?.installed===true,'V11.5.1 Wayfinder installed');
+  check(typeof RF.v9Route==='function','route function');
+  check(typeof RF.V1020?.openRoutePreview==='function','route preview');
+  check(typeof RF.V1017?.overlayHtml==='function','travel overlay');
+  check(typeof RF.v93AcceptQuest==='function','quest accept');
+  check(typeof RF.UI?.quests==='function','quest journal');
+  check(typeof RF.V1151?.progressHint==='function','Wayfinder hints');
+  check(RF.PRODUCTION_FOUNDATION?.systemOwnership?.valid===true,'ownership verifier');
+  window.RF_TEST_V1112={pass:fail.length===0,fail};
+})();
