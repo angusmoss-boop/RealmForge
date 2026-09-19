@@ -7,8 +7,8 @@ function context(scripts,storage=new Map()){
   document.head.appendChild=function(x){if(x?.tagName==='SCRIPT'&&x.textContent){try{vm.runInContext(x.textContent,ctx,{filename:String(x.textContent.match(/sourceURL=([^\n]+)/)?.[1]||'embedded-runtime.js')})}catch(e){ctx.__errs.push(String(e.stack||e))}}return x};document.documentElement.appendChild=document.head.appendChild;
   for(const rel of scripts){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel})}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e))}}return ctx;
 }
-const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_17.js','js/dist/data_core_v11_17.js','js/legacy/base/main.js','js/dist/systems_core_v11_17.js','js/legacy/compat_gameplay_time_energy_trimmed_v1153.js','js/dist/canonical_v11_17.js'];
-const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_18.js','js/dist/data_core_v11_18.js','js/legacy/base/main.js','js/dist/systems_core_v11_18.js','js/legacy/compat_gameplay_ui_presentation_trimmed_v1153.js','js/dist/canonical_v11_18.js'];
+const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_17.js','js/dist/data_core_v11_17.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_17.js','js/legacy/compat_gameplay_time_energy_trimmed_v1153.js','js/dist/canonical_v11_17.js'];
+const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_18.js','js/dist/data_core_v11_18.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_18.js','js/legacy/compat_gameplay_ui_presentation_trimmed_v1153.js','js/dist/canonical_v11_18.js'];
 const clone=x=>JSON.parse(JSON.stringify(x)),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 function baseAdvanced(R,name){
   let s=R.newGame(name,'traveller','🧭');R.state=s;s.player.level=30;s.player.xp=54321;s.gold=18888;s.location='greenvale';s.seed='v1118-compat-'+name;s.day=13;s.minute=16*60;s.player.maxEnergy=158;s.player.energy=67;s.speed=1;s.paused=false;

@@ -9,8 +9,8 @@ function context(scripts,storage=new Map()){
   for(const rel of scripts){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel})}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e))}}
   return ctx;
 }
-const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_15.js','js/dist/data_core_v11_15.js','js/legacy/base/main.js','js/dist/systems_core_v11_15.js','js/legacy/compat_gameplay_fieldcraft_trimmed_v1153.js','js/dist/canonical_v11_15.js'];
-const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_16.js','js/dist/data_core_v11_16.js','js/legacy/base/main.js','js/dist/systems_core_v11_16.js','js/legacy/compat_gameplay_exploration_crime_property_trimmed_v1153.js','js/dist/canonical_v11_16.js'];
+const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_15.js','js/dist/data_core_v11_15.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_15.js','js/legacy/compat_gameplay_fieldcraft_trimmed_v1153.js','js/dist/canonical_v11_15.js'];
+const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_16.js','js/dist/data_core_v11_16.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_16.js','js/legacy/compat_gameplay_exploration_crime_property_trimmed_v1153.js','js/dist/canonical_v11_16.js'];
 const a=context(oldScripts),b=context(newScripts),A=a.RF,B=b.RF;const same=(x,y)=>JSON.stringify(x)===JSON.stringify(y),norm=x=>String(x).replace(/>\s+</g,'><').replace(/\s+/g,' ').trim();
 function fresh(R,name='Parity'){
   const s=R.newGame(name,'traveller','🧭');R.state=s;s.day=5;s.minute=10*60;s.gold=5000;s.location='greenvale';s.player.energy=s.player.maxEnergy||100;

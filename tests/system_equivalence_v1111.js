@@ -10,8 +10,8 @@ function context(scripts,storage=new Map()){
   return ctx;
 }
 function norm(v,seen=new WeakSet()){if(typeof v==='function')return {$fn:String(v)};if(v===undefined)return {$undefined:true};if(v===null||typeof v!=='object')return v;if(seen.has(v))return {$cycle:true};seen.add(v);if(Array.isArray(v))return v.map(x=>norm(x,seen));if(v instanceof Set)return {$set:Array.from(v).map(x=>norm(x,seen))};const o={};for(const k of Object.keys(v).sort())o[k]=norm(v[k],seen);return o;}
-const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_10.js','js/dist/data_core_v11_10.js','js/legacy/base/main.js','js/legacy/compat_gameplay_config_trimmed_v1153.js','js/dist/canonical_v11_10.js'];
-const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_11.js','js/dist/data_core_v11_11.js','js/legacy/base/main.js','js/dist/systems_core_v11_11.js','js/legacy/compat_gameplay_systems_trimmed_v1153.js','js/dist/canonical_v11_11.js'];
+const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_10.js','js/dist/data_core_v11_10.js','tests/fixtures/base_main_v1118.js','js/legacy/compat_gameplay_config_trimmed_v1153.js','js/dist/canonical_v11_10.js'];
+const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_11.js','js/dist/data_core_v11_11.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_11.js','js/legacy/compat_gameplay_systems_trimmed_v1153.js','js/dist/canonical_v11_11.js'];
 const a=context(oldScripts),b=context(newScripts);const A=a.RF,B=b.RF;
 function mk(R){let s=R.newGame('SystemParity','traveller','🥷');R.state=s;s.seed='system-parity';s.day=17;s.minute=720;s.location='greenvale';s.gold=99999;s.world=s.world||{};s.world.market={food:1.05,metal:.96,wood:1.08,general:1.02};s.inventory={...(s.inventory||{}),logs:5,raw_meat:3};s.stats=s.stats||{};s.stats.marketTrades=0;return s;}
 const sa=mk(A),sb=mk(B);

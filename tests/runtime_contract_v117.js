@@ -22,7 +22,7 @@ ctx.window=ctx; ctx.globalThis=ctx; ctx.self=ctx;
 document.head.appendChild=function(el){if(el&&el.tagName==='SCRIPT'&&el.textContent){try{vm.runInContext(el.textContent,ctx,{filename:'embedded-runtime.js'});}catch(e){ctx.__errs.push(String(e.stack||e));}}return el};
 document.documentElement.appendChild=document.head.appendChild;
 ctx.addEventListener=()=>{};ctx.removeEventListener=()=>{};
-const scripts=['js/legacy/base/data.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/legacy/base/main.js','js/legacy/compat_v1153.js','js/dist/canonical_v11_7.js'];
+const scripts=['js/legacy/base/data.js','js/legacy/base/state.js','js/legacy/base/ui.js','tests/fixtures/base_main_v1118.js','js/legacy/compat_v1153.js','js/dist/canonical_v11_7.js'];
 for(const rel of scripts){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel});}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e));}}
 const RF=ctx.RF;
 const result={

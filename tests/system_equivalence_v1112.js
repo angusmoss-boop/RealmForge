@@ -8,8 +8,8 @@ function context(scripts,storage=new Map()){
   for(const rel of scripts){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel})}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e))}}
   return ctx;
 }
-const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_11.js','js/dist/data_core_v11_11.js','js/legacy/base/main.js','js/dist/systems_core_v11_11.js','js/legacy/compat_gameplay_systems_trimmed_v1153.js','js/dist/canonical_v11_11.js'];
-const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_12.js','js/dist/data_core_v11_12.js','js/legacy/base/main.js','js/dist/systems_core_v11_12.js','js/legacy/compat_gameplay_world_quest_trimmed_v1153.js','js/dist/canonical_v11_12.js'];
+const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_11.js','js/dist/data_core_v11_11.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_11.js','js/legacy/compat_gameplay_systems_trimmed_v1153.js','js/dist/canonical_v11_11.js'];
+const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_12.js','js/dist/data_core_v11_12.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_12.js','js/legacy/compat_gameplay_world_quest_trimmed_v1153.js','js/dist/canonical_v11_12.js'];
 const a=context(oldScripts),b=context(newScripts),A=a.RF,B=b.RF;
 function mk(R){let s=R.newGame('RoadParity','traveller','🥷');R.state=s;s.location='greenvale';s.day=10;s.minute=600;s.gold=5000;s.weather='Clear';s.v8={...(s.v8||{}),boostUntil:0,boostCooldownUntil:0};R.UI.modal=null;s.flags={...(s.flags||{}),woundedMerchantResolved:true,banditCampKnown:true,eastwatchOpen:true,vossRevealed:true,vossDefeated:true,northRoadOpen:true,deepMineFound:true,wayfarerHallOpen:true,cryptOpened:true,emberdeepKnown:true};s.visited={...(s.visited||{}),greenvale:true,crossroads:true,watchtower:true,northroad:true,ironridge:true,quarry:true};s.skills.exploration.level=20;s.skills.mining.level=20;return s;}
 const sa=mk(A),sb=mk(B);

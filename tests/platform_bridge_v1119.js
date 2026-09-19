@@ -19,7 +19,7 @@ function load(rel){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8
   P.onBackNavigation=handler=>{calls.onBack++;calls.backHandler=handler;return()=>{};};
   P.pushHistoryState=(state,url)=>{calls.pushHistory++;calls.lastPush={state,url};return true;};
   P.replaceHistoryState=(state,url)=>{calls.replaceHistory++;calls.lastReplace={state,url};return true;};
-  load('js/legacy/base/main.js');
+  load('tests/fixtures/base_main_v1119.js');
   load('js/dist/systems_core_v11_19.js');load('js/legacy/compat_gameplay_app_shell_trimmed_v1153.js');load('js/dist/canonical_v11_19.js');
   const R=ctx.RF;
   R.state=R.state||R.newGame('Bridge Test','traveller','🧭');

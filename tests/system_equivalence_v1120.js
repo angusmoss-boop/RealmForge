@@ -9,8 +9,8 @@ function context(scripts,storage=new Map()){
   for(const rel of scripts){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel})}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e))}}
   return ctx;
 }
-const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_18.js','js/dist/data_core_v11_18.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_18.js','js/legacy/compat_gameplay_ui_presentation_trimmed_v1153.js','js/dist/canonical_v11_18.js'];
-const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_19.js','js/dist/data_core_v11_19.js','tests/fixtures/base_main_v1119.js','js/dist/systems_core_v11_19.js','js/legacy/compat_gameplay_app_shell_trimmed_v1153.js','js/dist/canonical_v11_19.js'];
+const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_19.js','js/dist/data_core_v11_19.js','tests/fixtures/base_main_v1119.js','js/dist/systems_core_v11_19.js','js/legacy/compat_gameplay_app_shell_trimmed_v1153.js','js/dist/canonical_v11_19.js'];
+const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_20.js','js/dist/data_core_v11_20.js','js/legacy/base/main.js','js/dist/systems_core_v11_20.js','js/legacy/compat_gameplay_app_shell_trimmed_v1153.js','js/dist/canonical_v11_20.js'];
 const a=context(oldScripts),b=context(newScripts),A=a.RF,B=b.RF;const same=(x,y)=>JSON.stringify(x)===JSON.stringify(y),norm=x=>String(x).replace(/>\s+</g,'><').replace(/\s+/g,' ').trim();
 function fresh(R){const s=R.newGame('ShellParity','traveller','🧭');R.state=s;s.day=8;s.minute=14*60+35;s.gold=5000;s.location='greenvale';s.weather='Rain';s.player.level=25;s.player.maxEnergy=148;s.player.energy=90;s.speed=1;s.paused=false;for(const k of Object.keys(s.skills||{})){s.skills[k].level=Math.max(20,s.skills[k].level||1);s.skills[k].xp=R.xpForLevel?R.xpForLevel(s.skills[k].level):s.skills[k].xp;}s.home=s.home||{};s.home.owned=true;s.inventory={...(s.inventory||{}),lockpick:6,bread:3,iron_ore:4};s.bank={iron_ore:12,logs:8};s.v7=s.v7||{};s.v7.research=s.v7.research||{};Object.keys(R.DATA.enemies||{}).slice(0,4).forEach(id=>s.v7.research[id]={level:3,notes:0});s.visited=s.visited||{};['greenvale','ironridge','crypt','ember_cave'].forEach(id=>{if(R.DATA.locations[id])s.visited[id]=true});s.v94=s.v94||{dbType:'enemies',dbSearch:''};R.UI.modal=null;R.actionGame=null;s.activity=null;R.V101.mainMenu=false;return s;}
 const sa=fresh(A),sb=fresh(B),checks={};
@@ -19,10 +19,10 @@ checks.optionsHtml=norm(A.UI.options(sa))===norm(B.UI.options(sb));
 checks.developerHtml=norm(A.UI.dev(sa))===norm(B.UI.dev(sb));
 checks.buildParser=same(A.V1033.parseVersion('version=11.19.0\ntitle=Test'),B.V1033.parseVersion('version=11.19.0\ntitle=Test'));
 checks.versionCompare=[['11.19.0','11.18.0'],['11.18.0','11.19.0'],['11.19.0','11.19.0']].every(([x,y])=>A.V1033.compareVersion(x,y)===B.V1033.compareVersion(x,y));
-const stripBuild=h=>norm(h).replace(/V11\.1[89]\.0 • Canonical [^<]+/g,'Vx • Canonical').replace(/Built 19 Sep 2026 • 18:20 BST/g,'Built x');
+const stripBuild=h=>norm(h).replace(/V11\.(?:19|20)\.0 • Canonical [^<]+/g,'Vx • Canonical').replace(/Built 19 Sep 2026 • (?:18:20|18:50) BST/g,'Built x');
 checks.buildMarkupStructure=stripBuild(A.V1033.buildMarkup())===stripBuild(B.V1033.buildMarkup());
 A.V101.mainMenu=true;B.V101.mainMenu=true;A.V101.renderMainMenu();B.V101.renderMainMenu();
-const stripMenu=h=>norm(h).replace(/V11\.1[89]\.0 • Canonical [^<]+/g,'Vx • Canonical').replace(/Built 19 Sep 2026 • 18:20 BST/g,'Built x');
+const stripMenu=h=>norm(h).replace(/V11\.(?:19|20)\.0 • Canonical [^<]+/g,'Vx • Canonical').replace(/Built 19 Sep 2026 • (?:18:20|18:50) BST/g,'Built x');
 checks.mainMenuStructure=stripMenu(a.__app.innerHTML)===stripMenu(b.__app.innerHTML);
 A.V101.mainMenu=false;B.V101.mainMenu=false;
 checks.focusCapture=same(A.v96CaptureClock(sa),B.v96CaptureClock(sb));
@@ -33,10 +33,12 @@ checks.databaseEntries=sectors.every(type=>same(A.V1061.entries(sa,type),B.V1061
 checks.vistaScene=norm(A.V1039.scene(sa))===norm(B.V1039.scene(sb));checks.worldHtml=norm(A.UI.world(sa))===norm(B.UI.world(sb));
 checks.appShellCanonical=B.Modules?.info?.('ui.appShell')?.meta?.status==='canonical'&&B.Views.AppShell.installedStages.includes('js/v9_5.js')&&B.Views.AppShell.installedFragments.includes('v10_1-app-shell');
 checks.developerCanonical=B.Modules?.info?.('ui.developer')?.meta?.status==='canonical'&&B.Views.Developer.installedStages.includes('js/v10_33.js')&&B.V1033.__v1119PlatformBuildProbe===true;
-checks.platformBridge=['copyText','fetchBuildInfo','registerServiceWorker','onBackNavigation','pushHistoryState','replaceHistoryState'].every(k=>typeof B.Platform?.active?.[k]==='function');
+checks.platformBridge=['copyText','promptText','alertMessage','vibrate','isVisible','onResume','fetchBuildInfo','registerServiceWorker','onBackNavigation','pushHistoryState','replaceHistoryState'].every(k=>typeof B.Platform?.active?.[k]==='function');
+checks.lifecycleCanonical=B.Modules?.info?.('core.lifecycle')?.meta?.status==='canonical'&&B.Core?.Lifecycle?.booted===true;
+checks.compatUnchanged=require('fs').readFileSync(require('path').join(root,'js/legacy/compat_gameplay_app_shell_trimmed_v1153.js')).length===314471;
 checks.existingUiOwners=B.Modules?.info?.('ui.database')?.meta?.status==='canonical'&&B.Modules?.info?.('ui.navigation')?.meta?.status==='canonical'&&B.Modules?.info?.('ui.presentation')?.meta?.status==='canonical'&&B.Modules?.info?.('ui.overlays')?.meta?.status==='canonical';
 checks.gameplayOwners=B.Modules?.info?.('systems.timeEnergy')?.meta?.status==='canonical'&&B.Modules?.info?.('systems.travel')?.meta?.status==='canonical'&&B.Modules?.info?.('systems.combat')?.meta?.status==='canonical'&&B.Modules?.info?.('systems.inventory')?.meta?.status==='canonical';
-checks.ownership=B.PRODUCTION_FOUNDATION?.systemOwnership?.valid===true;checks.schema=B.V95?.SCHEMA==='11.5.3';checks.version=B.VERSION==='11.19.0';
+checks.ownership=B.PRODUCTION_FOUNDATION?.systemOwnership?.valid===true;checks.schema=B.V95?.SCHEMA==='11.5.3';checks.version=B.VERSION==='11.20.0';
 checks.knownHarnessWarningEquivalent=a.__errs.length===b.__errs.length&&a.__errs.every(x=>String(x).includes('modalHTML'))&&b.__errs.every(x=>String(x).includes('modalHTML'));
 console.log(JSON.stringify({checks,oldErrors:a.__errs.slice(0,3),newErrors:b.__errs.slice(0,3),owners:{appShell:B.Views.AppShell.installedStages,appShellFragments:B.Views.AppShell.installedFragments,developer:B.Views.Developer.installedStages}},null,2));
 if(Object.values(checks).some(v=>!v))process.exit(2);

@@ -9,8 +9,8 @@ function context(scripts,storage=new Map()){
   for(const rel of scripts){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel})}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e))}}
   return ctx;
 }
-const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_17.js','js/dist/data_core_v11_17.js','js/legacy/base/main.js','js/dist/systems_core_v11_17.js','js/legacy/compat_gameplay_time_energy_trimmed_v1153.js','js/dist/canonical_v11_17.js'];
-const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_18.js','js/dist/data_core_v11_18.js','js/legacy/base/main.js','js/dist/systems_core_v11_18.js','js/legacy/compat_gameplay_ui_presentation_trimmed_v1153.js','js/dist/canonical_v11_18.js'];
+const oldScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_17.js','js/dist/data_core_v11_17.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_17.js','js/legacy/compat_gameplay_time_energy_trimmed_v1153.js','js/dist/canonical_v11_17.js'];
+const newScripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_18.js','js/dist/data_core_v11_18.js','tests/fixtures/base_main_v1118.js','js/dist/systems_core_v11_18.js','js/legacy/compat_gameplay_ui_presentation_trimmed_v1153.js','js/dist/canonical_v11_18.js'];
 const a=context(oldScripts),b=context(newScripts),A=a.RF,B=b.RF;const same=(x,y)=>JSON.stringify(x)===JSON.stringify(y),norm=x=>String(x).replace(/>\s+</g,'><').replace(/\s+/g,' ').trim();
 function fresh(R,name='UIParity'){
   const s=R.newGame(name,'traveller','🧭');R.state=s;s.day=8;s.minute=14*60+35;s.gold=5000;s.location='greenvale';s.weather='Rain';s.player.level=25;s.player.maxEnergy=148;s.player.energy=90;s.speed=1;s.paused=false;
