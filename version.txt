@@ -1,6 +1,5 @@
-version=11.6.0
-title=Production Foundation I
-built=2026-09-19T02:21:00+01:00
-build_id=20260919-0221-bst
-save_schema=11.5.3
-notes=Production-foundation infrastructure release. The 93 active historical patch scripts from V2 through V11.5.3 are consolidated into one deterministic runtime bundle in their exact previous load order. Gameplay and save schema are intentionally unchanged.
+version=11.6.1
+title=Production Foundation Compatibility
+built=2026-09-19T03:16:00+01:00
+build_id=20260919-0316-bst
+notes=Corrects V11.6.0 runtime consolidation by preserving the original per-patch classic-script execution isolation. Restores all V11.5.3-era systems and UI while keeping a single consolidated runtime download. Save schema remains 11.5.3.

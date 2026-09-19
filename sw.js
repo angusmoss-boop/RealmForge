@@ -1,4 +1,4 @@
-const CACHE='realmforge-v11-6';
+const CACHE='realmforge-v11-6-1';
 const FILES=[
   './',
   './index.html',
@@ -8,7 +8,7 @@ const FILES=[
   './js/state.js',
   './js/ui.js',
   './js/main.js',
-  './js/realmforge_runtime_v11_6.js',
+  './js/realmforge_runtime_v11_6_1.js',
   './version.txt'
 ];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));

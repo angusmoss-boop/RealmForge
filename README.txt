@@ -21,3 +21,7 @@ See RUNTIME_PROVENANCE_V11_6.txt for the exact bundled patch order and SHA-256 h
 
 HISTORY
 The canonical release history is maintained in Realmforge_Development_Log_V1_to_V11_6_0.txt when distributed with the release.
+
+
+V11.6.1 COMPATIBILITY CORRECTION
+V11.6.0's direct source concatenation changed browser error-isolation semantics and could stop later historical patches from running. V11.6.1 embeds the same 93 active patches in one downloaded runtime but executes them as separate classic-script elements in their original order. This preserves V11.5.3 behaviour while maintaining the reduced deployment surface.

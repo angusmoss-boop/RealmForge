@@ -1,0 +1,46 @@
+REALMFORGE V11.6.1 — PRODUCTION FOUNDATION AUDIT ADDENDUM
+
+ROOT CAUSE OF V11.6.0 REGRESSION
+================================
+V11.6.0 concatenated all 93 active historical patches into one JavaScript execution unit.
+That changed an important runtime property of the previous build. With 93 separate classic
+<script> files, an uncaught exception in one historical patch did not prevent later patch
+files from executing. With direct concatenation, the same exception terminated the entire
+combined runtime, leaving the game at an older effective patch level.
+
+The player's observed symptoms matched this exactly: the custom V10.38 navigation shell
+was visible while later navigation, Pack, loadout and Wayfinder upgrades were absent.
+
+CORRECTION
+==========
+V11.6.1 keeps the one-file runtime download, but each embedded historical patch is executed
+as its own classic script element in the exact V11.5.3 load order. This restores:
+- per-patch exception isolation
+- classic global-script semantics
+- exact patch ordering
+while retaining a five-file active runtime surface in index.html.
+
+ACTIVE RUNTIME
+==============
+js/data.js
+js/state.js
+js/ui.js
+js/main.js
+js/realmforge_runtime_v11_6_1.js
+
+SAVE COMPATIBILITY
+==================
+Game version: 11.6.1
+Save schema: 11.5.3
+No campaign-state migration is introduced.
+
+SOURCE PATCH COUNT
+==================
+93 active historical patches embedded from the exact V11.5.3 index order.
+
+VALIDATION RESULT
+=================
+- Full JavaScript syntax check: 100 files, 0 failures.
+- Separate-script reference harness reached V11.5.3 with all sampled late-version namespaces present.
+- V11.6.1 compatibility runtime reached V11.6.1 with the same sampled V10.38 through V11.5.3 namespaces present.
+- Both harnesses produced the same two expected synthetic-environment errors; importantly, later patches continued executing in V11.6.1 exactly as they did in the separate-script reference.
