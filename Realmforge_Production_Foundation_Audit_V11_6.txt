@@ -1,0 +1,70 @@
+Realmforge Production Foundation Audit — V11.5.3 → V11.6.0
+Audit date: 19 September 2026
+Scope: current uploaded V11.5.3 source and active runtime chain
+
+EXECUTIVE SUMMARY
+- The current game is structurally viable and does NOT need a technology rewrite before V12.
+- The main scaling risk is the accumulated patch/override architecture, not the PWA technology.
+- V11.5.3 loaded 97 JavaScript files at runtime: 4 base files + 93 active historical patch files.
+- The js/ directory contained 98 files total; v11_1_1.js was retained historically but correctly inactive because its behaviour was folded into V11.2.
+- Active JavaScript source was approximately 1204.5 KiB before consolidation.
+- The 93-patch portion alone was approximately 1164.4 KiB.
+- V11.6 mechanically consolidates those 93 active patches into one deterministic bundle while leaving data.js, state.js, ui.js and main.js separate.
+- Runtime script requests therefore fall from 97 to 5 without deliberately changing gameplay behaviour.
+- Save schema remains 11.5.3. V11.6.0 is an application/build version only.
+
+WHY CONSOLIDATION WAS NEEDED
+The current source relies heavily on late-file overrides. Static audit found, across the active chain:
+- RF.newGame redefined/wrapped in 72 active source files including the base definition.
+- RF.load redefined/wrapped in 70 files.
+- RF.importSave redefined/wrapped in 68 files.
+- RF.UI.modalHtml redefined in 48 files.
+- RF.UI.bind redefined in 43 files.
+- RF.UI.world redefined in 19 files.
+- RF.UI.render redefined in 16 files.
+- RF.startBattle redefined in 9 files.
+These overrides are currently intentional and produce the live game, but continuing the same pattern through V12 would make ownership and regression tracing increasingly difficult.
+
+V11.6 CONSOLIDATION METHOD
+- Parsed the ACTIVE script list from V11.5.3 index.html rather than blindly bundling every js/ file.
+- Preserved the exact previous script order from v2.js through v11_5_3.js.
+- Excluded inactive v11_1_1.js.
+- Inserted explicit semicolon/file boundaries between source files.
+- Embedded a SHA-256 provenance record for every bundled source file.
+- Added only a final V11.6 build marker after the old chain. It does not mutate campaign state or raise the save schema.
+- Old individual patch files are retained in the source archive for history/debugging, but index.html and the service worker no longer execute/cache them individually.
+
+OTHER AUDIT FINDINGS
+1. manifest.webmanifest still advertised Realmforge V9.4 / V9.1. V11.6 changes this to version-neutral production metadata: Realmforge: Wanderer's Rise / Realmforge.
+2. README.txt had become a historical rolling changelog and was stale at the top. The canonical historical record is the Development Log; README has been replaced with current build/architecture guidance.
+3. The service worker previously precached the entire 97-script active chain. V11.6 precaches only the four base scripts plus the consolidated runtime bundle.
+4. The current save system already has a useful schema authority in RF.V95.SCHEMA. This should be retained when we formalise migrations later.
+5. Current game data, UI logic and patch behaviour are still interwoven. V11.6 does NOT pretend to solve that. It creates a stable bridge from the prototype patch tower to a future canonical module structure.
+
+WHAT V11.6 DOES NOT DO
+- It does not rewrite combat, inventory, travel, quests, dungeons, research or world logic.
+- It does not rename internal save namespaces.
+- It does not flatten the migration wrapper chain yet.
+- It does not move data definitions into new production modules yet.
+- It does not introduce Vite/Capacitor yet.
+Those should be subsequent Production Foundation passes after this consolidated runtime is tested against real campaigns.
+
+NEXT RECOMMENDED FOUNDATION PASSES
+1. Save/migration formalisation: one explicit migration pipeline with fixtures from known campaign versions.
+2. Canonical module extraction: core/state, systems, data, ui, platform, assets.
+3. Platform adapter: browser/PWA first, Capacitor Android later.
+4. Asset registry before large-scale custom artwork/audio import.
+5. Build tooling (likely Vite) after canonical modules exist, then Android debug packaging early in V12.
+
+VALIDATION PERFORMED
+- Bundle contains exactly the 93 scripts that were active in V11.5.3 index.html, in exact order.
+- Inactive v11_1_1.js excluded from bundle.
+- SHA-256 provenance manifest generated for every source segment.
+- Consolidated bundle syntax checked with Node.
+- Every JavaScript file in the V11.6 source tree syntax checked with Node.
+- index.html contains exactly 5 active script tags: 4 base + 1 consolidated runtime.
+- Service-worker precache contains the consolidated runtime and no individual historical patch scripts.
+- Save schema deliberately remains 11.5.3.
+
+RISK NOTE
+This is a mechanical runtime consolidation, not a behavioural rewrite. It is deliberately conservative. The safest next test is to deploy/install V11.6 over an existing V11.5.3 campaign and verify the same Equipment, Tool Belt, Pack/Bank, research, dungeon and world-progression state before beginning deeper source modularisation.

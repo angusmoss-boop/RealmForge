@@ -1,5 +1,6 @@
-version=11.5.3
-title=Living Encounters
-built=2026-09-18T00:58:00+01:00
-build_id=20260918-0058-bst
-notes=Nearby creature rotations now refresh every in-game hour. Field Research lists every unique nearby creature with duplicates removed, while the main Nearby Creatures roster can still contain duplicate spawns.
+version=11.6.0
+title=Production Foundation I
+built=2026-09-19T02:21:00+01:00
+build_id=20260919-0221-bst
+save_schema=11.5.3
+notes=Production-foundation infrastructure release. The 93 active historical patch scripts from V2 through V11.5.3 are consolidated into one deterministic runtime bundle in their exact previous load order. Gameplay and save schema are intentionally unchanged.
