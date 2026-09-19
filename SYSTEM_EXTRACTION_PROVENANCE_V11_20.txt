@@ -1,0 +1,85 @@
+REALMFORGE V11.20.0 — SYSTEM EXTRACTION / PLATFORM PROVENANCE
+
+Reference runtime: V11.19.0
+Save schema: 11.5.3 (unchanged)
+
+LEGACY-BASE STARTUP TRANSFER
+Source: V11.19 `js/legacy/base/main.js`
+Destination: `js/core/lifecycle.js`
+Transferred responsibility:
+- initial `RF.load()` startup;
+- exact offline catch-up guard/calculation;
+- loaded-campaign feed message;
+- initial speed/paused normalization;
+- initial render;
+- master requestAnimationFrame launch;
+- service-worker bootstrap.
+
+The canonical installer `RF.Core.Lifecycle.installLegacyBoot()` is invoked at the exact location where the old startup IIFE previously executed.
+
+SAVE SHELL AFFORDANCE TRANSFER
+The active V11.19 base-main implementations of `RF.exportPrompt` and `RF.importPrompt` are installed by core.lifecycle at that same boot boundary. Browser prompt/alert/clipboard operations are delegated to RF.Platform. Campaign import/export semantics are unchanged.
+
+PLATFORM ROUTING CHANGES
+`js/platform/browser.js` adds:
+- monotonicNow
+- promptText
+- alertMessage
+- vibrate
+- isVisible
+- onResume
+
+Existing platform methods remain:
+- storage
+- now
+- online
+- copyText
+- onVisibilityChange
+- fetchBuildInfo
+- currentUrl
+- replaceHistoryState
+- pushHistoryState
+- onBackNavigation
+- registerServiceWorker
+
+TRAVEL CLOCK SENTINEL
+Source owner remains: `js/systems/travel.js` / V11.2.2 Clock Sentinel.
+Only browser lifecycle transport changes:
+- visibility reads through RF.Platform.active.isVisible where available;
+- visibilitychange/pageshow/focus recovery subscription goes through RF.Platform.active.onResume.
+- V.repairOnResume and all actual recovery decisions remain Travel-owned.
+
+HAPTICS
+The historically preserved short vibration calls inside the canonicalized modern stages now delegate through RF.Platform:
+- `js/systems/inventory.js`
+- `js/systems/equipment.js`
+- `js/systems/combat.js`
+No haptic timing/gameplay rule is intentionally changed.
+
+SAVE CORE
+`js/core/state.js` raw import prompt/alert fallbacks are routed through RF.Platform. The active lifecycle shell affordance preserves the mature V11.19 user-facing import flow.
+
+LEGACY COMPATIBILITY RUNTIME
+`js/legacy/compat_gameplay_app_shell_trimmed_v1153.js` is byte-identical to V11.19.
+SHA-256: 2cb2125e6d7f159f3095dfcec3f9f0ba35b93e782cc96d356be5f97bc79fb8a3
+Bytes: 314,471
+
+LEGACY BASE MAIN
+V11.19 bytes: 11,782
+V11.20 bytes: 10,528
+Reduction: 1,254 bytes
+V11.20 SHA-256: c8dfb19f0ae0e79ba5338e37066e418bce9b534f725676f82919d03a955d7fed
+
+ORDER / OWNERSHIP SAFETY
+- `RF.tick` remains in legacy/base for this pass.
+- Travel continues to own Clock Sentinel/recovery.
+- Time/Energy continues to own cross-cutting time progression and Energy.
+- UI Focus Clock continues to own modal/select pause and Back semantics.
+- Lifecycle owns platform-facing boot orchestration only.
+- No compatibility patch was removed solely to reduce file size.
+
+HISTORICAL TEST FIXTURES
+Because current `legacy/base/main.js` now expects canonical Lifecycle, tests for older production bundles use frozen historical base-main fixtures:
+- `tests/fixtures/base_main_v1118.js`
+- `tests/fixtures/base_main_v1119.js`
+This prevents current startup architecture from leaking into older-version regression harnesses.

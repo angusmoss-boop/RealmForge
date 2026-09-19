@@ -1,5 +1,5 @@
-version=11.19.0
-title=Canonical App Shell & Developer
-built=2026-09-19T18:20:00+01:00
-build_id=20260919-v1119-app-shell
-notes=Campaign/options UI, startup front door and V10.33 Developer/Build Beacon now execute from canonical UI owners; browser shell calls are routed through RF.Platform. Save schema remains 11.5.3.
+version=11.20.0
+title=Canonical Platform & Lifecycle
+built=2026-09-19T18:50:00+01:00
+build_id=20260919-v1120-platform-lifecycle
+notes=Base startup/offline catch-up now belongs to canonical core.lifecycle; resume/visibility, dialogs and haptics route through RF.Platform while Travel Clock Sentinel and Time/Energy retain gameplay ownership. Save schema remains 11.5.3.
