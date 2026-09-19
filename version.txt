@@ -1,5 +1,5 @@
-version=11.8.0
-title=Canonical Save Core
-built=2026-09-19T04:18:00+01:00
-build_id=20260919-0418-bst
-notes=Save, storage and migration-chain ownership moved into canonical core modules. Existing V9.5 slot keys and V11.5.3 save schema remain fully compatible.
+version=11.9.0
+title=Canonical Content Core
+built=2026-09-19T05:42:00+01:00
+build_id=20260919-0542-bst
+notes=Base content and 87 historical top-level content-definition blocks moved into canonical data ownership while preserving exact execution order. Save schema remains 11.5.3.

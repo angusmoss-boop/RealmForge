@@ -1,0 +1,31 @@
+REALMFORGE V11.9.0 — CANONICAL BUNDLE PROVENANCE
+
+js/dist/save_core_v11_9.js
+3b8f8ee4a6427499d1d423b73355dd41c033ea0181b09ca37b070b9bd9e7c4ff      1218 bytes  js/core/bootstrap.js
+9a17a70e43cb1530b119401b00b3ebea9d83b3f913dcd02bf7627a776f4c7a7a      1563 bytes  js/platform/browser.js
+e4bbad3c6b9cae4b5efddb09e13e5f14f803b162fc4f01b53e28358f559bb029      6074 bytes  js/core/migrations.js
+67aed73486577cb34bd67ca95b8853c35bdbf0d28f32e558621a35321b856365       894 bytes  js/core/storage.js
+e591e106744a5e961b016a48e157125c200b97ee899a6a719367536caa2fb575      7190 bytes  js/core/campaigns.js
+364e1325346da1b9d8f880e8ff1ff8e7abd3a61de8a2ddaa0d354b8439b01810      2759 bytes  js/core/state.js
+Bundle SHA-256: c76c84196cb3adb58ec22ded26615c5904de93f259ec0411a01a05c72505c453
+
+js/dist/data_core_v11_9.js
+2563c96e705dc6f3088b9af1f86c98761007307da25ceb0649ee5cf2255ac370      2627 bytes  js/data/catalog.js
+dee4c9e9707127f0c10557e27598f70e3df8de8fea7f1de5f0298ffd78deaf3e     95401 bytes  js/data/content_blocks_v11_9.js
+Bundle SHA-256: 8d70d179fd9e57961aaeef024b6ae6a1dbe6f0b8755855a1d4ddd7c0ab7a9f99
+
+js/dist/canonical_v11_9.js
+1af2520a081c3bd06c5943a2f13edc531677acdd49ba08f20ed3d03b713025d8       805 bytes  js/core/save_boot.js
+7a927a13b1ae2b4cfef21e9ccd1dbbf93d2cf9538f7fbb7a5108dbd77975c336       713 bytes  js/data/finalize.js
+063689b3949c4d21c535680689a1a7b79f866a9c00c3cac82d013b493eceb7aa       873 bytes  js/systems/inventory.js
+8efec5d2e930efda6839f2a3eb938c94e015ccb8ca9a526863af6488c65371cc      1044 bytes  js/systems/equipment.js
+8ceadab1cc4c1d2fa2ab4d03ce82515750f9cf422ec04d1ca4aa5af9e956b09b       847 bytes  js/systems/travel.js
+30145aa18e9100dfed5f9bbafaac5a3afcb3bf2ea970866fca5e1a180a6b5e09       908 bytes  js/systems/combat.js
+b290afe4f5e988aa900f065db4c1020ee23123cd4816fc1f1518a5de1ee99cb6       711 bytes  js/systems/research.js
+1ba4a325339c1db398407b503394fc71ec6bf56f7ec2770116d0340229d0ffe2       749 bytes  js/systems/quests.js
+4371764359e1a93ad889f9f810bbbdb94830257d1e0e9e8d2e5bc6b36785373e       821 bytes  js/systems/crafting.js
+2e85bafc3c8d5fdb9f831d52fbc66ca19905e000c34e4716a867518136999fa9       621 bytes  js/systems/dungeons.js
+4fd859cf53b8ab932f6a51b50918c4c5910dadc0f48419bbe4f8e4e8ccce82cb       707 bytes  js/systems/commerce.js
+2911cfb8c0f3439cec0534c0e8c1c29e7d51306bb4e017ec0a01c0349d0197ca       804 bytes  js/ui/shell.js
+6a95b6c5abba8f1ff8a880517007312b3b6840096150899b75b0bc04642fc515       814 bytes  js/core/finalize.js
+Bundle SHA-256: 63e690618d8fe1dbcdd23c3600cf08e9bf99b27c71eda51cc0d2c67db8013eba

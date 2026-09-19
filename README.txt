@@ -1,4 +1,4 @@
-Realmforge: Wanderer's Rise - V11.8.0 Canonical Save Core
+Realmforge: Wanderer's Rise — V11.9.0 Canonical Content Core
 
 PRODUCTION FOUNDATION III
 V11.8.0 moves persistence ownership out of the historical compatibility runtime while preserving the proven V11.5.3 campaign format and gameplay behaviour.

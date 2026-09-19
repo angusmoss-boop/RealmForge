@@ -1,0 +1,30 @@
+REALMFORGE V11.9.0 — PRODUCTION FOUNDATION AUDIT
+
+Target: Data registries / content definitions
+
+RESULT
+- Canonical foundation data: ACTIVE
+- Legacy base data runtime dependency: REMOVED
+- Historical content blocks extracted: 87
+- Source bytes moved from gameplay compatibility into js/data: 85,615
+- Active gameplay compatibility size: 1,188,464 -> 1,105,848 bytes (82,616 bytes smaller)
+- Save schema: unchanged at 11.5.3
+
+OWNERSHIP
+- New content registration owner: RF.Catalog / js/data/catalog.js
+- Historical extracted content owner: js/data/content_blocks_v11_9.js
+- Foundation RF.DATA owner: js/data/base_content.js
+- Persistence owner remains core.campaigns
+- Migration owner remains core.migrations
+
+BOUNDARY
+Dynamic patch-local content generation remains temporarily in gameplay compatibility when it depends on local helpers/runtime logic. No new V12 content should be added there.
+
+VALIDATION
+- Full JavaScript syntax validation: PASS — 142 files, 0 failures.
+- V11.8 -> V11.9 final RF.DATA deep-equivalence: PASS (131,488-byte normalized content graph on both runtimes).
+- Canonical content blocks expected/applied: PASS — 87/87.
+- Catalog reference audit: PASS — 0 missing enemy-drop, recipe input/output or location-neighbor references.
+- V11.8 advanced save -> V11.9: PASS — Equipment, Tool Belt, Pack, Bank, research, flags and schema preserved.
+- Primary -> Backup -> Recovery persistence test inherited from V11.8: PASS.
+- Existing V10.9 harness-only modalHTML error remains reference-identical; no new runtime-contract errors introduced.
