@@ -1,0 +1,39 @@
+REALMFORGE V11.18.0 — SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.17.0
+Save schema: 11.5.3 (unchanged)
+
+CANONICAL DATABASE / CODEX WHOLE STAGES
+- js/v9_4.js -> ui.database (Field Database foundation)
+- js/v10_61.js -> ui.database (Database Grid, level-first sorting, Field Research gate)
+- js/v11_1.js -> ui.database (Location Directory / Facilities & Services)
+- js/v11_3.js -> ui.database (Dungeons + Magic sectors / Dungeon Codex)
+
+CANONICAL NAVIGATION WHOLE STAGE
+- js/v10_38.js -> ui.navigation (custom 3-column navigation launcher)
+
+CANONICAL PRESENTATION WHOLE STAGES
+- js/v10_39.js -> ui.presentation (Living Vistas)
+- js/v10_40.js -> ui.presentation (Vista Composition)
+- js/v10_41.js -> ui.presentation (Rainline)
+- js/v11_3_1.js -> ui.presentation (Verdant Count Tabs shared badge styling)
+
+CANONICAL OVERLAY WHOLE STAGES
+- js/v11_2_1.js -> ui.overlays (modal/background scroll lock)
+- js/v11_2_3.js -> ui.overlays (close-button normalisation)
+
+SOURCE MOVED
+- 11 complete historical stages
+- Exact extracted historical source: 84,239 bytes
+- Compatibility runtime reduction after installer markers: 83,513 bytes
+
+ORDER / DEPENDENCY NOTES
+- Every extracted stage still executes synchronously at its exact historical version boundary.
+- V9.4's original Database navigation contribution remains inside its exact stage; V10.38 later replaces it as before.
+- V10.50/V10.54/V10.57 later mutate the V10.38 navigation model at their original positions, preserving Equipment/Tool Belt/Magic entries and retirement of global Shop.
+- V11.2 Requirement Integrity remains systems.skills. Its folded V11.1.1 Database top-right-X repair still executes at V11.2 and is not duplicated here.
+- V11.4 Eightfold Dungeons still extends V11.3 Dungeon Codex rows and World dungeon cards after the canonical V11.3 stage.
+- Gameplay systems and save ownership are untouched by this extraction.
+
+METHOD
+Whole historical stage source was lifted from the transformed V11.17 compatibility runtime without semantic rewriting. Compatibility entries were replaced by tiny canonical installer markers only. Canonical modules inject the original classic-script source at the same chronological boundary so wrapper order, migration order and downstream extensions remain equivalent to V11.17.

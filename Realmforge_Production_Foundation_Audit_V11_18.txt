@@ -1,0 +1,127 @@
+REALMFORGE V11.18.0 — PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.17.0 Canonical Time & Energy
+Target: V11.18.0 Canonical Interface & Codex
+Save schema: 11.5.3 (unchanged)
+
+AUDIT CONCLUSION
+The safest next extraction boundary was the mature UI presentation stack rather than another mixed gameplay foundation. Eleven complete historical stages can be lifted without semantic slicing: Database/Codex, V10.38 Navigation, V10.39–V10.41 Living Vistas, V11.3.1 badge presentation, V11.2.1 scroll locking and V11.2.3 close-button normalisation.
+
+EXTRACTION SCOPE
+Database/Codex whole stages: 4
+- js/v9_4.js
+- js/v10_61.js
+- js/v11_1.js
+- js/v11_3.js
+
+Navigation whole stages: 1
+- js/v10_38.js
+
+World/shared presentation whole stages: 4
+- js/v10_39.js
+- js/v10_40.js
+- js/v10_41.js
+- js/v11_3_1.js
+
+Overlay infrastructure whole stages: 2
+- js/v11_2_1.js
+- js/v11_2_3.js
+
+SOURCE MOVED
+Exact historical source lifted: 84,239 bytes
+Installer markers left in chronological runtime: approximately 726 bytes of stage marker source plus JSON/runtime framing overhead
+
+COMPATIBILITY RUNTIME SIZE
+V11.17: 428,249 bytes
+V11.18: 344,736 bytes
+Reduction: 83,513 bytes (19.5%)
+The active compatibility layer is now below 345 KB, down from roughly 1.19 MB at the beginning of the production-foundation extraction era.
+
+ACTIVE RUNTIME
+9/9 production JavaScript references present:
+1. js/data/base_content.js
+2. js/legacy/base/state.js
+3. js/legacy/base/ui.js
+4. js/dist/save_core_v11_18.js
+5. js/dist/data_core_v11_18.js
+6. js/legacy/base/main.js
+7. js/dist/systems_core_v11_18.js
+8. js/legacy/compat_gameplay_ui_presentation_trimmed_v1153.js
+9. js/dist/canonical_v11_18.js
+
+OWNERSHIP RESULT
+- ui.database: canonical; 4 historical stages installed.
+- ui.navigation: canonical; 1 historical stage installed.
+- ui.presentation: canonical; 4 historical stages installed.
+- ui.overlays: canonical; 2 historical stages installed.
+- ui.focusClock remains separately canonical from V11.17.
+- Existing gameplay/system owners remain unchanged.
+
+ORDER-SAFETY REVIEW
+- V9.4's early Database/nav wrapper still executes at V9.4.
+- V10.38 still replaces the older navigation shell at V10.38.
+- V10.50, V10.54 and V10.57 still alter the navigation model later, so final Equipment/Tool Belt/Magic/global-Shop behavior is unchanged.
+- V11.2 still owns Requirement Integrity and the folded V11.1.1 Database close repair.
+- V11.4 still enriches V11.3 dungeon rows/world cards after V11.3.
+- No stage was moved earlier merely because it is now stored in a canonical source file.
+
+PARITY / REGRESSION VALIDATION
+- Final navigation item model: PASS.
+- Final navigation HTML: PASS.
+- Equipment / Tool Belt / Magic entries preserved, global Shop absent: PASS.
+- 8 Database sectors: PASS.
+- Database entries across every sector: PASS.
+- Database page HTML across every sector: PASS.
+- Location Facilities & Services: PASS.
+- Location detail HTML: PASS.
+- 8 Dungeon Codex entries/details: PASS.
+- Living Vista theme/sky/daypart: PASS.
+- Living Vista scene HTML: PASS.
+- Final World HTML: PASS.
+- Overlay selector contract: PASS.
+- Close-button selector contract: PASS.
+- All four new canonical UI ownership contracts: PASS.
+- Existing canonical gameplay ownership contract: PASS.
+- Known V10.9 fake-DOM warning equivalence: PASS.
+
+SAVE COMPATIBILITY VALIDATION
+Three V11.17 fixtures were loaded through V11.18:
+1. Advanced established campaign with deliberate Pack overflow.
+2. Active travel campaign with route plan, partial progress and travel-Energy state.
+3. Active combat campaign with interrupted-clock snapshot and combat-category state.
+
+46/46 compatibility assertions passed, covering:
+- Character level / XP / gold.
+- Pack and Bank.
+- All occupied Equipment slots.
+- Two identical Ring slots.
+- Non-empty Mining/Woodcutting/Fishing/Firemaking Tool Belt.
+- Skill levels and XP.
+- Field Research ranks/notes.
+- Quest state and progression flags.
+- Market state.
+- Dungeon history.
+- Crime/bounty/burglary cooldowns.
+- Exploration chest/excavation state.
+- Resource charges.
+- Property/home state and buffs.
+- Energy and recovery carry.
+- Active travel/route state.
+- Active combat/clock/category state.
+- Deliberate Pack overflow.
+
+VALIDATION COUNTS
+- JavaScript files checked: 248
+- Syntax failures: 0
+- Executable Node regression harnesses: 26
+- Harness failures: 0
+- V11.18 runtime contract: PASS
+- V11.17 -> V11.18 UI/system equivalence: 25/25 PASS
+- V11.17 -> V11.18 save compatibility: 46/46 PASS
+
+WHAT REMAINS IN COMPATIBILITY
+The remaining ~344.7 KB is now concentrated much more heavily in genuinely mixed historical foundations. Largest live areas include V4 tactical/social/world foundations, V7 specialist-system foundations, V9.2 living-road/crime/social mixing, V8.3 travel/UI recovery, V10.33 Build Beacon/Developer tooling, V8.2 mixed Pack/Mastery foundations, V10 base level-up/battle-summary/UI code and older Greenvale bank/world-layout repair stages.
+
+RECOMMENDED NEXT EXTRACTION
+V11.19 — Canonical App Shell / Developer & Build Infrastructure.
+Prioritise the V10.33 Build Beacon + Developer binding layer and audit remaining campaign-entry/app-lifecycle/version-check/browser integration around it. This directly improves the boundary that a future Capacitor/AAB shell will touch. Keep mixed V3/V4/V7/V9 gameplay foundations for later, narrower passes rather than performing a giant rewrite.
