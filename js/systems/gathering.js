@@ -28,3 +28,26 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Gathering. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Gathering;if(!api)throw new Error('Gathering canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v10_1-repaired-gathering":"// ---------- Repaired active gathering ----------\n// One press => one cooldown => one outcome. The V10 instant-harvest roll no longer consumes\n// a hidden cooldown before normal progress is allowed to resolve.\nRF.workTap=function(){\n  const s=RF.state,g=RF.actionGame;if(!s||!g||g.type!=='work')return;\n  const cooldown=RF.V8?.actionCooldowns?.work||520;\n  if(!RF.actionReady(g,'work',cooldown))return;\n  const d=RF.DATA.resourceDefs[g.key],r=RF.resourceState(s,g.key);if(!d||!r||r.charges<=0)return RF.closeActionGame();\n  const energyCost=RF.v10EnergyCost?.('work')||3;\n  if((s.player.energy||0)<energyCost){g.v8CooldownUntil=0;RF.v10SpendEnergy(s,energyCost);return}\n  RF.v10SpendEnergy(s,energyCost);\n  const tool=RF.bestTool(s,d.skill),level=s.skills[d.skill]?.level||1;\n  g.required=g.required||RF.workRequired(d);\n  let power=RF.workPower(s,d,tool);\n  const mishap=Math.max(.01,.065-(level-d.level)*.0045-(tool?.control||0));\n  const instant=Math.min(.055,.012+level*.0008+(tool?.control||0)*.22+(s.luck||0)*.001);\n  const crit=.09+Math.min(.12,level*.0025)+(tool?.control||0)+(s.luck||0)*.003;\n  const roll=Math.random();s.stats.activeTaps++;g.crit=false;g.mishap=false;\n  if(roll<mishap){\n    g.mishap=true;s.stats.skillMishaps++;r.charges=Math.max(0,r.charges-1);r.last=RF.totalMinutes(s);g.progress=0;\n    const words=d.skill==='woodcutting'?'The cut twists and the usable section splinters. One potential yield is lost.':d.skill==='mining'?'The strike fractures a useful pocket into rubble. One potential yield is lost.':'You spoil part of the resource.';\n    g.last=`⚠️ BUTCHERED — ${words} Progress reset to 0%.`;\n  }else if(roll<mishap+instant){\n    g.progress=g.required;s.stats.instantHarvests=(s.stats.instantHarvests||0)+1;g.last='✨ INSTANT HARVEST — one exceptional action finishes the resource.';\n  }else{\n    if(roll<mishap+instant+crit){power*=2;g.crit=true;s.stats.skillCrits++;g.last=`💥 CRITICAL WORK! +${power} work`;}else g.last=`+${power} work`;\n    g.progress=Math.min(g.required,g.progress+power);\n  }\n  if(g.progress>=g.required)return RF.finishActiveGather(g);\n  RF.save(s);RF.UI.render(s);\n};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-systems.gathering-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.gathering/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

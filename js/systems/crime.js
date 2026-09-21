@@ -62,3 +62,26 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Crime. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Crime;if(!api)throw new Error('Crime canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v10_1-pickpocket-repair":"// ---------- Pickpocketing: challenging, not microscopic ----------\nRF.v9Vigilance=function(speaker,passer){let job=(speaker.job||'').toLowerCase(),v=passer?44:52;if(/guard|warden|ranger|mercenary|sellsword|captain|watch|locksmith/.test(job))v+=24;if(/merchant|trader|guildmaster|apothecary/.test(job))v+=12;if(/farmer|fisher|innkeeper|miner/.test(job))v-=6;return Math.max(28,Math.min(92,v))};\nRF.startPickpocket=function(id,passer=false){let s=RF.state;if(s.combat||s.activity)return;let speaker=passer?RF.passersHere(s).find(x=>x.id===id):RF.DATA.npcs[id];if(!speaker)return;let resume=s.speed;s.speed=0,vig=RF.v9Vigilance(speaker,passer),skill=s.skills.thieving.level||1,width=Math.max(9,Math.min(27,24-vig*.105+skill*.22)),target=7+Math.random()*(86-width);RF.actionGame={type:'pickpocket',id,passer,speaker:{name:speaker.name,icon:speaker.icon||'🧑',job:speaker.job||'Traveller'},target,width,attention:Math.random()*100,velocity:(Math.random()*18+14)*(Math.random()<.5?-1:1),wanderTarget:Math.random()*100,vigilance:vig,resumeSpeed:resume,message:'Watch their attention. Lift only while the marker is inside the green window.'};RF.UI.modal={type:'v7Action'};RF.UI.render(s);RF.v9StartPickTicker()};\nRF.v9StartPickTicker=function(){RF.v9StopPick();let last=performance.now(),retarget=0;RF.V9.pickTimer=setInterval(()=>{let g=RF.actionGame;if(!g||g.type!=='pickpocket'){RF.v9StopPick();return}let now=performance.now(),dt=Math.min(.08,(now-last)/1000);last=now;retarget-=dt;if(retarget<=0){g.wanderTarget=Math.random()*100;retarget=.35+Math.random()*.85}let desired=Math.sign(g.wanderTarget-g.attention)*(16+g.vigilance*.18);g.velocity+=(desired-g.velocity)*Math.min(1,dt*2)+(Math.random()-.5)*35*dt;let cap=34+g.vigilance*.28;g.velocity=Math.max(-cap,Math.min(cap,g.velocity));g.attention+=g.velocity*dt;if(g.attention<0){g.attention=0;g.velocity=Math.abs(g.velocity)}if(g.attention>100){g.attention=100;g.velocity=-Math.abs(g.velocity)}let el=document.querySelector('.v9AttentionNeedle');if(el)el.style.left=`${g.attention}%`;},40)};\nRF.liftPurse=function(){let s=RF.state,g=RF.actionGame;if(!g||g.type!=='pickpocket')return;RF.v9StopPick();let pos=g.attention,dist=pos<g.target?g.target-pos:pos>g.target+g.width?pos-(g.target+g.width):0,inside=dist===0,skill=s.skills.thieving.level||1,before=RF.activitySnapshot(s);if(inside){let gold=5+Math.floor(Math.random()*(10+skill*2));s.gold+=gold;RF.addXp(s,'thieving',18+skill);s.stats.pickpockets++;if(Math.random()<.14)RF.addItem(s,['bread','lockpick','honey_cake','traveller_token'][Math.floor(Math.random()*4)],1);g.message=`Clean lift. ${gold}g taken.`}else{let bounty=Math.max(10,12+Math.round(Math.min(32,dist*.6)));s.crime=s.crime||{bounty:0,heat:0};s.crime.bounty=(s.crime.bounty||0)+bounty;s.crime.heat=Math.min(100,(s.crime.heat||0)+20);RF.addXp(s,'thieving',5);g.message=`Caught! Bounty +${bounty}g and local heat increased.`;RF.log(s,`Pickpocket failed: bounty increased by ${bounty}g.`,'bad');if(!g.passer&&RF.changeRelation)RF.changeRelation(s,g.id,-3)}RF.advanceWorld(2);s.speed=g.resumeSpeed??1;RF.actionGame=null;RF.save(s);RF.UI.modal=RF.makeResult(s,before,inside?'Clean Lift':'Pickpocket Failed',inside?'🪙':'🚨')||{type:'message',title:inside?'Clean Lift':'Caught',text:g.message};RF.UI.render(s)};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-systems.crime-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.crime/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

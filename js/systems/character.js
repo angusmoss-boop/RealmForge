@@ -58,3 +58,26 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Character. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Character;if(!api)throw new Error('Character canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v10_2-character-skills-grid":"// ---------- Character-tab skills grid ----------\nconst v102CharBase=RF.UI.character.bind(RF.UI);\nRF.UI.character=function(s){\n  let h=v102CharBase(s);\n  let tiles=Object.entries(RF.DATA.skills).map(([id,d])=>{let sk=s.skills[id]||{level:1,xp:0};return `<button class=\"v102SkillTile\" data-skill-detail=\"${id}\"><span class=\"v102SkillIcon\">${d.icon||'✨'}</span><span class=\"v102SkillName\">${d.name}</span><span class=\"v102SkillLv\">${sk.level}</span></button>`}).join('');\n  return h+`<section class=\"card\"><div class=\"questTitle\"><h3>📊 Skills</h3><span class=\"tiny\">Tap for XP details</span></div><div class=\"v102SkillGrid\">${tiles}</div></section>`\n};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-systems.character-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.character/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

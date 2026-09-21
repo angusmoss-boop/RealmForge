@@ -299,3 +299,26 @@
   api.installHistoricalFragment=function(name){if(fragmentSet.has(name))return false;if(Object.prototype.hasOwnProperty.call(fragmentSources,name)){run(fragmentSources[name],name,'fragment');fragmentSet.add(name);installedFragments.push(name);return true;}if(priorFragment)return priorFragment(name);throw new Error('Unknown canonical Dungeons fragment: '+name);};
   api.stageNames=()=>Object.keys(stageSources);api.fragmentNames=()=>Object.keys(fragmentSources);
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Dungeons. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Dungeons;if(!api)throw new Error('Dungeons canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v3-delve-action-bridge":"const v3Action=RF.action;RF.action=function(a){if(a==='delve')return RF.startActivity('delve',RF.state.location==='crypt'?'Descending the Forgotten Crypt':'Pushing deeper into Emberdeep',14,{dungeon:RF.state.location});return v3Action(a)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-systems.dungeons-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.dungeons/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

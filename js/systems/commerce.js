@@ -226,3 +226,26 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Commerce. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Commerce;if(!api)throw new Error('Commerce canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v3-ironridge-market-ui":"const v3Shop=RF.UI.shop.bind(RF.UI);RF.UI.shop=function(s){\n  if(s.location!=='ironridge')return v3Shop(s);\n  let stock=['bread','potion','iron_ore','coal','steel_bar','steel_sword','steel_helm','smoke_bomb'];\n  return `<section class=\"card\"><h2>Ironridge Forge Market</h2><div class=\"sub\">Hard metal, hot furnaces and northern prices. Trading, reputation and world supply still apply.</div><div class=\"list\" style=\"margin-top:10px\">${stock.map(id=>{let it=RF.DATA.items[id],price=RF.marketPrice(s,id,true);return `<div class=\"row\"><div class=\"icon\">${it.icon}</div><div class=\"meta\"><b>${it.name}</b><small>${it.desc}</small></div><span class=\"qty\">${price}g</span><button data-buy=\"${id}\" data-price=\"${price}\" ${s.gold>=price?'':'disabled'}>Buy</button></div>`}).join('')}</div></section><section class=\"card\"><h3>Sell to the Forges</h3><div class=\"list\">${Object.entries(s.inventory).filter(([id])=>RF.DATA.items[id]?.value>0).map(([id,q])=>{let it=RF.DATA.items[id],price=RF.marketPrice(s,id,false);return `<div class=\"row\"><div class=\"icon\">${it.icon}</div><div class=\"meta\"><b>${it.name}</b><small>Owned: ${q}</small></div><span class=\"qty\">${price}g</span><button data-sell=\"${id}\" data-price=\"${price}\">Sell 1</button></div>`}).join('')}</div></section>`;\n};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-systems.commerce-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.commerce/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

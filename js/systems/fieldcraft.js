@@ -25,3 +25,26 @@
   const api={installHistoricalStage,installHistoricalFragment,installedStages,installedFragments,ownsStage:name=>Object.prototype.hasOwnProperty.call(stageSources,name),ownsFragment:name=>Object.prototype.hasOwnProperty.call(fragmentSources,name),stageNames:()=>Object.keys(stageSources),fragmentNames:()=>Object.keys(fragmentSources)};
   RF.Systems.Fieldcraft=RF.Modules.register('systems.fieldcraft',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(stageSources).length,historicalFragmentCount:Object.keys(fragmentSources).length,extractedIn:'11.15.0',propertySplitIn:'11.16.0'});
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Fieldcraft. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Fieldcraft;if(!api)throw new Error('Fieldcraft canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v10_2-campfire-duration":"// ---------- Longer campfires at the faster world cadence ----------\nRF.lightFire=function(logType){\n  const s=RF.state;if(!RF.canCamp(s))return;if((s.inventory[logType]||0)<1)return;\n  RF.takeItem(s,logType,1);\n  const quality=logType==='yew_logs'?3:logType==='willow_logs'?2:1;\n  const base=45+quality*20;\n  const duration=Math.round(base*RF.V102.campDurationScale);\n  s.camp={location:s.location,expiresAt:RF.totalMinutes(s)+duration,quality};\n  const xp=18+quality*12;RF.addXp(s,'firemaking',xp);s.stats.firesLit++;\n  RF.log(s,`You light a campfire. It should last about ${duration} game minutes.`,'good');\n  RF.UI.modal={type:'activityResult',title:'Campfire Lit',icon:'🔥',gains:[{icon:'🔥',label:`+${xp} Firemaking XP`},{icon:'⏳',label:`Burn time: ${duration} game min`}]};\n  RF.save(s);RF.UI.render(s)\n};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-systems.fieldcraft-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.fieldcraft/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
