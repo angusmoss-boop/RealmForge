@@ -1,5 +1,5 @@
-version=11.27.0
-title=Canonical Runtime Residuals & Migration Bridges
-built=2026-09-19T23:55:00+01:00
-build_id=20260919-v1127-runtime-bridges
-notes=Split Vault, decision reliability, campaign-state/list bridges, repaired V10.1 gathering/pickpocket paths, V10 modal shell, V10.2 residuals and clean V3 runtime bridges now execute from canonical owners. Save schema remains 11.5.3.
+version=11.28.0
+title=Scoped Residual Execution & Final Migration Bridges
+built=2026-09-21T09:20:00+01:00
+build_id=20260921-v1128-scoped-residuals
+notes=Historical migration definitions now live under core.migrations; V8 cadence/travel/presentation bridges are split into canonical owners; V10.13/V10.14 UI stages moved to Presentation/Inventory; scope-sensitive V10.7 executes from a dedicated scoped historical capsule. Save schema remains 11.5.3.

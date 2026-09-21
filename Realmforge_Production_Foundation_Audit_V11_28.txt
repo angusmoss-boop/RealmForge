@@ -1,0 +1,66 @@
+REALMFORGE V11.28.0 - PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.27.0 Canonical Runtime Residuals & Migration Bridges
+Target: V11.28.0 Scoped Residual Execution & Final Migration Bridges
+Save schema: 11.5.3 (unchanged)
+Production Foundation phase: 21
+
+AUDIT TARGET
+Classify the remaining compatibility runtime by execution semantics, especially code whose behavior depends on lexical scope or captured historical bases. Move migration definitions and clean V8/V10.13/V10.14 ownership without rewriting behavior.
+
+AUDIT FINDING
+The largest remaining obstacle was no longer ordinary domain ownership. V10.7 is internally coherent but captures IIFE-local bases. Moving only its individual wrappers to ordinary canonical fragments would change which functions those closures reference. V8 mixed several domains but contained multiple exact slices with safe canonical owners. Historical migration function bodies were also still physically defined inside compatibility even though Core migrations was already the canonical migration subsystem.
+
+SAFE TRANSFERS
+- Core Migrations: historical definitions V3, V4, V7, V8, V8.3, V9, V9.1, V9.2, V9.3, V10 and V10.2.
+- Core Scoped Runtime: whole V10.7 stage, executed as an exact classic-script capsule at its original boundary.
+- Cadence: V8 runtime configuration and action/combat cooldown coordinator.
+- World Events: V8 road interruptions.
+- Travel: V8 journey activity-card bridge.
+- Presentation: V8 cooldown UI, V8 touch/render bridge and whole V10.13 stable-world-icons stage.
+- Time/Energy: V8 speed rebinding bridge.
+- Inventory: whole V10.14 Greenvale Bank section stage.
+
+TRANSFER VOLUME
+23,162 characters of exact historical implementation across 21 transfers.
+
+COMPATIBILITY RUNTIME
+V11.27: 84,320 bytes
+V11.28: 64,639 bytes
+Reduction: 19,681 bytes (23.34%)
+Active compatibility sha256: 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e
+
+DELIBERATELY RETAINED
+- V3 combined Delve + Prospector finishActivity wrapper.
+- Cross-domain V4/V7 state initialization and composition residue.
+- Remaining chronology glue and mixed wrappers where assigning one canonical owner would be misleading or would change captured execution order.
+
+SAVE COMPATIBILITY
+No persistent state migration was added. Save schema remains 11.5.3. Existing Equipment, identical Ring I/Ring II, populated Tool Belt, Pack/Bank, deliberate Pack overflow, skills/XP, research, quests, markets, dungeon state, crime/cooldowns, exploration/resources, property/buffs, Collection, Energy, active travel and active combat remain covered by V11.28 fixtures.
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM modalHTML warning occurs once in both V11.27 reference and V11.28 candidate fake-browser runs. Its text and cause are unchanged. This is a Node harness limitation, not a browser regression.
+
+VALIDATION
+- JavaScript syntax: 372/372 PASS.
+- Executable Node regression harnesses: 65/65 PASS.
+- Runtime contract: PASS.
+- V11.27 -> V11.28 parity: 71/71 PASS.
+- Advanced save compatibility: 72/72 PASS.
+- Scoped Residuals targeted suite: 47/47 PASS.
+- Active runtime / service-worker references: 9/9 PASS.
+- Production bundle reproduction: 4/4 byte-for-byte PASS.
+
+FINAL PACKAGING / INCREMENTAL UPDATE VALIDATION
+- GitHub delta from V11.27.0: 31 changed/new files, 0 deletions.
+- Fresh V11.27.0 Full Current Source + only V11.28 update pack: PASS.
+- Reconstructed runtime contract: PASS.
+- Reconstructed V11.27 -> V11.28 parity: 71/71 PASS.
+- Reconstructed advanced save compatibility: 72/72 PASS.
+- Reconstructed Scoped Residuals suite: 47/47 PASS.
+- Reconstructed executable Node harnesses: 65/65 PASS.
+- Reconstructed JavaScript syntax: 372/372 PASS.
+- Reconstructed active runtime / service-worker references: 9/9 PASS.
+- Reconstructed production bundle provenance: 4/4 byte-for-byte PASS.
+- All 31 update payload files matched the V11.28 source tree byte-for-byte.
+- Final update/source ZIP integrity: PASS.

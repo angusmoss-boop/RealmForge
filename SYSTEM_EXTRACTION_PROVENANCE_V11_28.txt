@@ -1,0 +1,120 @@
+REALMFORGE V11.28.0 - SYSTEM EXTRACTION PROVENANCE
+
+All entries below are exact historical source bodies moved from the active V11.27 compatibility runtime into canonical/support owners. Historical trigger order remains in the compatibility chronology.
+
+- v3
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 884
+  source-body sha256: 514713acc92452989b9314a0199034d9bed1dd21145e72022ab05144696fcb57
+- v4
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 1,188
+  source-body sha256: a5c4cc508e14d12160fa6d06f28818cedafbb839507a834156251c5d08582a51
+- v7
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 648
+  source-body sha256: 131fd37a5dbbd8f199531741f2f082cfed998b33a2df1b44565e6bd1c65b641d
+- v8
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 470
+  source-body sha256: 135cfc96a22679cf00744b29784217e6197229900c9415ad1a405b2bdf46f037
+- v8_3
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 177
+  source-body sha256: 543dbe5eb68e41b0ec218863d7ba4686c28377d3b382ab43a6c31e74be8e9d45
+- v9
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 223
+  source-body sha256: a334caf3eb7918da04189fd3d7597545a15128237eec23014160554d2cf00a7b
+- v9_1
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 233
+  source-body sha256: 47eef20ca1c1b4b2a27aa490b19576e4e1af89ac670576efee09230f33116069
+- v9_2
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 297
+  source-body sha256: 04997f150c359a3cc2857eb246acf77a5604fea6e0fe3121148263d91b8157b6
+- v9_3
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 415
+  source-body sha256: 6bd63521109f22ef397952564a4ab97eecbb045e4687d3a7289be37a8b8e67d8
+- v10
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 315
+  source-body sha256: b630fb9c62a2ea6380739c4098936e3849a106f0879869a55e77889b62fd2b05
+- v10_2
+  owner: core.migrations
+  readable source: js/core/migrations.js
+  exact source chars: 92
+  source-body sha256: 0dee2e220b2d65d992298ea5b85bb795ba0ec503ff4780b9f67230d3c3704a1d
+- js/v10_7.js
+  owner: core.scopedRuntime
+  readable source: js/core/scoped_runtime.js
+  exact source chars: 6,314
+  source-body sha256: 8a23b1ce0dbcd2c640104bf2ecbf56767fcf5d504c84de1f4f5dae191449113f
+- v8-runtime-config
+  owner: systems.cadence
+  readable source: js/systems/cadence.js
+  exact source chars: 184
+  source-body sha256: a56fc3ab695b6e3d37c86244a839b1688941cf88f4f3a53f953db07a1f083e29
+- v8-action-cadence
+  owner: systems.cadence
+  readable source: js/systems/cadence.js
+  exact source chars: 2,301
+  source-body sha256: b8b99d1b156fd9d5ba54188614bd960afd7d1e4eba4abbacbb45ecfab2d7b949
+- v8-road-interruptions
+  owner: systems.worldEvents
+  readable source: js/systems/world_events.js
+  exact source chars: 1,641
+  source-body sha256: 3c0e94ad27669dc47a372860f28730c8ad359908524b311dc1136e018646cf00
+- v8-travel-activity-ui
+  owner: systems.travel
+  readable source: js/systems/travel.js
+  exact source chars: 925
+  source-body sha256: 1f96eedbcdb11d767195f0f692372e1852bb067a5f19fe052c845616ce809f67
+- js/v10_13.js
+  owner: ui.presentation
+  readable source: js/ui/presentation.js
+  exact source chars: 2,137
+  source-body sha256: 9c6b2e296e43ac80cc7f42d159edd6c3a079f5e4cc129dc5fed23e0a9466f7f9
+- v8-cooldown-ui
+  owner: ui.presentation
+  readable source: js/ui/presentation.js
+  exact source chars: 1,543
+  source-body sha256: 7656edfd30ca253421392d82a60994480c77c49c185d2b81316fa5821cace341
+- v8-touch-render
+  owner: ui.presentation
+  readable source: js/ui/presentation.js
+  exact source chars: 325
+  source-body sha256: 2d00e8249bd7f3fb27de56ff485070766ae29823270c782b04ba3ef9ab545246
+- v8-speed-rebind
+  owner: systems.timeEnergy
+  readable source: js/systems/time_energy.js
+  exact source chars: 269
+  source-body sha256: 32fe6eb3fe7a3c8323c9f85bf6338f4363b96a0e08a56d2a26c25e880948bea1
+- js/v10_14.js
+  owner: systems.inventory
+  readable source: js/systems/inventory.js
+  exact source chars: 2,581
+  source-body sha256: bd04dbd1027c13e1773ae5dcf5b20d29575df43f5cd440a6466a37bd9d637795
+
+TOTAL
+- Transfers: 21
+- Exact historical source characters: 23,162
+- Compatibility bytes: 84,320 -> 64,639 (19,681 removed, 23.34%)
+
+SCOPE-PRESERVATION NOTE
+V10.7 is intentionally owned as a complete scoped historical stage. Its internal captured bases are part of its behavior. This extraction preserves that scope rather than decomposing it into ordinary fragments.
+
+MIGRATION NOTE
+Migration function definitions now live in core.migrations, but historical compatibility markers still install/invoke them at the same boundaries. Save schema remains 11.5.3.
