@@ -27,3 +27,26 @@
   const api=Object.assign({installHistoricalStage,installHistoricalFragment,installedStages,installedFragments,stageNames:()=>Object.keys(stageSources),fragmentNames:()=>Object.keys(fragmentSources)},{scene:s=>RF.V1039?.scene?.(s), daypart:h=>RF.V1039?.daypart?.(h), theme:id=>RF.V1039?.theme?.[id]});
   RF.Views.Presentation=RF.Modules.register('ui.presentation',api,{owner:'ui',status:'canonical',historicalStageCount:Object.keys(stageSources).length,historicalFragmentCount:Object.keys(fragmentSources).length,extractedIn:'11.18.0'});
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Presentation. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Views.Presentation;if(!api)throw new Error('Presentation canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v10_11-layout-style":"(()=>{\n  if(document.getElementById('v1011-style'))return;\n  const st=document.createElement('style');st.id='v1011-style';st.textContent=`\n  /* Consistent action-card geometry */\n  .card>.grid2{align-items:stretch}\n  .card>.grid2>.action{box-sizing:border-box;min-height:92px;height:100%;display:grid;grid-template-columns:42px minmax(0,1fr);grid-template-rows:auto auto;column-gap:9px;row-gap:2px;align-content:center;align-items:center;padding:12px 11px}\n  .card>.grid2>.action .emoji{grid-column:1;grid-row:1/3;float:none!important;margin:0!important;text-align:center;font-size:24px;line-height:1}\n  .card>.grid2>.action b{grid-column:2;grid-row:1;font-size:13px;line-height:1.2}\n  .card>.grid2>.action small{grid-column:2;grid-row:2;margin-top:0;line-height:1.25}\n  .card>.grid2>.action:not(:has(.emoji)){grid-template-columns:minmax(0,1fr)}\n  .card>.grid2>.action:not(:has(.emoji)) b,.card>.grid2>.action:not(:has(.emoji)) small{grid-column:1}\n  @media(max-width:420px){.card>.grid2>.action{min-height:88px;grid-template-columns:38px minmax(0,1fr);padding:10px 9px}.card>.grid2>.action .emoji{font-size:22px}}\n\n  /* Traveller faces forward while retaining the light walking bob. */\n  .roadWalker{animation:v1011walk .6s ease-in-out infinite alternate!important;transform-origin:center}\n  @keyframes v1011walk{from{transform:scaleX(-1) translateY(0)}to{transform:scaleX(-1) translateY(-3px) rotate(-2deg)}}\n  `;document.head.appendChild(st);\n})();\n\n","v10_2-skills-crime-style":"(()=>{const st=document.createElement('style');st.textContent=`\n.v102SkillGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}\n.v102SkillTile{border:1px solid #493d2f;background:#191611;color:#eadfc5;border-radius:12px;padding:9px 6px;min-height:70px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}\n.v102SkillTile:active{transform:scale(.985)}\n.v102SkillIcon{font-size:21px;line-height:1}.v102SkillName{font-size:11px;color:#b7aa94;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}.v102SkillLv{font-size:17px;color:#f0d398;font-weight:800}\n.v102CrimeTotal{margin-top:12px;border:1px solid #704236;background:#241513;border-radius:14px;padding:12px;text-align:center}.v102CrimeTotal span{display:block;color:#b99b91;font-size:12px}.v102CrimeTotal b{display:block;color:#f0a58f;font-size:24px;margin-top:2px}\n`;document.head.appendChild(st)})();\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-ui.presentation-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///ui.presentation/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

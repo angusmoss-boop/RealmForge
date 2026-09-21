@@ -59,3 +59,26 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+/* Realmforge V11.27.0 historical residual extension: Item Browser. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Views.ItemBrowser;if(!api)throw new Error('Item Browser canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v10_11-category-ordering":"// ---------- Category-first visual ordering ----------\nRF.V1011.categoryOrder={weapon:0,armor:1,food:2,material:3,tool:4,treasure:5,other:6};\nRF.V1011.itemSortKey=function(id){\n  const it=RF.DATA.items?.[id];if(!it)return [99,'zzz'];\n  const cat=RF.v92Category?RF.v92Category(it):(it.slot==='main'?'weapon':it.slot?'armor':it.tool?'tool':it.type||'other');\n  return [RF.V1011.categoryOrder[cat]??98,String(it.name||id).toLowerCase()];\n};\nRF.V1011.compareItemIds=function(a,b){let A=RF.V1011.itemSortKey(a),B=RF.V1011.itemSortKey(b);return A[0]-B[0]||A[1].localeCompare(B[1])};\nRF.V1011.idFromRow=function(el){\n  if(!el)return null;\n  if(el.dataset?.itemDetail)return el.dataset.itemDetail;\n  if(el.dataset?.shopDetail)return el.dataset.shopDetail;\n  if(el.dataset?.bankDeposit)return el.dataset.bankDeposit;\n  if(el.dataset?.bankDepositAll)return el.dataset.bankDepositAll;\n  if(el.dataset?.bankWithdraw)return el.dataset.bankWithdraw;\n  if(el.dataset?.bankWithdrawAll)return el.dataset.bankWithdrawAll;\n  if(el.dataset?.recipeDetail){const r=RF.DATA.recipes?.[el.dataset.recipeDetail];return Object.keys(r?.outputs||{})[0]||el.dataset.recipeDetail;}\n  const btn=el.querySelector?.('[data-bank-deposit],[data-bank-deposit-all],[data-bank-withdraw],[data-bank-withdraw-all]');\n  if(btn)return btn.dataset.bankDeposit||btn.dataset.bankDepositAll||btn.dataset.bankWithdraw||btn.dataset.bankWithdrawAll;\n  return null;\n};\nRF.V1011.sortContainer=function(container){\n  if(!container)return;\n  const kids=[...container.children].filter(x=>RF.V1011.idFromRow(x));\n  if(kids.length<2)return;\n  kids.sort((a,b)=>RF.V1011.compareItemIds(RF.V1011.idFromRow(a),RF.V1011.idFromRow(b)));\n  kids.forEach(x=>container.appendChild(x));\n};\nRF.V1011.organizeLists=function(){\n  // Pack and ordinary browse lists.\n  document.querySelectorAll('.inventoryList,.v1010BankScroll').forEach(RF.V1011.sortContainer);\n  // Shop/crafting list blocks: only reorder rows that carry an item/recipe id.\n  document.querySelectorAll('.list').forEach(list=>{\n    const candidates=[...list.children].filter(x=>x.matches?.('[data-shop-detail],[data-recipe-detail]'));\n    if(candidates.length<2)return;\n    candidates.sort((a,b)=>RF.V1011.compareItemIds(RF.V1011.idFromRow(a),RF.V1011.idFromRow(b)));\n    candidates.forEach(x=>list.appendChild(x));\n  });\n};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-ui.itemBrowser-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///ui.itemBrowser/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

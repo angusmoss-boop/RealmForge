@@ -29,3 +29,26 @@
   };
   RF.Views.AppShell=RF.Modules.register('ui.appShell',api,{owner:'ui',status:'canonical',historicalStageCount:1,historicalFragmentCount:1,extractedIn:'11.19.0'});
 })();
+
+/* Realmforge V11.27.0 historical residual extension: App Shell. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Views.AppShell;if(!api)throw new Error('App Shell canonical owner missing before V11.27 residual extension.');
+  const extraSources={"v10_11-campaign-state-guard":"// ---------- Campaign-state guard ----------\n// Keep an in-memory reference to the last valid live state. A stray render(null/undefined)\n// from post-combat/event cleanup should never be interpreted as character creation.\nconst v1011RenderBase=RF.UI.render.bind(RF.UI);\nRF.UI.render=function(s){\n  if(s){RF.V1011.lastState=s;RF.V1011.allowCreator=false;}\n  if(!s&&RF.state){s=RF.state;}\n  if(!s&&!RF.state&&RF.V1011.lastState&&!RF.V1011.allowCreator&&!(RF.V101?.mainMenu)){\n    RF.state=RF.V1011.lastState;s=RF.state;\n    try{RF.save?.(s)}catch(_){}\n  }\n  const out=v1011RenderBase(s);\n  requestAnimationFrame(()=>RF.V1011.organizeLists());\n  return out;\n};\n\n// Mark only deliberate new-campaign flows as allowed to reach the creator.\nif(RF.V95?.doConfirm){\n  const v1011ConfirmBase=RF.V95.doConfirm.bind(RF.V95);\n  RF.V95.doConfirm=function(m){if(m?.action==='new')RF.V1011.allowCreator=true;return v1011ConfirmBase(m)};\n}\ndocument.addEventListener('click',e=>{\n  const el=e.target?.closest?.('[data-v101-new]');\n  if(el)RF.V1011.allowCreator=true;\n},true);\nconst v1011StartNewBase=RF.startNew;\nif(typeof v1011StartNewBase==='function')RF.startNew=function(...a){RF.V1011.allowCreator=false;const r=v1011StartNewBase.apply(this,a);if(RF.state)RF.V1011.lastState=RF.state;return r};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;
+    const source=extraSources[name];
+    if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';
+    script.setAttribute('data-rf-canonical-ui.appShell-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///ui.appShell/fragment/'+name+'\n';
+    (document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
