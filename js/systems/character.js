@@ -38,3 +38,23 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+
+/* Realmforge V11.26.0 historical fragment extension: Character. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Character;if(!api)throw new Error('Character canonical owner missing before V11.26 fragment extension.');
+  const extraSources={"v4-character-shell-ui":"const v4CharBase=RF.UI.character.bind(RF.UI);RF.UI.character=function(s){let h=v4CharBase(s);let comp=s.companion?`<section class=\"card\"><h3>Companion</h3><div class=\"row\"><div class=\"icon\">${RF.DATA.npcs[s.companion.id]?.icon||'🧭'}</div><div class=\"meta\"><b>${RF.DATA.npcs[s.companion.id]?.name}</b><small>Level ${s.companion.level} • Bond ${s.companion.bond}<br>May assist during tactical battles.</small></div></div></section>`:'';let spec=s.specialization?`<section class=\"card\"><h3>Combat Specialisation</h3><div class=\"sub\">${s.specialization==='duelist'?'⚔️ Duelist • +8% critical chance':s.specialization==='warden'?'🛡️ Warden • stronger Guard mitigation':'✨ Arcanist • +18% magic damage'}</div></section>`:s.player.level>=10?`<section class=\"card\"><h3>Choose a Combat Specialisation</h3><div class=\"sub\">A permanent emphasis, not a class lock. All skills remain trainable.</div><div class=\"grid2\" style=\"margin-top:8px\"><button class=\"action\" data-spec=\"duelist\"><b>⚔️ Duelist</b><small>+8% critical chance</small></button><button class=\"action\" data-spec=\"warden\"><b>🛡️ Warden</b><small>Guard reduces more damage</small></button><button class=\"action\" data-spec=\"arcanist\"><b>✨ Arcanist</b><small>+18% magic damage</small></button></div></section>`:'';let home=s.home?.owned?`<section class=\"card\"><h3>🏠 Greenvale Cottage</h3><div class=\"sub\">Owned • Well Rested victories remaining: ${s.home.wellRestedBattles||0}</div></section>`:'';return h+comp+spec+home+this.collectionPanel(s)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-character-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.character/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

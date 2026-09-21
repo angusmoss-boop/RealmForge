@@ -23,3 +23,23 @@
   const api=Object.assign({installHistoricalStage,installHistoricalFragment,installedStages,installedFragments,ownsStage:name=>Object.prototype.hasOwnProperty.call(stageSources,name),ownsFragment:name=>Object.prototype.hasOwnProperty.call(fragmentSources,name),stageNames:()=>Object.keys(stageSources),fragmentNames:()=>Object.keys(fragmentSources)},{buyHome:()=>RF.buyHome?.(),restAtHome:()=>RF.restAtHome?.(),innHere:s=>!!RF.v10InnHere?.(s),restAtInn:hour=>RF.v10RestUntil?.(hour),homeAvailable:s=>!!RF.V1024?.homeAvailable?.(s),homePanel:s=>RF.V1024?.homePanel?.(s)||'',startHomeCooking:id=>RF.V1024?.startHomeCook?.(id),recipeNeeds:r=>RF.V1024?.recipeNeeds?.(r)||{},hasIngredients:(s,r,source='home')=>RF.V1024?.hasIngredients?.(s,r,source),wellRestedBattles:s=>s?.home?.wellRestedBattles||0});
   RF.Systems.Property=RF.Modules.register('systems.property',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(stageSources).length,historicalFragmentCount:Object.keys(fragmentSources).length,extractedIn:'11.16.0',includesHistoricalV1024:true});
 })();
+
+
+/* Realmforge V11.26.0 historical fragment extension: Property. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Property;if(!api)throw new Error('Property canonical owner missing before V11.26 fragment extension.');
+  const extraSources={"v4-buy-home":"RF.buyHome=function(){let s=RF.state;if(s.location!=='greenvale'||s.home.owned||s.gold<450)return;s.gold-=450;s.home.owned=true;s.home.level=1;RF.log(s,'You purchase a small cottage on Greenvale’s western lane. A permanent bed, a stubborn fireplace, and a door that locks.','important');RF.save(s);RF.UI.render(s)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-property-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.property/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
