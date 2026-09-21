@@ -1,0 +1,62 @@
+REALMFORGE V11.27.0 - SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.26.0
+Save schema: 11.5.3 (unchanged)
+
+INVENTORY
+- v10_9-split-vault - 7,310 chars
+
+WORLD ACTIONS
+- v10_21-decision-reliability - 6,881 chars
+- v3-perk-crime-bind-bridge - 356 chars
+
+PRESENTATION
+- v10_11-layout-style - 1,454 chars
+- v10_2-skills-crime-style - 957 chars
+
+APP SHELL
+- v10_11-campaign-state-guard - 1,285 chars
+
+ITEM BROWSER
+- v10_11-category-ordering - 2,322 chars
+
+GATHERING
+- v10_1-repaired-gathering - 2,128 chars
+
+CRIME
+- v10_1-pickpocket-repair - 3,272 chars
+
+OVERLAYS
+- v10-modal-style - 409 chars
+- v10-milestone-modal-renderer - 3,631 chars
+- v10-modal-bindings - 451 chars
+
+FIELDCRAFT
+- v10_2-campfire-duration - 813 chars
+
+CHARACTER
+- v10_2-character-skills-grid - 653 chars
+
+DUNGEONS
+- v3-delve-action-bridge - 240 chars
+
+COMMERCE
+- v3-ironridge-market-ui - 1,269 chars
+
+TOTAL EXACT SOURCE TRANSFERRED
+33,431 characters
+
+METHOD
+- Every body was cut from the active transformed V11.26 compatibility runtime.
+- Bodies are stored verbatim in the canonical owner.
+- Compatibility retains guarded installer calls at the original historical positions.
+- No extracted source body was semantically rewritten.
+- V8, V10.7 and the V3 Delve/Prospector completion wrapper remain because exact transfer is not yet ownership-safe.
+
+COMPATIBILITY RESULT
+V11.26: 114,791 bytes
+V11.27: 84,320 bytes
+Reduction: 30,471 bytes (26.54%)
+
+ACTIVE COMPATIBILITY SHA-256
+71f0e1907ea35927c95a98a1850cc7e8de1127acb86cd1926b0f80b215e09a54

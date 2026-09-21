@@ -1,10 +1,10 @@
-const CACHE='realmforge-v11-26-0';
+const CACHE='realmforge-v11-27-0';
 const FILES=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './js/data/base_content.js','./js/legacy/base/state.js','./js/legacy/base/ui.js',
-  './js/dist/save_core_v11_26.js','./js/dist/data_core_v11_26.js',
-  './js/legacy/base/main.js','./js/dist/systems_core_v11_26.js','./js/legacy/compat_gameplay_combat_collection_trimmed_v1153.js',
-  './js/dist/canonical_v11_26.js','./version.txt'
+  './js/dist/save_core_v11_27.js','./js/dist/data_core_v11_27.js',
+  './js/legacy/base/main.js','./js/dist/systems_core_v11_27.js','./js/legacy/compat_gameplay_runtime_residuals_trimmed_v1153.js',
+  './js/dist/canonical_v11_27.js','./version.txt'
 ];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));

@@ -1,0 +1,73 @@
+REALMFORGE V11.27.0 - PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.26.0 Canonical V4 Combat & Collection Foundations
+Target: V11.27.0 Canonical Runtime Residuals & Migration Bridges
+Save schema: 11.5.3 (unchanged)
+
+AUDIT TARGET
+Remove small coherent runtime bridges that no longer justify residence in compatibility, while retaining mixed migration/ticker/wrapper stages whose extraction would alter lexical scope or cross-domain behavior.
+
+AUDIT FINDING
+The residual compatibility layer contained several whole-stage or sharply bounded bridges with already-established canonical owners. V10.9 Split Vault and V10.21 Decision Reliability were complete coherent stages. V10.11, V10.1, V10, V10.2 and V3 each contained exact source slices that could be moved without changing their historical trigger position.
+
+SAFE TRANSFERS
+- Inventory: V10.9 Split Vault.
+- World Actions: V10.21 Decision Reliability; V3 perk/crime binding bridge.
+- Presentation: V10.11 layout style; V10.2 skills/crime style.
+- App Shell: V10.11 campaign-state guard.
+- Item Browser: V10.11 category ordering.
+- Gathering: V10.1 repaired active gathering.
+- Crime: V10.1 repaired pickpocketing.
+- Overlays: V10 modal styling, milestone renderer and bindings.
+- Fieldcraft: V10.2 campfire duration.
+- Character: V10.2 Character skills grid.
+- Commerce: V3 Ironridge market UI.
+- Dungeons: V3 Delve action starter.
+
+DELIBERATELY RETAINED
+- V8 mixed cadence/travel/action runtime.
+- V10.7 IIFE-scoped wrappers and captured bases.
+- V3 mixed Delve/Prospector finishActivity wrapper.
+- V4/V7 cross-domain migration and state normalizers.
+
+TOTAL EXACT HISTORICAL SOURCE TRANSFERRED
+33,431 characters across 16 fragments.
+
+COMPATIBILITY RUNTIME SIZE
+V11.26: 114,791 bytes
+V11.27: 84,320 bytes
+Reduction: 30,471 bytes (26.54%)
+
+SAVE COMPATIBILITY
+Save schema remains 11.5.3. No persistent migration was added. Existing Equipment, identical Ring I/Ring II, populated Tool Belt, Pack/Bank, deliberate Pack overflow, skills/XP, research, quests, markets, dungeon records, crime/cooldowns, exploration/resources, property/buffs, Collection state, Energy, active travel and active combat remain covered by the V11.27 advanced fixtures.
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM `modalHTML` warning still occurs once in both baseline and candidate fake-browser runs. In V11.26 its source URL is the embedded V10.9 patch; in V11.27 it is the canonical Inventory fragment. The error text and cause are unchanged and this remains a Node harness artifact rather than a browser regression.
+
+VALIDATION COUNTS
+- JavaScript files checked with node --check: 359
+- Syntax failures: 0
+- Executable Node regression harnesses: 61
+- Harness failures: 0
+- V11.27 runtime contract: PASS
+- V11.26 -> V11.27 parity: 66/66 PASS
+- Runtime Residuals targeted suite: 20/20 PASS
+- Advanced/active-state save compatibility: 69/69 PASS
+- Active runtime/service-worker references: 9/9 PASS
+- Production bundles reproduced byte-for-byte: 4/4 PASS
+
+ACTIVE COMPATIBILITY SHA-256
+71f0e1907ea35927c95a98a1850cc7e8de1127acb86cd1926b0f80b215e09a54
+
+FINAL PACKAGING / INCREMENTAL UPDATE VALIDATION
+- GitHub delta from V11.26.0: 35 changed/new files, 0 deletions.
+- Fresh V11.26.0 Full Current Source + only V11.27 update pack: PASS.
+- Reconstructed runtime contract: PASS.
+- Reconstructed V11.26 -> V11.27 parity: 66/66 PASS.
+- Reconstructed advanced save compatibility: 69/69 PASS.
+- Reconstructed Runtime Residuals suite: 20/20 PASS.
+- Reconstructed retained executable Node harnesses: 61/61 PASS.
+- Reconstructed JavaScript syntax validation: 359/359 PASS.
+- Reconstructed active runtime / service-worker references: 9/9 PASS.
+- Reconstructed generated bundle provenance: 4/4 byte-for-byte PASS.
+- Final update/source ZIP integrity: PASS.

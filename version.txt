@@ -1,5 +1,5 @@
-version=11.26.0
-title=Canonical V4 Combat & Collection Foundations
-built=2026-09-19T23:20:00+01:00
-build_id=20260919-v1126-combat-collection
-notes=V4 tactical combat ancestry, collection foundations, character collection shell and Greenvale home purchase now execute from canonical owners. Save schema remains 11.5.3.
+version=11.27.0
+title=Canonical Runtime Residuals & Migration Bridges
+built=2026-09-19T23:55:00+01:00
+build_id=20260919-v1127-runtime-bridges
+notes=Split Vault, decision reliability, campaign-state/list bridges, repaired V10.1 gathering/pickpocket paths, V10 modal shell, V10.2 residuals and clean V3 runtime bridges now execute from canonical owners. Save schema remains 11.5.3.

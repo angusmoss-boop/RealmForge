@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#16130f" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Realmforge V11.27.0: Wanderer's Rise - Canonical Runtime Residuals & Migration Bridges</title>
+  <title>Realmforge V11.27.0 Smoke Test</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -20,5 +19,7 @@
   <script defer src="js/dist/systems_core_v11_27.js"></script>
   <script defer src="js/legacy/compat_gameplay_runtime_residuals_trimmed_v1153.js"></script>
   <script defer src="js/dist/canonical_v11_27.js"></script>
+  <script src="tests/runtime_contract_v1127.js"></script>
+  <script>window.addEventListener('load',()=>setTimeout(()=>{document.documentElement.setAttribute('data-v1127-test',JSON.stringify(window.RF_TEST_V1127||{}));},600));</script>
 </body>
 </html>
