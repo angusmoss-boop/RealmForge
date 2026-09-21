@@ -1,5 +1,5 @@
-version=11.25.0
-title=Canonical Dungeon & World Event Foundations
-built=2026-09-19T23:25:00+01:00
-build_id=20260919-v1125-dungeon-world-events
-notes=Eightfold Dungeons, V3/V4 world-event hooks, encounter ecology and residual world-action composition now execute from canonical owners. Save schema remains 11.5.3.
+version=11.26.0
+title=Canonical V4 Combat & Collection Foundations
+built=2026-09-19T23:20:00+01:00
+build_id=20260919-v1126-combat-collection
+notes=V4 tactical combat ancestry, collection foundations, character collection shell and Greenvale home purchase now execute from canonical owners. Save schema remains 11.5.3.

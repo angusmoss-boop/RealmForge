@@ -1,0 +1,77 @@
+REALMFORGE V11.26.0 - CANONICAL BUNDLE PROVENANCE
+
+Runtime bundles are generated concatenations of readable canonical source files.
+
+save_core_v11_26.js sha256 329823040e5c2b74e690d69002062d87af3b30b97c601cf7702b079b39c6ae62
+bytes 25426
+
+data_core_v11_26.js sha256 216582d33956ef6c61c079ee2fafa9681376dfaa536ef7e5c005a4cf8e72d33b
+bytes 133342
+
+systems_core_v11_26.js sha256 24505360e62c1306f3f324fd5153c47e975e7066fc0c33c3ad8e4d3199638ba6
+bytes 1114417
+
+canonical_v11_26.js sha256 a75b0a94fa416dbfb5b67c7d05ffd787bfa2fe2136347fa1bf924077add7aa01
+bytes 22084
+
+SAVE / PLATFORM / LIFECYCLE CORE SOURCE ORDER
+- js/core/bootstrap.js | sha256 fc1bdbb3608b5e4985aa5ba1286e3983d6cd6dd13a8b4353fb4061122ff54c9c | 1,216 bytes
+- js/platform/browser.js | sha256 1ebe8b52c2e2e343ccc6e8025287bf0a765ff8b8a421a6f482744f1ace074c8e | 3,890 bytes
+- js/core/migrations.js | sha256 e4bbad3c6b9cae4b5efddb09e13e5f14f803b162fc4f01b53e28358f559bb029 | 6,074 bytes
+- js/core/storage.js | sha256 67aed73486577cb34bd67ca95b8853c35bdbf0d28f32e558621a35321b856365 | 894 bytes
+- js/core/campaigns.js | sha256 e591e106744a5e961b016a48e157125c200b97ee899a6a719367536caa2fb575 | 7,190 bytes
+- js/core/state.js | sha256 22eac05bd885d7d211395ff4291738b28aec45b9997c1736f003da612c5de60c | 2,819 bytes
+- js/core/lifecycle.js | sha256 40c2bb656e22f4dae7204ad566535c05cfab5b2a9007816c00b9c408e6c7247b | 3,343 bytes
+
+DATA CORE SOURCE ORDER
+- js/data/catalog.js | sha256 e08abe2cfec1654b8b87353425fc504293936297a9aed90cbdd459f0ad09aa2b | 2,628 bytes
+- js/data/content_blocks_v11_9.js | sha256 dee4c9e9707127f0c10557e27598f70e3df8de8fea7f1de5f0298ffd78deaf3e | 95,401 bytes
+- js/data/config_registry.js | sha256 6379439478078f7e27f44f354e3c11aa2cad7fd941fbb82d33546ea3b609cfd4 | 1,151 bytes
+- js/data/world_config_v11_10.js | sha256 42b51c6d940db80ce5d452881bd6916e6928230c8059a88456c72284f35f2926 | 34,162 bytes
+
+SYSTEMS + UI CORE SOURCE ORDER
+- js/systems/fieldcraft.js | sha256 e6d53729a14bc939869d71601404d55cb4c4a6ad50e5d1e7394346e303efad03 | 52,887 bytes
+- js/systems/world.js | sha256 ee64b5284eef949d1e3f42f5e195f3c14c65c5e370c6c7a376d0cb106a98ed46 | 20,536 bytes
+- js/systems/world_events.js | sha256 12225f9e2dc30a17ca067a7e054d9cb9666c83c27f84cfbb0ac114ec7c930aec | 4,640 bytes
+- js/systems/social.js | sha256 78e0f086a8e77b048bb6ba970640911eca6be0b9ddb6f3d94464cf3e06a20cba | 20,211 bytes
+- js/systems/character.js | sha256 9d82545136fda90c0262193274af5cd946b339b7623217a5fd0e47d35af2b8c3 | 12,422 bytes
+- js/systems/collection.js | sha256 67ff65c58b42d15c6aacbbedff9f8877d6ac9fc9f5617d3a8d42eab7cd102181 | 2,773 bytes
+- js/systems/specialist.js | sha256 dc8270e21f09156a61b0b8347be73b235f7066807e1310a9f620f6917fb19b9a | 3,668 bytes
+- js/systems/encounters.js | sha256 a9b303cd7d70af9c084485513c58a472df9795e0698678d96c610343565bbb93 | 7,046 bytes
+- js/systems/property.js | sha256 6ad04ac1741540bb88da5218a02b05a0ee0734967ef9736176764c327ae99444 | 20,498 bytes
+- js/systems/gathering.js | sha256 523cc63088765b9005373bae6f263bd66402c810e74227559b5d8b99b636b1d4 | 15,246 bytes
+- js/systems/fishing.js | sha256 29f4dd0aa786c645323884af99cbeb2dcfed9467a1d35b4d22d97a3f49586c82 | 539 bytes
+- js/systems/hunting.js | sha256 4f0dd594b34e16c18a79dd5065c9f7ad4e19d3cb895ed630a6788438630af56e | 448 bytes
+- js/systems/cooking.js | sha256 82668fef406e7d7128f6a039c342bf78fddd37903d784e0e1548037c1b691eff | 1,029 bytes
+- js/ui/app_shell.js | sha256 970de689cdebb0177e136d9d5f7cdbd8fa0918cb55c79b391f0657778ca3f73e | 14,220 bytes
+- js/ui/developer.js | sha256 035519471503942c62cb7b9732f15a37c1c7fa0706cdc1aa011e5e46ebd085c1 | 30,766 bytes
+- js/ui/database.js | sha256 00ade7f453286035c2f1cb2b022ce125cd40244c4b5a1f45ddb540e8eb0765d7 | 35,237 bytes
+- js/ui/navigation.js | sha256 996b1b7c8a1f65b708a317269d3d931d0a74e4f6f97c38c8a4388e116d1edcad | 7,376 bytes
+- js/ui/presentation.js | sha256 e394060dcb502dab77167b2bf73e3e15f631c3a78893cfdaee921cece3cd9764 | 41,789 bytes
+- js/ui/overlays.js | sha256 f3f0dbad09c896ee6916df0411caa0a9c838472741ca65c59dd8afe1bdbf1de0 | 8,394 bytes
+- js/ui/focus_clock.js | sha256 19dc3871eaec2d229a09c5cb9ef03aeca673229e98acf2a3d150b3c740639fe5 | 8,847 bytes
+- js/ui/item_browser.js | sha256 5541c2410689e547e1016493696f1e5374f1c27c238551b2f4d17315bceab01e | 36,937 bytes
+- js/ui/world_actions.js | sha256 391a4f6f506125660b8a132b38bcb0c351edf3c4b31985783a604b4d395ae4eb | 22,149 bytes
+- js/systems/time_energy.js | sha256 d042613dff89ace44694d0bfc6ccaf7f4fd08ba35691ab2bbd362311d5b50e8c | 30,101 bytes
+- js/systems/exploration.js | sha256 b4318a5da1940b880588252b676dde54bbce3b36819486c52cd58b42c6f08cd7 | 37,481 bytes
+- js/systems/locks.js | sha256 98c28129dc5eb94761b86a6193995761cd5cf16e7c721f19bb6ab12401432d3b | 59,558 bytes
+- js/systems/crime.js | sha256 3dda2b29e967b0df56d82f148bac4f656f1b53de8c7e3828d8729f62d804049f | 89,493 bytes
+- js/systems/commerce.js | sha256 a5f32a512564160af15615a096d962f26607210a8127be62b9fa90debc55ef94 | 27,562 bytes
+- js/systems/dungeons.js | sha256 b250c3f347f2a12a937e6ffacf20becf86c1a4bdf545db7d1ac852ad26c83c27 | 38,042 bytes
+- js/systems/travel.js | sha256 310d5023aafe0507e862604f975aff1504ac2c8fa77300c38a21d5bfa6cb7333 | 61,318 bytes
+- js/systems/quests.js | sha256 9124d0b239a1301b72cf73e0c6ab7a8438fcfcf0f9578b2b1bc1fe7a5a998e04 | 7,149 bytes
+- js/systems/wayfinder.js | sha256 b1477f8db5c336b46b2b8492250e66676497ede0d8dc15e43b5f21c3b462237c | 12,860 bytes
+- js/systems/inventory.js | sha256 aa01fb0483e3ee16c0a692b1953df04010b6ccaa75118c7100ff8d2d4b45412f | 92,843 bytes
+- js/systems/equipment.js | sha256 c36a26efb9b2a89f4278da08ba3ee0b19866ee1773e1d991d5631a5eaca421c5 | 74,173 bytes
+- js/systems/combat.js | sha256 143b226ef676adc44adeb5088b64d22627c232be93e1a727349923e14d895a79 | 100,760 bytes
+- js/systems/research.js | sha256 945af013edb8380a415fd398d2c73c42801456328d22ebde2617b590292a0a2a | 38,262 bytes
+- js/systems/crafting.js | sha256 54246ff64a85d3364d5b53d8a966a48d96c8bf53b9df5b3e7bcf2ac017f1f090 | 50,192 bytes
+- js/systems/skills.js | sha256 643ba16fba2c7972402d4ca2c6bb05e304d43c5022cf771c7ea0483f93b22081 | 26,965 bytes
+
+FINALISATION BUNDLE SOURCE ORDER
+- js/core/save_boot.js | sha256 1af2520a081c3bd06c5943a2f13edc531677acdd49ba08f20ed3d03b713025d8 | 805 bytes
+- js/data/finalize.js | sha256 4c8567d49dd106e919e59a0119ad7bc5fc4d74339bbc584d4feb476a5a9a23ab | 714 bytes
+- js/data/config_finalize.js | sha256 46fc9933995a2e6f3970e1ba3553b5deb04a0596344f47c373e58be25a164329 | 2,451 bytes
+- js/ui/shell.js | sha256 2911cfb8c0f3439cec0534c0e8c1c29e7d51306bb4e017ec0a01c0349d0197ca | 804 bytes
+- js/core/system_ownership_v11_26.js | sha256 d01eec97bca926ae7482e4c5cf69b0520641d0a979ec89bd082e2c00f654c181 | 15,368 bytes
+- js/core/finalize.js | sha256 71a3052467b731090db13ff954599e9e18e5849c01f19f3b8f34eaa1e4da9289 | 1,942 bytes

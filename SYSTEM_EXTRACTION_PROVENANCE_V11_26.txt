@@ -1,0 +1,45 @@
+REALMFORGE V11.26.0 - SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.25.0
+Save schema: 11.5.3 (unchanged)
+
+COMBAT
+Destination: js/systems/combat.js
+- v4-combat-move-pools - 823 chars
+- v4-tactical-combat-core - 10,234 chars
+- v4-tactical-combat-ui - 2,257 chars
+Subtotal: 13,314 chars
+
+COLLECTION
+Destination: js/systems/collection.js
+- v4-collection-item-tracking - 121 chars
+- v4-collection-ui - 1,070 chars
+Subtotal: 1,191 chars
+
+CHARACTER
+Destination: js/systems/character.js
+- v4-character-shell-ui - 1,495 chars
+Subtotal: 1,495 chars
+
+PROPERTY
+Destination: js/systems/property.js
+- v4-buy-home - 316 chars
+Subtotal: 316 chars
+
+TOTAL EXACT SOURCE TRANSFERRED
+16,316 characters
+
+METHOD
+- Every source slice was taken from the active transformed V11.25 compatibility runtime, not from an untransformed historical copy.
+- Fragment bodies are stored verbatim in their canonical owners and execute synchronously only from guarded installer markers at the original V4 positions.
+- The V4 tactical combat engine remains below later V8/V9/V10/V11 combat stages, preserving wrapper order and mature behavior.
+- Collection owns collection tracking/presentation only. Inventory owns storage; Combat owns battle resolution; Social owns people/dialogue; Research owns field research.
+- No extracted historical source body was semantically rewritten.
+
+COMPATIBILITY RESULT
+V11.25: 129,864 bytes
+V11.26: 114,791 bytes
+Reduction: 15,073 bytes (11.61%)
+
+ACTIVE COMPATIBILITY SHA-256
+0367100c569db01f5e6ca06b978760157dc986b66b665739fca8a2b40b551baf

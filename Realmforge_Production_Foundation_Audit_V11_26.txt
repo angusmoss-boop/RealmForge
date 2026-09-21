@@ -1,0 +1,89 @@
+REALMFORGE V11.26.0 - PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.25.0 Canonical Dungeon & World Event Foundations
+Target: V11.26.0 Canonical V4 Combat & Collection Foundations
+Save schema: 11.5.3 (unchanged)
+
+AUDIT TARGET
+Finish the clean V4 tactical-combat and collection seams without absorbing V4 migration/social/world/binding residue into the wrong modern owner. Preserve later Combat, Inventory, Character, Property and save/loadout semantics.
+
+AUDIT FINDING
+The remaining V4 body contained three coherent tactical-combat slices, two coherent collection slices, one Character-page composition slice and one cottage-purchase action. Each can execute through an existing or newly justified canonical owner at the exact original V4 position. The remaining V4 migration and mixed composition/binding residue is still cross-domain and should stay in compatibility for now.
+
+SAFE NEW OWNER
+- systems.collection: V4 collection item-discovery wrapper and Collection Log presentation only.
+
+SAFE EXISTING-OWNER TRANSFERS
+- Combat: V4 enemy move pools, tactical battle engine ancestry, original tactical combat renderer.
+- Character: V4 Companion/Specialisation/Home/Collection Character-page composition.
+- Property: original V4 Greenvale cottage purchase action.
+
+DELIBERATELY RETAINED IN COMPATIBILITY
+- V4 migration/state normalizer because it initializes Social, Encounters, Collection, Companion, Guild, Home, Specialisation and Faction state together.
+- V4 mixed world/social/binding ancestry already coordinated through canonical World Actions/Social installers.
+- V3 mixed Delve/Prospector finish-activity wrapper remains intact because splitting it would rewrite the historical function rather than transfer an exact source slice.
+- Later combat cadence, focus/category, Battle Lines and current combat UI remain under the existing canonical Combat stage chain.
+
+TOTAL EXACT HISTORICAL SOURCE TRANSFERRED
+16,316 characters
+
+COMPATIBILITY RUNTIME SIZE
+V11.25: 129,864 bytes
+V11.26: 114,791 bytes
+Reduction: 15,073 bytes
+Reduction from V11.25 compatibility: 11.61%
+
+SAVE COMPATIBILITY
+Save schema remains 11.5.3. No new persistent migration is registered. Existing Equipment, identical Ring I/Ring II, populated Tool Belt, Pack/Bank, deliberate Pack overflow, skills/XP, research, quests, markets, dungeon records, crime/cooldowns, exploration/resources, property/buffs, Collection state, Energy, active travel and active combat remain covered by the V11.26 advanced fixtures.
+
+OWNERSHIP SAFETY
+- systems.collection tracks collection state/presentation but does not own Inventory storage or Combat kill resolution.
+- systems.combat owns the historical tactical engine while later canonical combat stages remain layered above it in the same order.
+- systems.character owns Character-page composition only; Property still owns home mechanics.
+- systems.property owns cottage purchase/rest/home mechanics.
+- Valid Equipment and Tool Belt loadouts are not migrated, unequipped or deleted.
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM modalHTML warning appears identically in V11.25 and V11.26 Node fake-browser harnesses and is not a browser/runtime regression.
+
+VALIDATION COUNTS
+- JavaScript files checked with node --check: 348
+- Syntax failures: 0
+- Executable Node regression harnesses: 57
+- Harness failures: 0
+- V11.26 runtime contract: PASS
+- V11.25 -> V11.26 parity: 64/64 PASS
+- V4 Combat / Collection targeted suite: 23/23 PASS
+- Advanced/active-state save compatibility: 68/68 PASS
+- Active runtime/service-worker references: 9/9 PASS
+- All four production bundles reproduce byte-for-byte from documented source order: PASS
+
+RESIDUAL HOTSPOTS
+- js/v8.js: 8,079 chars
+- js/v10.js: 7,756 chars
+- js/v3.js: 7,628 chars
+- js/v10_9.js: 7,310 chars
+- js/v10_21.js: 6,881 chars
+- js/v4.js: 6,844 chars
+- js/v7.js: 6,617 chars
+- js/v10_7.js: 6,314 chars
+- js/v10_11.js: 5,771 chars
+- js/v10_1.js: 5,669 chars
+- js/v10_2.js: 3,827 chars
+- js/v8_2.js: 2,755 chars
+
+RECOMMENDED NEXT EXTRACTION
+V11.27 should audit the remaining V8/V10/V3 bridges, especially the mixed activity/ticker/migration wrappers, then transfer only exact coherent slices. Avoid whole-stage moves now that no single residual patch dominates the compatibility runtime.
+
+FINAL PACKAGING / INCREMENTAL UPDATE VALIDATION
+- GitHub delta from V11.25.0: 27 changed/new files, 0 deletions.
+- Fresh V11.25.0 Full Current Source + only V11.26 update pack: PASS.
+- Reconstructed runtime contract: PASS.
+- Reconstructed V11.25 -> V11.26 parity: 64/64 PASS.
+- Reconstructed advanced save compatibility: 68/68 PASS.
+- Reconstructed V4 Combat / Collection suite: 23/23 PASS.
+- Reconstructed retained executable Node harnesses: 57/57 PASS.
+- Reconstructed JavaScript syntax validation: 348/348 PASS.
+- Reconstructed active runtime / service-worker references: 9/9 PASS.
+- Reconstructed generated bundle provenance: 4/4 byte-for-byte PASS.
+- Final update/source ZIP integrity: PASS.
