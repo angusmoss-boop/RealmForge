@@ -1,12 +1,12 @@
-/* Realmforge V11.23.0 production finalizer. */
+/* Realmforge V11.24.0 production finalizer. */
 (() => {
   'use strict';
   const RF=window.RF;
-  RF.VERSION='11.23.0';
-  RF.BUILD={version:'11.23.0',title:'Canonical Character, Progression & Vault Ancestry',built:'19 Sep 2026 • 20:51 BST',buildId:'20260919-v1123-character-progression-vault'};
+  RF.VERSION='11.24.0';
+  RF.BUILD={version:'11.24.0',title:'Canonical World Actions & Specialist Foundations',built:'19 Sep 2026 • 22:06 BST',buildId:'20260919-v1124-world-actions-specialist'};
   RF.PRODUCTION_FOUNDATION=RF.PRODUCTION_FOUNDATION||{};
   Object.assign(RF.PRODUCTION_FOUNDATION,{
-    phase:17,architecture:'canonical-systems-v11',legacyBaseline:'11.5.3',compatibilityLayer:'js/legacy/compat_gameplay_character_progression_trimmed_v1153.js',saveSchema:RF.Core.contract.saveSchema,
+    phase:18,architecture:'canonical-systems-v11',legacyBaseline:'11.5.3',compatibilityLayer:'js/legacy/compat_gameplay_world_actions_specialist_trimmed_v1153.js',saveSchema:RF.Core.contract.saveSchema,
     persistenceOwner:'core.campaigns',migrationOwner:'core.migrations',contentOwner:'data.catalog',configOwner:'data.config',
     characterOwner:'systems.character',travelOwner:'systems.travel',questOwner:'systems.quests',wayfinderOwner:'systems.wayfinder',combatOwner:'systems.combat',equipmentOwner:'systems.equipment',inventoryOwner:'systems.inventory',
     researchOwner:'systems.research',craftingOwner:'systems.crafting',skillsOwner:'systems.skills',fieldcraftOwner:'systems.fieldcraft',
