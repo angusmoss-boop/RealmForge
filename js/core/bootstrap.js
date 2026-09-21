@@ -1,4 +1,4 @@
-/* Realmforge V11.29.0 — canonical production bootstrap. */
+/* Realmforge V11.30.0 — canonical production bootstrap. */
 window.RF = window.RF || {};
 (() => {
   'use strict';
@@ -24,7 +24,7 @@ window.RF = window.RF || {};
   RF.Modules.list = () => Array.from(registry.values()).map(x => ({ name: x.name, ...x.meta }));
 
   RF.Core.contract = Object.freeze({
-    appVersion: '11.29.0',
+    appVersion: '11.30.0',
     saveSchema: '11.5.3',
     architecture: 'canonical-systems-v11',
     legacyBaseline: '11.5.3'
