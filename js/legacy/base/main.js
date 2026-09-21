@@ -1,6 +1,6 @@
 window.RF = window.RF || {};
 RF.state=null; RF.lastTick=performance.now(); RF.autoSave=0; RF.renderAcc=0;
-RF.startNew=function(name,bg,avatar){RF.state=RF.newGame(name,bg,avatar);RF.save(RF.state);RF.UI.render(RF.state)};
+if(typeof RF.startNew!=='function')RF.startNew=function(name,bg,avatar){RF.state=RF.newGame(name,bg,avatar);RF.save(RF.state);RF.UI.render(RF.state)};
 RF.setSpeed=function(v){RF.state.speed=v;RF.state.paused=v===0;RF.save(RF.state);RF.UI.render(RF.state)};
 RF.startActivity=function(type,label,duration,data={}){if(RF.state.activity||RF.state.combat)return;RF.state.activity={type,label,duration,progress:0,...data};RF.UI.render(RF.state)};
 RF.cancelActivity=function(){RF.state.activity=null;RF.log(RF.state,'Activity cancelled.');RF.UI.render(RF.state)};
