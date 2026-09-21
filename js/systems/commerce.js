@@ -206,3 +206,23 @@
   };
   RF.Systems.Commerce=RF.Modules.register('systems.commerce',api,{owner:'systems',status:'canonical',implementation:'v10.54-equivalent',configOwner:'data.config'});
 })();
+
+
+/* Realmforge V11.24.0 historical fragment extension: Commerce. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Commerce;if(!api)throw new Error('Commerce canonical owner missing before V11.24 fragment extension.');
+  const extraSources={"v9-quantity-trade":"// ---------- Quantity-aware trade & crafting ----------\nRF.v9Int=function(v){v=parseInt(v,10);return Number.isFinite(v)&&v>0?v:0};\nRF.v9MaxBuy=function(s,id,price){let it=RF.DATA.items[id];if(!it)return 0;let byGold=Math.floor(s.gold/Math.max(1,price));if(byGold<1)return 0;let has=(s.inventory[id]||0)>0;if(!has&&RF.packUsed&&RF.packUsed(s)>=RF.V82.PACK_CAP&&!RF.isBankTown(s))return 0;return byGold};\nRF.v9MaxSell=function(s,id){let q=s.inventory[id]||0;return Math.max(0,q-(RF.isEquipped?.(s,id)?1:0))};\nRF.v9MaxCraft=function(s,id){let r=RF.DATA.recipes[id];if(!r||(s.skills[r.skill]?.level||1)<r.level)return 0;let max=Infinity;Object.entries(r.inputs).forEach(([x,q])=>max=Math.min(max,Math.floor((s.inventory[x]||0)/q)));if(!Number.isFinite(max))max=0;let outId=Object.keys(r.outputs||{})[0];if(outId&&!(s.inventory[outId]>0)&&RF.packUsed&&RF.packUsed(s)>=RF.V82.PACK_CAP&&!RF.isBankTown(s))return 0;return Math.max(0,max)};\nRF.v9Cant=function(title,text,back){RF.UI.modal={type:'v9Cant',title,text,back};RF.UI.render(RF.state)};\nRF.v9BuyQty=function(id,qty,price,privateTrade=false){let s=RF.state;qty=RF.v9Int(qty);let max=RF.v9MaxBuy(s,id,price);if(!qty||qty>max)return RF.v9Cant('Cannot buy that amount',`You can currently buy at most ${max} × ${RF.DATA.items[id]?.name||id}.`,RF.UI.modal);let cost=qty*price;s.gold-=cost;RF.addItem(s,id,qty);RF.addXp(s,'trading',Math.max(5,Math.round(5*Math.sqrt(qty))));RF.save(s);RF.UI.modal={type:'message',title:'Purchase complete',text:`Bought ${qty} × ${RF.DATA.items[id].name} for ${cost}g.`};RF.UI.render(s)};\nRF.v9SellQty=function(id,qty,price){let s=RF.state;qty=RF.v9Int(qty);let max=RF.v9MaxSell(s,id);if(!qty||qty>max)return RF.v9Cant('Cannot sell that amount',`You can currently sell at most ${max} × ${RF.DATA.items[id]?.name||id}. Equipped copies are protected.`,RF.UI.modal);RF.takeItem(s,id,qty);s.gold+=qty*price;RF.addXp(s,'trading',Math.max(3,Math.round(3*Math.sqrt(qty))));RF.save(s);RF.UI.modal={type:'message',title:'Sale complete',text:`Sold ${qty} × ${RF.DATA.items[id].name} for ${qty*price}g.`};RF.UI.render(s)};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-commerce-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.commerce/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

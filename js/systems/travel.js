@@ -966,3 +966,23 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+
+/* Realmforge V11.24.0 historical fragment extension: Travel. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Travel;if(!api)throw new Error('Travel canonical owner missing before V11.24 fragment extension.');
+  const extraSources={"v7-mirefen-travel-gate":"// Make Mirefen travel hidden until discovered but usable once known.\nconst v7TravelBase=RF.travel;\nRF.travel=function(id){if(['marshroad','reedmere','drowned_ruins','mirewatch'].includes(id)&&!RF.state.flags.marshKnown)return;return v7TravelBase(id)};\n","v7-marsh-sidequest-travel":"// Start the Mirefen side quest naturally when the player commits to the road.\nconst v701Travel=RF.travel;\nRF.travel=function(id){let s=RF.state;if(id==='marshroad'&&s.flags.marshKnown&&!s.quests.marsh_lights)s.quests.marsh_lights={active:true,done:false};return v701Travel(id)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-travel-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.travel/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

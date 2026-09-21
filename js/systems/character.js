@@ -18,3 +18,23 @@
   };
   RF.Systems.Character=RF.Modules.register('systems.character',api,{owner:'systems',status:'canonical',historicalFragmentCount:Object.keys(fragmentSources).length,extractedIn:'11.23.0'});
 })();
+
+
+/* Realmforge V11.24.0 historical fragment extension: Character. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Character;if(!api)throw new Error('Character canonical owner missing before V11.24 fragment extension.');
+  const extraSources={"v7-character-records-ui":"// Add a V7 depth panel to character/collection.\nconst v7CharBase=RF.UI.character.bind(RF.UI);\nRF.UI.character=function(s){let h=v7CharBase(s);let researched=Object.values(s.v7.research).filter(x=>x.level>0).length;return h+`<section class=\"card\"><h3>📚 Deep Roads Records</h3><div class=\"statsGrid\"><div class=\"statbox\"><span>Locks picked</span><b>${s.stats.locksPicked}</b></div><div class=\"statbox\"><span>Pickpockets</span><b>${s.stats.pickpockets}</b></div><div class=\"statbox\"><span>Creatures researched</span><b>${researched}</b></div><div class=\"statbox\"><span>Excavations</span><b>${s.stats.excavations}</b></div><div class=\"statbox\"><span>Potion formulae</span><b>${Object.keys(s.v7.formulas).length}</b></div><div class=\"statbox\"><span>Rare skill finds</span><b>${s.v7.rareFinds}</b></div></div></section>`};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-character-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.character/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

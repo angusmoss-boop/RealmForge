@@ -17,3 +17,23 @@
   const api={installHistoricalStage,installHistoricalFragment,installedStages,installedFragments,stageNames:()=>Object.keys(stageSources),fragmentNames:()=>Object.keys(fragmentSources),hour:s=>RF.hour?.(s),npcsHere:s=>RF.npcsHere?.(s)||[],worldPulse:(s,m)=>RF.worldPulse?.(s,m),refreshEncounters:(s,loc,force)=>RF.refreshEncounters?.(s,loc,force)};
   RF.Systems.World=RF.Modules.register('systems.world',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(stageSources).length,historicalFragmentCount:Object.keys(fragmentSources).length,extractedIn:'11.21.0'});
 })();
+
+
+/* Realmforge V11.24.0 historical fragment extension: World. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.World;if(!api)throw new Error('World canonical owner missing before V11.24 fragment extension.');
+  const extraSources={"v7-mirefen-encounter-tables":"RF.fieldTables.marshroad=[['mudcrab',3],['bog_spider',3],['mire_wolf',2],['marsh_raider',1]];\nRF.fieldTables.reedmere=[['mudcrab',3],['bog_spider',2],['fen_croc',1]];\nRF.fieldTables.drowned_ruins=[['lantern_wisp',3],['drowned_sentinel',3],['fen_croc',1]];\nRF.fieldTables.mirewatch=[['mire_wolf',3],['fen_croc',2],['rogue_stag',2]];\nRF.fieldTables.quarry.push(['quarry_drake',1]);\nRF.fieldTables.ember_cave.push(['ember_hound',2]);\nRF.fieldTables.sunmeadow.push(['rogue_stag',1]);\n","v7-mirefen-world-reveal":"// Initial road reveal and side quest safety checks during world ticks.\nconst v7AdvanceBase=RF.advanceWorld;\nRF.advanceWorld=function(min){let out=v7AdvanceBase(min),s=RF.state;if(s){if((s.player.level>=5||s.skills.exploration.level>=5)&&!s.flags.marshKnown)s.flags.marshKnown=true;if(s.quests.marsh_lights?.done&&!s.quests.bell_below)s.quests.bell_below={active:true,done:false};if(s.flags.heron_rumour&&s.visited.drowned_ruins&&!s.flags.heron_chamber_open&&s.skills.exploration.level>=10&&Math.random()<.06){s.flags.heron_chamber_open=true;RF.log(s,'You locate a submerged stair beneath the stone heron. Something ancient waits below.','important')}}return out};\n\n// Once the chamber is open, surface the boss in the drowned ruins.\nconst v7NearbyBase=RF.refreshEncounters;\nRF.refreshEncounters=function(s,loc=s.location,force=false){let arr=v7NearbyBase(s,loc,force);if(loc==='drowned_ruins'&&s.flags.heron_chamber_open&&!s.kills.heron_keeper){if(!arr.some(x=>x.id==='heron_keeper'))arr.push({uid:`keeper_${s.day}`,id:'heron_keeper',level:RF.DATA.enemies.heron_keeper.level,hostile:false})}return arr};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-world-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.world/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

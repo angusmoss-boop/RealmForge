@@ -23,3 +23,23 @@
   const api=Object.assign({installHistoricalStage,installHistoricalFragment,installedStages,installedFragments,ownsStage:name=>Object.prototype.hasOwnProperty.call(stageSources,name),ownsFragment:name=>Object.prototype.hasOwnProperty.call(fragmentSources,name),stageNames:()=>Object.keys(stageSources),fragmentNames:()=>Object.keys(fragmentSources)},{pickCount:s=>RF.V1027?.pickCount?.(s)||0,hasPick:s=>!!RF.V1027?.hasPick?.(s),start:opts=>RF.V1027?.startLock?.(opts),turn:()=>RF.V1027?.turnLock?.(),leave:()=>RF.V1027?.leaveLock?.(),chestProfile:(s,tier)=>RF.V1027?.chestProfile?.(s,tier),burglaryProfile:(s,site)=>RF.V1027?.burglaryProfile?.(s,site),siteProfile:(s,level)=>RF.V1027?.siteProfile?.(s,level),active:()=>RF.actionGame?.type==='v1027Lock'?RF.actionGame:null});
   RF.Systems.Locks=RF.Modules.register('systems.locks',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(stageSources).length,historicalFragmentCount:Object.keys(fragmentSources).length,extractedIn:'11.16.0'});
 })();
+
+
+/* Realmforge V11.24.0 historical fragment extension: Locks. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Locks;if(!api)throw new Error('Locks canonical owner missing before V11.24 fragment extension.');
+  const extraSources={"v7-lockpicking":"// ---------- Lockpicking ----------\nRF.lockState=function(s,id){let def=RF.DATA.lockSites[id];if(!def)return null;if(!s.v7.locks[id])s.v7.locks[id]={opened:false};return s.v7.locks[id]};\nRF.startLockpick=function(id){let s=RF.state,def=RF.DATA.lockSites[id],st=RF.lockState(s,id);if(!def||st.opened||s.skills.thieving.level<def.level)return;let resume=s.speed;s.speed=0;RF.actionGame={type:'lockpick',id,pin:0,pins:Math.min(5,2+Math.floor(def.level/4)),targets:Array.from({length:5},()=>18+Math.random()*64),started:Date.now(),resumeSpeed:resume,message:'Feel for the first tumbler.'};RF.UI.modal={type:'v7Action'};RF.UI.render(s)};\nRF.lockNeedle=function(g){return 50+44*Math.sin((Date.now()-g.started)/520)};\nRF.setTumbler=function(){let s=RF.state,g=RF.actionGame;if(!g||g.type!=='lockpick')return;let def=RF.DATA.lockSites[g.id],tool=RF.v7Tool(s,'lockpicking'),needle=RF.lockNeedle(g),target=g.targets[g.pin],tol=11+(tool?.control||0)*65+Math.min(7,s.skills.thieving.level*.25),dist=Math.abs(needle-target);if(dist<=tol){g.pin++;g.started=Date.now();g.message=dist<tol*.3?'✨ Clean click.':`Click. ${g.pins-g.pin} tumbler${g.pins-g.pin===1?'':'s'} remain.`;RF.addXp(s,'thieving',5);if(g.pin>=g.pins)return RF.finishLockpick();}else{g.message='⚠️ The pick slips.';if(Math.random()<Math.max(.08,.28-(tool?.control||0)-s.skills.thieving.level*.008)){RF.takeItem(s,'lockpick',1);g.message='💥 A pick snaps inside the keyway.';if((s.inventory.lockpick||0)<1&&!RF.v7Tool(s,'lockpicking'))return RF.v7Resume();}}RF.save(s);RF.UI.render(s)};\nRF.finishLockpick=function(){let s=RF.state,g=RF.actionGame,def=RF.DATA.lockSites[g.id],st=RF.lockState(s,g.id),before=RF.activitySnapshot(s);st.opened=true;s.stats.locksPicked++;RF.addXp(s,'thieving',35+def.level*6);for(let [id,q] of def.rewards){if(id==='gold'){s.gold+=q;continue}RF.addItem(s,id,q)}RF.advanceWorld(8+def.level);s.speed=g.resumeSpeed??s.speed;RF.actionGame=null;RF.save(s);RF.UI.modal=RF.makeResult(s,before,`${def.name} Opened`,'🔓')||{type:'message',title:'Unlocked',text:'The lock yields.'};RF.UI.render(s)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-locks-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.locks/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

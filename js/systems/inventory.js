@@ -76,3 +76,23 @@
   api.installHistoricalStage=runExtra;
   const oldNames=typeof api.stageNames==='function'?api.stageNames.bind(api):()=>[];api.stageNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraStages)]));
 })();
+
+
+/* Realmforge V11.24.0 historical fragment extension: Inventory. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Inventory;if(!api)throw new Error('Inventory canonical owner missing before V11.24 fragment extension.');
+  const extraSources={"v7-antivenom":"// Antivenom special use.\nconst v7UseItemBase=RF.useItem;\nRF.useItem=function(id){if(id==='antivenom'&&RF.state){let s=RF.state;if((s.inventory[id]||0)<1)return;RF.takeItem(s,id,1);s.player.hp=Math.min(s.player.maxHp,s.player.hp+8);if(s.combat?.playerStatuses)s.combat.playerStatuses=s.combat.playerStatuses.filter(x=>x.id!=='poison');RF.log(s,'Antivenom clears poison.','good');RF.save(s);RF.UI.render(s);return}return v7UseItemBase(id)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-inventory-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.inventory/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

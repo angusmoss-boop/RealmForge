@@ -34,3 +34,23 @@
   };
   RF.Systems.Research=RF.Modules.register('systems.research',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(sources).length,extractedIn:'11.14.0'});
 })();
+
+
+/* Realmforge V11.24.0 historical fragment extension: Research. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems.Research;if(!api)throw new Error('Research canonical owner missing before V11.24 fragment extension.');
+  const extraSources={"v7-bestiary-research":"// ---------- Bestiary research ----------\nRF.researchEnemy=function(id){let s=RF.state,e=RF.DATA.enemies[id];if(!e)return;let r=s.v7.research[id]||{level:0,notes:0};let risk=Math.max(.04,.22-s.skills.exploration.level*.006);RF.advanceWorld(12);if(Math.random()<risk&&RF.fieldTables[s.location]?.some(([x])=>x===id)){RF.log(s,`Your observation of ${e.name} gets much too close. It attacks.`,'bad');RF.save(s);RF.startBattle(id,{forced:true});return}r.notes++;if(r.notes>=2+r.level){r.level=Math.min(3,r.level+1);r.notes=0;RF.addXp(s,'exploration',30+r.level*18);RF.addXp(s,'hunting',18+r.level*12)}s.v7.research[id]=r;s.stats.researchActions++;RF.save(s);RF.UI.modal={type:'message',title:`Research: ${e.name}`,text:r.level===0?'You record basic tracks, feeding signs and posture.':r.level===1?'You can now recognise its common tells and preferred ground.':r.level===2?'You understand several attack patterns and warning behaviours.':'Your field notes on this creature are unusually thorough.'};RF.UI.render(s)};\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);
+  const seen=new Set(installed);
+  function runExtra(name){
+    if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string')return previous?previous(name):false;
+    const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-research-fragment',name);
+    script.textContent=source+'\n//# sourceURL=realmforge-canonical:///systems.research/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();
+    seen.add(name);installed.push(name);return true;
+  }
+  api.installHistoricalFragment=runExtra;
+  const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
+  api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
