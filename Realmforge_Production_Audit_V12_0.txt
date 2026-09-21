@@ -1,0 +1,60 @@
+REALMFORGE V12.0.0 — SAVE SYSTEM AUDIT
+
+SCOPE
+Full end-to-end review of campaign creation, active-slot identity, verified writes, Primary/Backup/Recovery fallback, load bootstrapping, duplicate, restart, export/import, Options & Saves bindings, storage-index recovery, platform file seams and established-save compatibility.
+
+ROOT CAUSE — NEW CAMPAIGN DATA LOSS
+Canonical `RF.startNew()` was correctly defined in `js/core/state.js`, but active runtime order then loaded `js/legacy/base/main.js`, which unconditionally redefined `RF.startNew()` with the V1-era single-save implementation. That implementation created a new state and immediately called `RF.save()` while the previous campaign slot was still active. Canonical `RF.save()` therefore wrote the fresh character into the old campaign slot.
+
+FIX
+- `legacy/base/main.js` now defines its historical `RF.startNew` fallback only when no canonical implementation exists.
+- Canonical `RF.startNew` therefore remains authoritative in the production runtime.
+- `core.campaigns.writeSlot()` now enforces slot identity and rejects cross-campaign writes even if a future caller is wrong.
+
+ROOT CAUSE — IMPORT OVERWRITE / BROKEN TRANSFER
+`core.state` already contained a non-destructive import path, but `core.lifecycle.installShellAffordances()` later redefined `RF.importPrompt` with older behavior: imported state replaced `RF.state` and then `RF.save()` wrote it into the currently active slot.
+
+FIX
+- Lifecycle no longer owns import/export semantics and delegates to canonical Core State.
+- Import always creates a new verified campaign slot.
+- Export/import now use a checksummed V12 backup package, while retaining pre-V12 text-import compatibility.
+- File download/file selection live behind RF.Platform.
+
+ADDITIONAL HARDENING
+- Brand-new slots seed Primary, Backup and Recovery immediately, yielding 3/3 readable copies from creation.
+- Runtime slot stamps prevent a loaded state from being written into a different slot.
+- Creation-identity comparison blocks an unstamped fresh state from overwriting an existing campaign.
+- Duplicate is non-activating by default.
+- Restart uses an explicit replace path only after creating and verifying a Before Restart duplicate.
+- Per-slot Duplicate and Export controls added to Options & Saves.
+- Import UI supports .rfsave files and pasted legacy text backups.
+- Corrupt/missing campaign index can be reconstructed from surviving verified slot envelopes.
+- Legacy Primary -> Backup -> Recovery fallback remains intact.
+- V11.30 compatibility runtime remains byte-identical at 64,639 bytes.
+
+SAVE SCHEMA
+11.5.3 unchanged. No gameplay-state migration required.
+
+VALIDATION
+- JavaScript syntax wall: PASS — 435 files, 0 failures.
+- 73/73 retained executable V11 regression harnesses: PASS.
+- Complete executable test set including V12 additions: 77/77 PASS.
+- V12 runtime contract: PASS.
+- V11.29 established/advanced save -> V12 runtime compatibility: PASS.
+- V12 save reliability harness: PASS.
+- New campaign creates a distinct slot: PASS.
+- Valuable original campaign unchanged after new campaign creation: PASS.
+- Deliberate cross-campaign write rejected by storage layer: PASS.
+- Duplicate creates independent verified slot without activation: PASS.
+- New V12 backup checksum/package validation: PASS.
+- V12 import creates separate slot: PASS.
+- Pre-V12 base64 export import: PASS.
+- Primary corruption -> Backup fallback: PASS.
+- Primary + Backup corruption -> Recovery fallback: PASS.
+- Corrupt slot-index reconstruction: PASS.
+- Save schema remains 11.5.3: PASS.
+- Fresh V11.30 Full Source + only V12 update payload reconstruction: PASS — exact candidate tree, 648/648 files, 0 deletions.
+- Reconstructed-tree runtime/save/content tests: PASS.
+
+KNOWN HARNESS NOTE
+The historical V10.9 fake-DOM `modalHTML.bind` warning remains the same artificial Node-harness warning documented throughout the Production Foundation work. It is not a browser/runtime regression.

@@ -1,0 +1,23 @@
+REALMFORGE V12.0.0 — SAVE SYSTEM PROVENANCE
+
+CANONICAL OWNERS
+- js/core/storage.js — platform-backed low-level persistence transport
+- js/core/campaigns.js — verified slots, identity protection, recovery copies, duplicate, index recovery
+- js/core/state.js — public save/load/new-game API and portable backup format
+- js/core/lifecycle.js — startup orchestration; delegates transfer affordances to Core State
+- js/platform/browser.js — browser storage, file download/file selection, clipboard/dialog transport
+- js/ui/save_manager.js — Options & Saves UI and slot actions
+
+LEGACY BOOTSTRAP CHANGE
+- js/legacy/base/main.js — one-line ownership guard only: historical RF.startNew fallback is installed only if canonical RF.startNew is absent.
+
+FROZEN HISTORICAL COMPATIBILITY
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js — unchanged from V11.30.0.
+
+BACKWARD-COMPATIBLE STORAGE CONTRACT
+The V9.5 slot/index keys and 11.5.3 campaign schema remain unchanged. Existing browser/PWA campaigns therefore require no conversion.
+
+TRANSFER COMPATIBILITY
+- V12 export: versioned checksummed .rfsave JSON package.
+- V12 import: accepts V12 packages and legacy base64 text exports.
+- Import destination: always a new slot.

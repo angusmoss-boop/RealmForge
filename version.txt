@@ -1,5 +1,5 @@
-version=11.30.0
-title=Canonical Content Sources & V12 Readiness
-built=2026-09-21T14:22:00+01:00
-build_id=20260921-v1130-content-v12-readiness
-notes=Final V11 production-foundation release. Canonical content/config sources are decomposed for human editing, RF.Assets is formalized for V12 media, authoring validation is wired into the content build path, and the classified 11.5.3 compatibility layer is frozen unchanged.
+version=12.0.0
+title=Saveguard
+built=2026-09-21T17:09:00+01:00
+build_id=20260921-v1200-saveguard
+notes=V12 save-system hardening: cross-campaign overwrite protection, verified three-copy slot creation, safe duplicate/export/import, and canonical save ownership repaired. Save schema remains 11.5.3.
