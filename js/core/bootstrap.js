@@ -1,4 +1,4 @@
-/* Realmforge V11.28.0 — canonical production bootstrap. */
+/* Realmforge V11.29.0 — canonical production bootstrap. */
 window.RF = window.RF || {};
 (() => {
   'use strict';
@@ -7,6 +7,7 @@ window.RF = window.RF || {};
   RF.Systems = RF.Systems || {};
   RF.Platform = RF.Platform || {};
   RF.Catalog = RF.Catalog || {};
+  RF.Authoring = RF.Authoring || {};
   RF.Views = RF.Views || {};
   RF.Assets = RF.Assets || {};
   RF.Modules = RF.Modules || {};
@@ -23,7 +24,7 @@ window.RF = window.RF || {};
   RF.Modules.list = () => Array.from(registry.values()).map(x => ({ name: x.name, ...x.meta }));
 
   RF.Core.contract = Object.freeze({
-    appVersion: '11.28.0',
+    appVersion: '11.29.0',
     saveSchema: '11.5.3',
     architecture: 'canonical-systems-v11',
     legacyBaseline: '11.5.3'
