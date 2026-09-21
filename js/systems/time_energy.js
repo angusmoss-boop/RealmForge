@@ -29,3 +29,14 @@
   });
   RF.Systems.TimeEnergy=RF.Modules.register('systems.timeEnergy',api,{owner:'systems',status:'canonical',historicalStageCount:Object.keys(stageSources).length,historicalFragmentCount:Object.keys(fragmentSources).length,travelClockOwner:'systems.travel',restOwner:'systems.property',extractedIn:'11.17.0'});
 })();
+
+/* Realmforge V11.28.0 — Time Energy historical extension. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems?.TimeEnergy;if(!api)throw new Error('Time Energy owner missing before V11.28 extension.');
+  const extraSources={"v8-speed-rebind":"// Binders need to rebind 2x even while recovering so denied clicks can animate rather than vanish.\nconst v8BindBase=RF.UI.bind.bind(RF.UI);\nRF.UI.bind=function(s){v8BindBase(s);document.querySelectorAll('[data-speed=\"2\"]').forEach(b=>b.onclick=()=>RF.setSpeed(2));};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);const seen=new Set(installed);
+  function install(name){if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string'){return previous?previous(name):false;}const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-time-energy-v1128',name);script.textContent=source+'\n//# sourceURL=realmforge-canonical:///time_energy/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();seen.add(name);installed.push(name);return true;}
+  api.installHistoricalFragment=install;const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();

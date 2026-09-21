@@ -986,3 +986,14 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+/* Realmforge V11.28.0 — Travel historical extension. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems?.Travel;if(!api)throw new Error('Travel owner missing before V11.28 extension.');
+  const extraSources={"v8-travel-activity-ui":"// More informative activity panel for journeys.\nconst v8ActivityBase=RF.UI.activity.bind(RF.UI);\nRF.UI.activity=function(s){\n  if(s.activity?.type==='travel'){\n    const a=s.activity,p=Math.min(100,100*a.progress/a.duration),dest=RF.DATA.locations[a.target];\n    return `<section class=\"card travelCard\"><span class=\"eyebrow\">ON THE ROAD</span><h3>🛤️ ${a.label}</h3><div class=\"roadStrip\"><div class=\"roadWalker\" style=\"left:calc(${Math.max(2,Math.min(94,p))}% - 10px)\">🚶</div></div><div class=\"bar large\"><div class=\"fill xp\" style=\"width:${p}%\"></div></div><div class=\"rowBetween tiny\"><span>${Math.round(p)}% complete</span><span>${Math.max(0,Math.ceil(a.duration-a.progress))} sec remaining</span></div><div class=\"sub\">Road events can interrupt the journey before you reach ${dest?.name||'your destination'}.</div><button class=\"cancelBtn\" data-cancel>Turn back</button></section>`;\n  }\n  return v8ActivityBase(s);\n};\n\n"};
+  const previous=typeof api.installHistoricalFragment==='function'?api.installHistoricalFragment.bind(api):null;
+  const installed=Array.isArray(api.installedFragments)?api.installedFragments:(api.installedFragments=[]);const seen=new Set(installed);
+  function install(name){if(seen.has(name))return false;const source=extraSources[name];if(typeof source!=='string'){return previous?previous(name):false;}const script=document.createElement('script');script.type='text/javascript';script.setAttribute('data-rf-canonical-travel-v1128',name);script.textContent=source+'\n//# sourceURL=realmforge-canonical:///travel/fragment/'+name+'\n';(document.head||document.documentElement).appendChild(script);script.remove();seen.add(name);installed.push(name);return true;}
+  api.installHistoricalFragment=install;const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
+})();
