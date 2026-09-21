@@ -1,0 +1,17 @@
+REALMFORGE V11.30.0 - SYSTEM EXTRACTION PROVENANCE
+
+V11.30 performs no gameplay-system extraction and no compatibility-runtime extraction.
+
+Compatibility runtime:
+- file: js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js
+- bytes: 64,639
+- classification: frozen from V11.29
+- historical boundaries: 93
+- 80 canonical chronology bridges
+- 12 save/migration bridges
+- 1 mixed historical runtime survivor
+- 0 proven retireable/obsolete entries
+
+Systems + UI production sources are unchanged from V11.29. The versioned V11.30 Systems bundle is byte-identical to V11.29.
+
+V11.30 ownership work is instead content-source decomposition, build tooling, authoring validation and the canonical asset registry. See CONTENT_SOURCE_PROVENANCE_V11_30.txt.

@@ -1,5 +1,5 @@
-version=11.29.0
-title=Final Compatibility Classification & Content Authoring Readiness
-built=2026-09-21T13:20:00+01:00
-build_id=20260921-v1129-authoring-readiness
-notes=Every remaining historical timeline stage is explicitly classified, and canonical RF.Authoring now provides validated content/config registration plus cross-reference checks for future V12 content. Save schema remains 11.5.3.
+version=11.30.0
+title=Canonical Content Sources & V12 Readiness
+built=2026-09-21T14:22:00+01:00
+build_id=20260921-v1130-content-v12-readiness
+notes=Final V11 production-foundation release. Canonical content/config sources are decomposed for human editing, RF.Assets is formalized for V12 media, authoring validation is wired into the content build path, and the classified 11.5.3 compatibility layer is frozen unchanged.

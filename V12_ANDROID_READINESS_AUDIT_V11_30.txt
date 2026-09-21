@@ -1,0 +1,41 @@
+REALMFORGE V11.30.0 - V12 / ANDROID READINESS AUDIT
+
+STATUS
+READY TO BEGIN V12: YES.
+READY TO PUBLISH TO GOOGLE PLAY IMMEDIATELY: NO. Native packaging work intentionally begins in V12.
+
+WEB/GAME ARCHITECTURE READY
+- Active browser/PWA runtime remains exactly 9 production scripts.
+- Gameplay ownership is canonical by domain; V12 mechanics do not need chronological patch files.
+- Save schema remains 11.5.3 and the migration owner is core.migrations.
+- The surviving 64,639-byte compatibility runtime is frozen/classified: 80 chronology bridges, 12 save/migration bridges, 1 mixed historical runtime survivor, 0 proven obsolete entries.
+- RF.Platform already isolates storage, time, online state, prompts, alerts, vibration, visibility/resume, clipboard, build-info fetching, history/back navigation and service-worker registration.
+- A Capacitor/Android adapter can therefore implement the same platform seam without forking gameplay systems.
+
+CONTENT AUTHORING READY
+- Human-editable foundation content is split into nine category sources under js/data/content/base/.
+- The former 95 KB legacy content monolith is split into subject-oriented source files under js/data/content/legacy/ while preserving all 87 historical block IDs/metadata.
+- The former world/config monolith is split into seven domain files under js/data/config/ while preserving all 19 Config definitions.
+- tools/build_content.js reproduces base_content.js and data_core_v11_30.js from readable source order and runs validation automatically.
+- New V12 content packs have a dedicated js/data/content/packs/ home.
+- data.assets / RF.Assets provides the media-ID seam needed for future images, music, audio and other packaged resources.
+
+PERSISTENCE / UPDATE SAFETY READY
+- V11.29 -> V11.30 behavioral parity and advanced campaign fixtures protect Equipment, identical Ring I/Ring II items, Tool Belt, Pack/Bank, deliberate Pack overflow, skills/XP, research, quests, markets, crime/cooldowns, Property, Collection, Energy, active travel and active combat.
+- No V11.30 persistent field is added; schema remains 11.5.3.
+- Compatibility receives no new V12 gameplay.
+
+NATIVE WORK STILL REQUIRED IN V12
+- Create the Capacitor/Android project and package/application ID.
+- Add an Android RF.Platform adapter for native lifecycle/back navigation and any native storage/haptics/clipboard/dialog APIs chosen for production.
+- Decide native-shell service-worker behavior; browser/PWA service-worker registration should not be treated as the native app's update mechanism.
+- Add real app icons, adaptive icon, splash assets and store graphics. The current web manifest intentionally has an empty icons array.
+- Configure Android SDK/Gradle build, release signing and AAB output.
+- Test install/update/save persistence on physical Samsung/Android devices.
+- Complete Play Console listing, policy/privacy declarations and release-track testing.
+
+RECOMMENDED V12 OPENING
+V12.0 should be the Android Foundation: thin Capacitor shell around the shared canonical web source, platform-adapter integration, physical-device save/update tests, and repeatable debug APK/release AAB generation. Gameplay/content expansion can then proceed on top of a continuously tested Android target.
+
+V11 CONCLUSION
+V11.30 completes the production-foundation refactor. Future ordinary development should not return to patch-era architecture. New content goes through canonical content/config/assets; new mechanics go through canonical systems; legacy compatibility remains quarantine/migration infrastructure only.
