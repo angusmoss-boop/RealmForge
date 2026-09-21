@@ -1,5 +1,5 @@
-version=11.23.0
-title=Canonical Character, Progression & Vault Ancestry
-built=2026-09-19T20:51:00+01:00
-build_id=20260919-v1123-character-progression-vault
-notes=Character/perk progression, V8.2 Pack/Bank/Mastery ancestry, V10 milestones, V10.10 Vault and V10.12 sorting/stability now execute from canonical domain owners. Save schema remains 11.5.3.
+version=11.24.0
+title=Canonical World Actions & Specialist Foundations
+built=2026-09-19T22:06:00+01:00
+build_id=20260919-v1124-world-actions-specialist
+notes=V7/V9 specialist actions, Mirefen world ancestry, quantity commerce/crafting, research/combat and cross-system world-action UI now execute from canonical domain owners. Save schema remains 11.5.3.

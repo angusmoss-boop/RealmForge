@@ -1,0 +1,99 @@
+REALMFORGE V11.24.0 - SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.23.0
+Save schema: 11.5.3 (unchanged)
+
+SPECIALIST
+Destination: js/systems/specialist.js
+- v7-specialist-core - 414 chars
+- v7-potion-experiment - 1,775 chars
+Subtotal: 2,189 chars
+
+WORLD ACTIONS
+Destination: js/ui/world_actions.js
+- v7-world-context-modal-ui - 8,406 chars
+- v7-action-bind-ui - 1,578 chars
+- v9-action-modal-ui - 1,893 chars
+- v9-action-bind-ui - 1,382 chars
+Subtotal: 13,259 chars
+
+WORLD
+Destination: js/systems/world.js
+- v7-mirefen-encounter-tables - 480 chars
+- v7-mirefen-world-reveal - 1,105 chars
+Subtotal: 1,585 chars
+
+LOCKS
+Destination: js/systems/locks.js
+- v7-lockpicking - 2,067 chars
+Subtotal: 2,067 chars
+
+CRIME
+Destination: js/systems/crime.js
+- v7-pickpocket-timing - 1,724 chars
+- v9-dynamic-pickpocket - 3,037 chars
+- v9-pickpocket-resume - 94 chars
+Subtotal: 4,855 chars
+
+CRAFTING
+Destination: js/systems/crafting.js
+- v7-smithing-heat - 2,490 chars
+- v9-batch-crafting - 4,224 chars
+Subtotal: 6,714 chars
+
+RESEARCH
+Destination: js/systems/research.js
+- v7-bestiary-research - 1,013 chars
+Subtotal: 1,013 chars
+
+COMBAT
+Destination: js/systems/combat.js
+- v7-research-combat - 514 chars
+- v9-combat-focus-core - 3,489 chars
+- v9-combat-focus-ui - 1,084 chars
+Subtotal: 5,087 chars
+
+INVENTORY
+Destination: js/systems/inventory.js
+- v7-antivenom - 440 chars
+Subtotal: 440 chars
+
+CHARACTER
+Destination: js/systems/character.js
+- v7-character-records-ui - 818 chars
+Subtotal: 818 chars
+
+TRAVEL
+Destination: js/systems/travel.js
+- v7-mirefen-travel-gate - 253 chars
+- v7-marsh-sidequest-travel - 280 chars
+Subtotal: 533 chars
+
+COMMERCE
+Destination: js/systems/commerce.js
+- v9-quantity-trade - 2,089 chars
+Subtotal: 2,089 chars
+
+ITEM BROWSER
+Destination: js/ui/item_browser.js
+- v9-quantity-detail-ui - 4,104 chars
+Subtotal: 4,104 chars
+
+TOTAL EXACT SOURCE TRANSFERRED
+44,753 characters
+
+METHOD
+- Every source slice was taken from the active transformed V11.23 compatibility runtime, not from an untransformed historical copy.
+- Canonical modules store the exact historical classic-script body.
+- Compatibility retains a guarded installer at the exact old execution position.
+- Installers execute synchronously, preserving wrapper and dependency order.
+- ui.worldActions owns only mixed presentation/binding glue; gameplay remains with Locks, Crime, Crafting, Research, Combat, Travel and other domain owners.
+- No extracted historical source body was semantically rewritten.
+
+COMPATIBILITY RESULT
+V11.23: 189,383 bytes
+V11.24: 148,946 bytes
+Reduction: 40,437 bytes (21.35%)
+
+ACTIVE COMPATIBILITY SHA-256
+f8ca7cecc64ecdcc1d0f1e09a9bb72b52c709d8a482c8bbcea70412f26ab72ca

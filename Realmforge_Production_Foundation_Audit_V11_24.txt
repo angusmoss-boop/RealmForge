@@ -1,0 +1,89 @@
+REALMFORGE V11.24.0 - PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.23.0 Canonical Character, Progression & Vault Ancestry
+Target: V11.24.0 Canonical World Actions & Specialist Foundations
+Save schema: 11.5.3 (unchanged)
+
+AUDIT TARGET
+Trace the remaining specialist/world-action ancestry in mixed V7 and V9 after the Character/Pack migration. Preserve mature canonical ownership instead of creating replacement Lockpicking, Crime, Crafting, Combat, Travel or Commerce systems.
+
+AUDIT FINDING
+V7 and V9 still contained unusually coherent legacy seams, but their source files were multi-domain. Whole-stage ownership would have been incorrect. Fragment-level extraction was therefore used.
+
+SAFE NEW OWNERS
+- systems.specialist: shared V7 action coordinator and potion experimentation only.
+- ui.worldActions: mixed historical World/context/action-modal/binding presentation only.
+
+SAFE EXISTING-OWNER TRANSFERS
+- World: Mirefen encounter tables and reveal/Heron hooks.
+- Locks: V7 lockpicking.
+- Crime: V7 pickpocket timing plus V9 dynamic attention and cleanup.
+- Crafting: V7 forge heat and V9 batch crafting.
+- Research: V7 Bestiary research.
+- Combat: V7 research bonus and V9 combat focus/pooled XP/Parry ancestry.
+- Inventory: V7 Antivenom use.
+- Character: V7 Deep Roads records panel.
+- Travel: Mirefen gate and Marsh Lights road-start hook.
+- Commerce: V9 quantity buy/sell helpers.
+- Item Browser: V9 quantity-aware detail presentation.
+
+DELIBERATELY RETAINED IN COMPATIBILITY
+- V7 migration and content-block calls.
+- Existing canonical installer markers for V7 Exploration/Fieldcraft.
+- V9 migration/boot message and canonical V9 routing installer.
+- Later mixed stages whose ownership was not needed for this release.
+- No V4 extraction was attempted merely to chase byte count; its remaining combat/world/event/property seams require a separate audit.
+
+TOTAL EXACT HISTORICAL SOURCE TRANSFERRED
+44,753 characters
+
+COMPATIBILITY RUNTIME SIZE
+V11.23: 189,383 bytes
+V11.24: 148,946 bytes
+Reduction: 40,437 bytes
+Reduction from V11.23 compatibility: 21.35%
+
+SAVE COMPATIBILITY
+Save schema remains 11.5.3. No new migration is registered. Existing Equipment, identical Ring I/Ring II, populated Tool Belt, Pack, Bank, deliberate Pack overflow, skills/XP, research, quests, markets, dungeon history, crime/cooldowns, exploration/resources, property/buffs, Energy, active travel and active combat remain covered by the V11.24 fixtures.
+
+OWNERSHIP SAFETY
+- systems.specialist is a shared action/minigame coordinator, not a general skilling owner.
+- ui.worldActions does not own gameplay rules; it only composes historical contextual cards/modals/bindings.
+- Travel routing, route recovery and Clock Sentinel remain systems.travel.
+- Tactical Combat remains systems.combat.
+- Lock engine remains systems.locks; V7 is ancestry beneath the modern lock stack.
+- Modern Inventory/Equipment/Tool Belt and Pack-overflow authority are unchanged.
+- No extracted source body was semantically rewritten.
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM modalHTML warning appears identically in V11.23 and V11.24 Node fake-browser harnesses and is not a browser/runtime regression.
+
+VALIDATION COUNTS
+- JavaScript files checked with node --check: 324
+- Syntax failures: 0
+- Executable Node regression harnesses: 49
+- Harness failures: 0
+- V11.24 runtime contract: PASS
+- V11.23 -> V11.24 parity: 55/55 PASS
+- World Actions/Specialist targeted suite: 20/20 PASS
+- Advanced/active-state save compatibility: 65/65 PASS
+- Active runtime/service-worker references: 9/9 PASS
+- All four production bundles reproduce byte-for-byte from documented source order: PASS
+
+RESIDUAL HOTSPOTS
+- js/v4.js: 28,281 chars
+- js/v3.js: 10,268 chars
+- js/v11_4.js: 9,672 chars
+- js/v8.js: 8,081 chars
+- js/v10.js: 7,762 chars
+- js/v10_9.js: 7,313 chars
+- js/v10_21.js: 6,881 chars
+- js/v7.js: 6,617 chars
+- js/v10_7.js: 6,315 chars
+- js/v10_11.js: 5,771 chars
+
+RECOMMENDED NEXT EXTRACTION
+V11.25 Canonical Dungeon / World Event Foundations. Audit the complete V11.4 eightfold-dungeon stage for canonical Dungeons ownership, then split coherent V3/V4 dungeon, forced encounter, world pulse and regional action fragments into existing owners without reopening mature Combat or Travel.
+
+UPDATE-PACK RECONSTRUCTION
+A clean V11.23.0 Full Current Source tree was updated using only the 36-file V11.24 GitHub delta, with no deletions required. The reconstructed installation passed the V11.24 runtime contract, 55/55 parity checks, 65/65 advanced save checks, 20/20 targeted World Actions/Specialist checks, all 49 executable regression harnesses, all 324 JavaScript syntax checks, 9/9 active runtime/precache checks and 4/4 bundle reproduction checks.
