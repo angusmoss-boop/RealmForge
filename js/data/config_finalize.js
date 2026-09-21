@@ -1,4 +1,4 @@
-/* Realmforge V11.11.0 — canonical configuration validation / ownership contract. */
+/* Realmforge V11.29.0 — canonical configuration validation / ownership contract. */
 (() => {
   'use strict';
   const RF=window.RF,C=RF.Config;
@@ -30,7 +30,9 @@
   for(const [id] of entitySpecs)if(!enemies[id])issues.push(`V11.4 entity spec was not registered: ${id}`);
   const gearSpecs=C?.get('dungeons.v114GearSpecs')||[];
   for(const [id] of gearSpecs)if(!items[id])issues.push(`V11.4 gear spec was not registered: ${id}`);
-  const info={owner:'data',status:'canonical',definitions:C?.size?.()||0,keys:C?.keys?.()||[],issues,valid:issues.length===0};
+  const authoringIssues=RF.Authoring?.validateConfig?.();
+  const finalIssues=Array.isArray(authoringIssues)?authoringIssues.filter(x=>x.severity==='error').map(x=>x.message):issues;
+  const info={owner:'data',status:'canonical',definitions:C?.size?.()||0,keys:C?.keys?.()||[],issues:finalIssues,valid:finalIssues.length===0,authoringValidator:!!RF.Authoring?.validateConfig};
   RF.PRODUCTION_FOUNDATION=RF.PRODUCTION_FOUNDATION||{};
   RF.PRODUCTION_FOUNDATION.configCore=info;
   RF.Modules.register('data.configCore',info,{owner:'data',status:'canonical'});
