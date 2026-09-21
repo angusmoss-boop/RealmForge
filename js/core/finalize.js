@@ -1,9 +1,9 @@
-/* Realmforge V11.24.0 production finalizer. */
+/* Realmforge V11.25.0 production finalizer. */
 (() => {
   'use strict';
   const RF=window.RF;
-  RF.VERSION='11.24.0';
-  RF.BUILD={version:'11.24.0',title:'Canonical World Actions & Specialist Foundations',built:'19 Sep 2026 • 22:06 BST',buildId:'20260919-v1124-world-actions-specialist'};
+  RF.VERSION='11.25.0';
+  RF.BUILD={version:'11.25.0',title:'Canonical Dungeon & World Event Foundations',built:'19 Sep 2026 • 23:25 BST',buildId:'20260919-v1125-dungeon-world-events'};
   RF.PRODUCTION_FOUNDATION=RF.PRODUCTION_FOUNDATION||{};
   Object.assign(RF.PRODUCTION_FOUNDATION,{
     phase:18,architecture:'canonical-systems-v11',legacyBaseline:'11.5.3',compatibilityLayer:'js/legacy/compat_gameplay_world_actions_specialist_trimmed_v1153.js',saveSchema:RF.Core.contract.saveSchema,
