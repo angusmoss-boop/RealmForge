@@ -1,0 +1,41 @@
+const fs=require('fs'),vm=require('vm'),path=require('path');
+const root=path.resolve(__dirname,'..');
+function el(){return {innerHTML:'',textContent:'',value:'',disabled:false,hidden:false,style:{},dataset:{},classList:{add(){},remove(){},contains(){return false},toggle(){}},setAttribute(){},getAttribute(){return null},appendChild(){},remove(){},addEventListener(){},removeEventListener(){},querySelectorAll(){return[]},querySelector(){return null},closest(){return null},focus(){},blur(){},onclick:null,offsetWidth:1,nodeType:1};}
+let ctx; const app=el(),document={visibilityState:'visible',head:el(),body:el(),documentElement:el(),activeElement:null,getElementById:id=>id==='app'?app:el(),createElement(tag){const x=el();x.tagName=String(tag).toUpperCase();return x},querySelectorAll(){return[]},querySelector(){return null},addEventListener(){},removeEventListener(){}};
+const storage=new Map();
+ctx=vm.createContext({console,Math,Date,JSON,Object,Array,String,Number,Boolean,Map,Set,Promise,RegExp,Error,TypeError,parseInt,parseFloat,isNaN,encodeURIComponent,decodeURIComponent,escape,unescape,btoa:s=>Buffer.from(s,'binary').toString('base64'),atob:s=>Buffer.from(s,'base64').toString('binary'),__errs:[],document,navigator:{onLine:true,clipboard:{writeText:async()=>{}}},location:{protocol:'file:',pathname:'/',href:'file:///'},history:{state:{},pushState(){},replaceState(){},back(){}},performance:{now:()=>0},requestAnimationFrame:()=>1,cancelAnimationFrame(){},setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,clearInterval(){},alert(){},prompt(){return null},confirm(){return true},localStorage:{getItem:k=>storage.has(k)?storage.get(k):null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k),key:i=>Array.from(storage.keys())[i]||null,get length(){return storage.size}},MutationObserver:class{observe(){}disconnect(){}},ResizeObserver:class{observe(){}disconnect(){}},getComputedStyle:()=>({}),URL,Intl});
+ctx.window=ctx;ctx.globalThis=ctx;ctx.self=ctx;ctx.addEventListener=()=>{};ctx.removeEventListener=()=>{};ctx.scrollTo=()=>{};ctx.scrollX=0;ctx.scrollY=0;ctx.pageXOffset=0;ctx.pageYOffset=0;
+document.head.appendChild=function(x){if(x?.tagName==='SCRIPT'&&x.textContent){try{vm.runInContext(x.textContent,ctx,{filename:String(x.textContent.match(/sourceURL=([^\n]+)/)?.[1]||'embedded-runtime.js')})}catch(e){ctx.__errs.push(String(e.stack||e))}}return x};document.documentElement.appendChild=document.head.appendChild;
+const scripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v11_29.js','js/dist/data_core_v11_29.js','js/legacy/base/main.js','js/dist/systems_core_v11_29.js','js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js','js/dist/canonical_v11_29.js'];
+for(const rel of scripts){try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel})}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e))}}
+
+const R=ctx.RF,checks={};
+const report=R.Authoring.report();
+checks.owner=R.Modules?.info?.('data.authoring')?.meta?.status==='canonical';
+checks.clean=report.valid===true&&report.errors.length===0;
+checks.catalogLegacy=Array.isArray(R.Catalog.validate())&&R.Catalog.validate().length===0;
+checks.catalogDetailed=Array.isArray(R.Catalog.validateDetailed())&&R.Catalog.validateDetailed().length===0;
+checks.configClean=R.Authoring.validateConfig().length===0;
+checks.summary=report.catalogSummary.items===170&&report.catalogSummary.enemies===88&&report.catalogSummary.locations===21&&report.configDefinitions===19;
+checks.helpers=['item','enemy','location','recipe','quest','skill','npc','perk','register','registerMany','defineConfig','registerPack','assertClean'].every(k=>typeof R.Authoring[k]==='function');
+let invalidId=false;try{R.Authoring.item('Bad ID',{name:'Bad',type:'material'});}catch(e){invalidId=String(e).includes('Invalid items id');}checks.invalidId=invalidId;
+let duplicate=false;try{R.Authoring.item('bread',{name:'Duplicate',type:'food'});}catch(e){duplicate=String(e).includes('already exists');}checks.duplicateGuard=duplicate;
+const tmpEnemy='v1129_validator_enemy';R.DATA.enemies[tmpEnemy]={name:'Validator Enemy',hp:1,damage:[1,1],drops:[['definitely_missing_item',1,1]]};
+checks.badReference=R.Authoring.validateCatalog().some(x=>x.code==='missing-item-ref'&&x.path===`enemies.${tmpEnemy}.drops`);delete R.DATA.enemies[tmpEnemy];
+const tmpLoc='v1129_validator_location';R.DATA.locations[tmpLoc]={name:'Validator Place',neighbors:{definitely_missing_location:1}};
+checks.badLocation=R.Authoring.validateCatalog().some(x=>x.code==='missing-location-ref'&&x.path===`locations.${tmpLoc}.neighbors`);delete R.DATA.locations[tmpLoc];
+checks.cleanAfter=R.Authoring.report().valid===true;
+const C=R.Core?.CompatibilityClassification,S=C?.summary?.()||{};
+checks.classOwner=R.Modules?.info?.('core.compatibilityClassification')?.meta?.status==='canonical';
+checks.classCount=S.total===93&&C.entries.length===93;
+checks.classBuckets=S.canonical_chronology_bridge===80&&S.save_migration_bridge===12&&S.mixed_historical_runtime===1&&S.retireable_obsolete===0;
+checks.noRetireable=C.retireable().length===0;
+checks.v3=C.forPatch('js/v3.js')?.category==='mixed_historical_runtime'&&C.forPatch('js/v3.js')?.tags?.includes('save-migration');
+checks.v107=C.forPatch('js/v10_7.js')?.category==='canonical_chronology_bridge'&&C.forPatch('js/v10_7.js')?.tags?.includes('scope-capsule');
+checks.runtimeCount=C.assertRuntimeCount()===true&&R.PRODUCTION_FOUNDATION?.sourcePatchCount===93;
+checks.compatBytes=S.compatibilityBytes===64639;
+checks.foundation=R.PRODUCTION_FOUNDATION?.contentAuthoring?.valid===true&&R.PRODUCTION_FOUNDATION?.compatibilityClassification?.total===93;
+checks.schema=R.V95?.SCHEMA==='11.5.3';checks.version=R.VERSION==='11.29.0';
+checks.knownHarnessWarning=ctx.__errs.length===1&&String(ctx.__errs[0]).includes('modalHTML');
+console.log(JSON.stringify({checks,report:{valid:report.valid,summary:report.catalogSummary,configDefinitions:report.configDefinitions},classification:S,errors:ctx.__errs.slice(0,2)},null,2));
+if(Object.values(checks).some(v=>!v))process.exit(2);
