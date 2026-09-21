@@ -7,7 +7,8 @@
   const safeStorage = {
     get(key) { try { return localStorage.getItem(key); } catch { return null; } },
     set(key, value) { try { localStorage.setItem(key, value); return true; } catch { return false; } },
-    remove(key) { try { localStorage.removeItem(key); return true; } catch { return false; } }
+    remove(key) { try { localStorage.removeItem(key); return true; } catch { return false; } },
+    keys(prefix = '') { try { const out=[]; for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&String(k).startsWith(String(prefix)))out.push(String(k));} return out; } catch { return []; } }
   };
   const api = {
     kind: 'browser',
@@ -35,6 +36,34 @@
     copyText: async text => {
       if (navigator?.clipboard?.writeText) { await navigator.clipboard.writeText(String(text)); return true; }
       return false;
+    },
+    async saveTextFile(filename, text, mime = 'text/plain') {
+      try {
+        if (typeof document === 'undefined' || typeof Blob === 'undefined' || !URL?.createObjectURL) return false;
+        const blob = new Blob([String(text)], { type: String(mime || 'text/plain') });
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = href; a.download = String(filename || 'realmforge-save.rfsave'); a.style.display = 'none';
+        (document.body || document.documentElement).appendChild(a); a.click(); a.remove();
+        setTimeout(() => { try { URL.revokeObjectURL(href); } catch {} }, 1000);
+        return true;
+      } catch { return false; }
+    },
+    async pickTextFile(accept = '.rfsave,.txt,application/json,text/plain') {
+      if (typeof document === 'undefined') return null;
+      return new Promise(resolve => {
+        try {
+          const input = document.createElement('input'); input.type = 'file'; input.accept = accept; input.style.display = 'none';
+          let settled = false; const finish = value => { if (settled) return; settled = true; try { input.remove(); } catch {} resolve(value); };
+          input.addEventListener('cancel', () => finish(null), { once: true });
+          input.addEventListener('change', async () => {
+            const file = input.files?.[0]; if (!file) return finish(null);
+            try { finish({ name: file.name || '', text: await file.text() }); } catch { finish(null); }
+          }, { once: true });
+          (document.body || document.documentElement).appendChild(input); input.click();
+          // Cancellation is intentionally silent; browsers do not expose a universal file-picker cancel event.
+        } catch { resolve(null); }
+      });
     },
     onVisibilityChange(handler) {
       if (typeof document === 'undefined') return () => {};
