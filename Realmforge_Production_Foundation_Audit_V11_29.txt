@@ -1,0 +1,75 @@
+REALMFORGE V11.29.0 - PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.28.0 Scoped Residual Execution & Final Migration Bridges
+Target: V11.29.0 Final Compatibility Classification & Content Authoring Readiness
+Save schema: 11.5.3 (unchanged)
+Production Foundation phase: 22
+
+AUDIT TARGET
+Stop treating residual legacy size as the primary metric. Classify every remaining historical execution boundary by purpose, prove whether any source is genuinely obsolete, and establish a validated authoring surface so future V12 content does not recreate patch-era coupling.
+
+COMPATIBILITY FINDING
+The V11.28 compatibility runtime contains 93 historical timeline entries and is 64,639 bytes. After inspection, no remaining entry can be deleted with sufficient semantic/save proof in V11.29.
+
+Classification:
+- 80 canonical chronology bridges: implementation is already canonical; the boundary preserves historical ordering.
+- 12 save/migration bridges: implementation/data ownership is canonical, but migration invocation or historical activation order still matters.
+- 1 mixed historical runtime stage: V3 retains the combined Delve + Prospector finishActivity wrapper.
+- 0 retireable obsolete stages.
+
+The detailed patch-by-patch result is written to COMPATIBILITY_CLASSIFICATION_V11_29.txt and exposed at runtime through core.compatibilityClassification.
+
+V11.29 deliberately leaves compatibility at 64,639 bytes. Deleting chronology or migration bridges solely to report a smaller number would make the architecture less trustworthy, not more production-ready.
+
+AUTHORING FINDING
+RF.Catalog and RF.Config were already the correct canonical data boundaries, but their author-facing API and validation coverage were too small for a large V12 content expansion.
+
+V11.29 adds data.authoring / RF.Authoring with:
+- validated single-record registration;
+- validated multi-record registration;
+- content-pack registration;
+- static Config definition helper;
+- structured Catalog validation;
+- structured Config/world validation;
+- full report/assert gate.
+
+The current game validates with 0 authoring errors. Current headline catalog counts include 170 items, 88 enemies and 21 locations, with 19 canonical Config definitions.
+
+VALIDATION COVERAGE
+V11.29 catches broken IDs/references for enemy drops, recipe inputs/outputs/skills, location neighbours, NPC locations, perk prerequisites, quest chains/objectives, shop stock, event locations, markets, ecosystems, service locations, burglary loot, equipment stat configuration, exploration pools, dungeon bosses/rewards/materials and V11.4 dungeon registrations.
+
+The dedicated test suite intentionally injects missing item and location references and verifies that RF.Authoring reports them, then removes them and verifies the live graph returns to clean state.
+
+GAMEPLAY / PERSISTENCE IMPACT
+No gameplay balance, mechanics or content were changed. No persistent field was added. Save schema remains 11.5.3.
+
+Existing campaign invariants remain protected: Equipment, identical dual rings, Tool Belt, Pack/Bank, deliberate overflow, skills/XP, research, quests, markets, crime/cooldowns, property/buffs, Collection, Energy, active travel and active combat.
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM modalHTML warning occurs identically under the Node fake-browser harness. It remains a harness limitation and is not a browser regression.
+
+VALIDATION
+- JavaScript syntax: 385/385 PASS.
+- Executable Node regression harnesses: 69/69 PASS.
+- Runtime contract: PASS.
+- V11.28 -> V11.29 parity: 73/73 PASS.
+- Advanced save compatibility: 74/74 PASS.
+- Content Authoring / Compatibility Classification suite: 24/24 PASS.
+- Active runtime/service-worker references: 9/9 PASS.
+- Authoring report: PASS, 0 errors.
+
+INCREMENTAL RELEASE VALIDATION
+- Final delta against V11.28.0: 30 changed/new files, 0 deletions.
+- Fresh V11.28.0 Full Current Source + only the V11.29 update pack: PASS.
+- Reconstructed runtime contract: PASS.
+- Reconstructed parity: 73/73 PASS.
+- Reconstructed advanced save compatibility: 74/74 PASS.
+- Reconstructed Content Authoring / Compatibility Classification suite: 24/24 PASS.
+- Reconstructed executable Node harnesses: 69/69 PASS.
+- Reconstructed JavaScript syntax: 385/385 PASS.
+- Reconstructed active runtime/service-worker references: 9/9 PASS.
+- Reconstructed production bundle reproduction: 4/4 byte-for-byte PASS.
+- All 30 update payload files matched the V11.29 source tree byte-for-byte.
+
+PRODUCTION CONCLUSION
+The codebase is now in the intended transition state for V12: canonical systems own mechanics, a small classified compatibility layer preserves history, and content authors have a validated data API. The next cleanup should focus on physical content-file organization rather than further arbitrary compatibility shaving.

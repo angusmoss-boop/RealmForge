@@ -1,0 +1,41 @@
+REALMFORGE V11.29.0 - SYSTEM / OWNERSHIP PROVENANCE
+
+Release theme: Final Compatibility Classification & Content Authoring Readiness
+Baseline: V11.28.0
+Save schema: 11.5.3
+
+HISTORICAL GAMEPLAY EXTRACTION
+V11.29 transfers 0 bytes of historical gameplay implementation out of compatibility.
+
+This is intentional. The release audited every remaining historical boundary and found no stage that was both obsolete and sufficiently proven safe to delete. Compatibility remains exactly 64,639 bytes with sha256:
+68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e
+
+NEW CANONICAL OWNERS
+1. core.compatibilityClassification
+   Source: js/core/compatibility_classification.js
+   Purpose: explicit runtime-readable classification of all 93 residual timeline boundaries.
+   Classification summary: 80 chronology bridges, 12 save/migration bridges, 1 mixed runtime, 0 retireable obsolete.
+
+2. data.authoring
+   Source: js/data/authoring.js
+   Purpose: content/config registration and validation for future development.
+   API: validateRecord, validateCatalog, validateConfig, report, assertClean, register, registerMany, registerPack, defineConfig plus type helpers.
+
+UPDATED CANONICAL DATA SURFACES
+- js/data/catalog.js: retains the old validate() string API and adds validateDetailed(), delegating to RF.Authoring when available.
+- js/data/finalize.js: records authoring readiness/validity in Production Foundation metadata.
+- js/data/config_finalize.js: records use of the shared authoring Config validator.
+
+COMPATIBILITY CLASSIFICATION
+Every active compatibility patch boundary is documented in COMPATIBILITY_CLASSIFICATION_V11_29.txt.
+
+The only mixed historical runtime survivor is js/v3.js because one captured finishActivity wrapper combines Delve completion and Prospector Mining behaviour. It remains untouched.
+
+V10.7 is classified as a canonical chronology bridge because its actual implementation was already moved to core.scopedRuntime in V11.28.
+
+CONTENT-AUTHORING MATERIAL
+- CONTENT_AUTHORING_GUIDE_V11_29.md
+- content_templates/realmforge_content_pack.example.js
+
+PRODUCTION RULE
+New game content must register through canonical data/config. New mechanics must edit canonical system/UI/core owners. Historical compatibility and scoped runtime are preservation infrastructure only.

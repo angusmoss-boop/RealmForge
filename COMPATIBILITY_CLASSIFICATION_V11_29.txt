@@ -1,0 +1,122 @@
+REALMFORGE V11.29.0 - FINAL COMPATIBILITY CLASSIFICATION
+
+Active compatibility file: js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js
+Compatibility size: 64,639 bytes (unchanged from V11.28; no unsafe byte-chasing removals)
+Runtime patch boundaries classified: 93
+
+CLASSIFICATION SUMMARY
+- canonical_chronology_bridge: 80
+- save_migration_bridge: 12
+- mixed_historical_runtime: 1
+- retireable_obsolete: 0
+
+INTERPRETATION
+canonical_chronology_bridge = implementation already belongs to canonical owners; the historical boundary remains solely to preserve ordering.
+save_migration_bridge = canonical implementation/data is delegated, but migration invocation or historical activation timing is still preserved here.
+mixed_historical_runtime = code still spans multiple semantic owners or captured wrappers and cannot be truthfully extracted without changing behaviour.
+retireable_obsolete = code proven safe to delete. V11.29 found none; no code was removed merely to improve the byte counter.
+
+IMPORTANT RESIDUAL
+js/v3.js remains the only patch classified mixed_historical_runtime because its captured finishActivity wrapper combines Delve completion with Prospector Mining bonus behaviour.
+V10.7 itself is already contained by core.scopedRuntime; its remaining compatibility entry is only the chronology boundary that invokes the scope-preserving capsule.
+
+PATCH-BY-PATCH CLASSIFICATION
+- js/v2.js |   200 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v3.js |  5722 body bytes | mixed_historical_runtime | tags=content-boundary,save-migration,canonical-delegation | combined Delve + Prospector finishActivity wrapper remains multi-owner
+- js/v4.js |  5838 body bytes | save_migration_bridge | tags=content-boundary,save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v5.js |   215 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v6.js |   215 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v7.js |  6151 body bytes | save_migration_bridge | tags=content-boundary,save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v8.js |  2006 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v8_1.js |   207 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v8_2.js |  2757 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v8_3.js |  1784 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v9.js |  2688 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v9_1.js |  1507 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v9_2.js |  2359 body bytes | save_migration_bridge | tags=content-boundary,save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v9_3.js |  1834 body bytes | save_migration_bridge | tags=content-boundary,save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v9_4.js |   209 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v9_5.js |   210 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v9_6.js |   219 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10.js |  3760 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v10_1.js |   701 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v10_2.js |  2182 body bytes | save_migration_bridge | tags=save-migration,canonical-delegation | migration/activation chronology remains after canonical delegation
+- js/v10_3.js |   218 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_4.js |   206 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_5.js |   206 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_6.js |   206 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_7.js |   201 body bytes | canonical_chronology_bridge | tags=canonical-delegation,scope-capsule | boundary delegates implementation to canonical owner(s)
+- js/v10_8.js |   206 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_9.js |   234 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_10.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_11.js |  1379 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_12.js |  1410 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_13.js |   200 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_14.js |   195 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_15.js |   217 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_16.js |   349 body bytes | canonical_chronology_bridge | tags=canonical-delegation,build-metadata | boundary delegates implementation to canonical owner(s)
+- js/v10_17.js |   348 body bytes | canonical_chronology_bridge | tags=canonical-delegation,build-metadata | boundary delegates implementation to canonical owner(s)
+- js/v10_18.js |   217 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_19.js |   217 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_20.js |   351 body bytes | canonical_chronology_bridge | tags=canonical-delegation,build-metadata | boundary delegates implementation to canonical owner(s)
+- js/v10_21.js |   260 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_22.js |   224 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_23.js |   224 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_24.js |   217 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_25.js |   226 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_26.js |   226 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_27.js |   208 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_28.js |   217 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_29.js |   208 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_30.js |   208 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_31.js |   208 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_32.js |   208 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_33.js |   216 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_34.js |   226 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_35.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_36.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_37.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_38.js |   219 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_39.js |   225 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_40.js |   225 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_41.js |   225 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_42.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_43.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_44.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_45.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_46.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_47.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_48.js |   217 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_49.js |   217 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_50.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_51.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_52.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_53.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_54.js |   356 body bytes | canonical_chronology_bridge | tags=canonical-delegation,build-metadata | boundary delegates implementation to canonical owner(s)
+- js/v10_55.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_56.js |   220 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_57.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_58.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_59.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_60.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v10_61.js |   213 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11.js |   356 body bytes | canonical_chronology_bridge | tags=canonical-delegation,build-metadata | boundary delegates implementation to canonical owner(s)
+- js/v11_1.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_2.js |   209 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_2_1.js |   214 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_2_2.js |   345 body bytes | canonical_chronology_bridge | tags=canonical-delegation,build-metadata | boundary delegates implementation to canonical owner(s)
+- js/v11_2_3.js |   214 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_3.js |   211 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_3_1.js |   227 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_3_2.js |   213 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_4.js |   215 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_5.js |   218 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_5_1.js |   355 body bytes | canonical_chronology_bridge | tags=canonical-delegation,build-metadata | boundary delegates implementation to canonical owner(s)
+- js/v11_5_2.js |   219 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+- js/v11_5_3.js |   219 body bytes | canonical_chronology_bridge | tags=canonical-delegation | boundary delegates implementation to canonical owner(s)
+
+RETIREMENT RESULT
+No remaining patch was classified retireable_obsolete in V11.29. The release therefore keeps compatibility at 64,639 bytes rather than deleting code without proof.
+
+FUTURE EXIT CRITERION
+Compatibility can shrink further only when a bridge is replaced by an equivalent declarative timeline/migration mechanism, or when a mixed wrapper receives a scope-safe multi-owner execution model with regression proof. New gameplay must not be added to compatibility.

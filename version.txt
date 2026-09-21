@@ -1,5 +1,5 @@
-version=11.28.0
-title=Scoped Residual Execution & Final Migration Bridges
-built=2026-09-21T09:20:00+01:00
-build_id=20260921-v1128-scoped-residuals
-notes=Historical migration definitions now live under core.migrations; V8 cadence/travel/presentation bridges are split into canonical owners; V10.13/V10.14 UI stages moved to Presentation/Inventory; scope-sensitive V10.7 executes from a dedicated scoped historical capsule. Save schema remains 11.5.3.
+version=11.29.0
+title=Final Compatibility Classification & Content Authoring Readiness
+built=2026-09-21T13:20:00+01:00
+build_id=20260921-v1129-authoring-readiness
+notes=Every remaining historical timeline stage is explicitly classified, and canonical RF.Authoring now provides validated content/config registration plus cross-reference checks for future V12 content. Save schema remains 11.5.3.
