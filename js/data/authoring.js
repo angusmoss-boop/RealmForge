@@ -1,4 +1,4 @@
-/* Realmforge V11.29.0 — canonical content authoring and validation surface. */
+/* Realmforge V11.30.0 — canonical content authoring and validation surface. */
 (() => {
   'use strict';
   const RF=window.RF;
@@ -86,23 +86,40 @@
     return issues;
   }
 
+  function validateAssets(){return RF.Assets?.validate?.()||[];}
+
+  function validateAssetReferences(){
+    const issues=[]; const A=RF.Assets; if(!A)return issues;
+    const fields=['asset','image','portrait','music','audio','sound','sprite','iconAsset','backgroundAsset'];
+    for(const type of Object.keys(specs))for(const [id,value] of Object.entries(table(type))){
+      if(!isRecord(value))continue;
+      for(const field of fields){
+        const target=value[field];
+        if(typeof target==='string'&&target&&!A.has(target))issues.push(issue('error','missing-asset-ref',`${type}.${id}.${field}`,`${type}.${id}.${field} references missing asset ${target}`));
+      }
+    }
+    return issues;
+  }
+
   function report(){
-    const issues=[...validateCatalog(),...validateConfig()];
+    const issues=[...validateCatalog(),...validateConfig(),...validateAssets(),...validateAssetReferences()];
     const errors=issues.filter(x=>x.severity==='error'), warnings=issues.filter(x=>x.severity==='warning');
-    return {valid:errors.length===0,issues,errors,warnings,catalogSummary:RF.Catalog?.summary?.()||{},configDefinitions:RF.Config?.size?.()||0};
+    return {valid:errors.length===0,issues,errors,warnings,catalogSummary:RF.Catalog?.summary?.()||{},configDefinitions:RF.Config?.size?.()||0,assetDefinitions:RF.Assets?.count?.()||0};
   }
   function assertClean(){const r=report();if(!r.valid)throw new Error(`Realmforge content validation failed:\n${r.errors.map(x=>`- ${x.message}`).join('\n')}`);return r;}
   function register(type,id,value,options={}){const bad=validateRecord(type,id,value).filter(x=>x.severity==='error');if(bad.length)throw new Error(bad.map(x=>x.message).join(' '));return RF.Catalog.register(type,id,value,options);}
   function registerMany(type,records,options={}){for(const [id,value] of Object.entries(records||{}))register(type,id,value,options);return RF.Catalog.table(type);}
   function defineConfig(name,value,meta={}){if(typeof name!=='string'||!name.includes('.'))throw new Error('Realmforge config names must be dotted strings, e.g. commerce.markets.');return RF.Config.define(name,value,meta);}
+  function defineAsset(id,value,options={}){return RF.Assets.define(id,value,options);}
   function registerPack(pack,{replace=false,assertValid=true}={}){
     if(!isRecord(pack))throw new Error('Realmforge content pack must be an object.');
     for(const type of Object.keys(specs))if(pack[type])registerMany(type,pack[type],{replace});
     for(const [name,value] of Object.entries(pack.config||{}))defineConfig(name,value,{source:'content-pack'});
+    for(const [id,value] of Object.entries(pack.assets||{}))defineAsset(id,value);
     return assertValid?assertClean():report();
   }
 
-  const api={specs,validateRecord,validateCatalog,validateConfig,report,assertClean,register,registerMany,defineConfig,registerPack,
-    item:(id,v,o)=>register('items',id,v,o),enemy:(id,v,o)=>register('enemies',id,v,o),location:(id,v,o)=>register('locations',id,v,o),recipe:(id,v,o)=>register('recipes',id,v,o),quest:(id,v,o)=>register('quests',id,v,o),skill:(id,v,o)=>register('skills',id,v,o),npc:(id,v,o)=>register('npcs',id,v,o),perk:(id,v,o)=>register('perks',id,v,o)};
+  const api={specs,validateRecord,validateCatalog,validateConfig,validateAssets,validateAssetReferences,report,assertClean,register,registerMany,defineConfig,defineAsset,registerPack,
+    item:(id,v,o)=>register('items',id,v,o),enemy:(id,v,o)=>register('enemies',id,v,o),location:(id,v,o)=>register('locations',id,v,o),recipe:(id,v,o)=>register('recipes',id,v,o),quest:(id,v,o)=>register('quests',id,v,o),skill:(id,v,o)=>register('skills',id,v,o),npc:(id,v,o)=>register('npcs',id,v,o),perk:(id,v,o)=>register('perks',id,v,o),asset:(id,v,o)=>defineAsset(id,v,o)};
   RF.Authoring=RF.Modules.register('data.authoring',api,{owner:'data',status:'canonical',purpose:'content-authoring'});
 })();
