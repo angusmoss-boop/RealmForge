@@ -18,29 +18,9 @@
 
 
   function installShellAffordances() {
-    RF.exportPrompt = async function() {
-      const txt = RF.exportSave(RF.state);
-      try {
-        const copied = await platform().copyText?.(txt);
-        if (!copied) throw new Error('Clipboard unavailable');
-        RF.UI.modal = { type: 'message', title: 'Save Exported', text: 'Your save backup has been copied to the clipboard. Keep it somewhere safe.' };
-      } catch {
-        platform().promptText?.('Copy this save backup:', txt);
-      }
-      RF.UI.render(RF.state);
-    };
-    RF.importPrompt = function() {
-      const txt = platform().promptText?.('Paste your Realmforge save backup:', '');
-      if (!txt) return;
-      try {
-        RF.state = RF.importSave(txt);
-        RF.save(RF.state);
-        RF.UI.modal = { type: 'message', title: 'Save Restored', text: 'Your campaign has been restored.' };
-        RF.UI.render(RF.state);
-      } catch {
-        platform().alertMessage?.('That save could not be read.');
-      }
-    };
+    // Save transfer UX is owned by canonical Core State. Lifecycle only asks it to install
+    // the active platform affordances, preventing late legacy handlers from stealing ownership.
+    return RF.Core.State?.installTransferAffordances?.() ?? false;
   }
 
   function installLegacyBoot() {

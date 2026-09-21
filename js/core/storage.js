@@ -11,6 +11,7 @@
       return true;
     },
     remove(key) { return store()?.remove(String(key)) !== false; },
+    keys(prefix = '') { const out=store()?.keys?.(String(prefix)); return Array.isArray(out)?out:[]; },
     getJSON(key, fallback = null) {
       try { const raw = api.get(key); return raw == null ? fallback : JSON.parse(raw); }
       catch { return fallback; }
