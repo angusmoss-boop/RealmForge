@@ -1,0 +1,54 @@
+REALMFORGE V11.25.0 - SYSTEM EXTRACTION PROVENANCE
+
+Reference runtime: V11.24.0
+Save schema: 11.5.3 (unchanged)
+
+DUNGEONS
+Destination: js/systems/dungeons.js
+- js/v11_4.js complete Eightfold Dungeons historical stage - 9,665 chars
+- v3-delve-action-ui - 325 chars
+Subtotal: 9,990 chars
+
+WORLD EVENTS
+Destination: js/systems/world_events.js
+- v3-world-events - 1,645 chars
+- v4-forced-world-events - 1,622 chars
+Subtotal: 3,267 chars
+
+WORLD
+Destination: js/systems/world.js
+- v4-encounter-ecology-core - 1,320 chars
+Subtotal: 1,320 chars
+
+ENCOUNTERS
+Destination: js/systems/encounters.js
+- v4-nearby-enemies-ui - 913 chars
+Subtotal: 913 chars
+
+WORLD ACTIONS
+Destination: js/ui/world_actions.js
+- v3-world-dungeon-crime-ui - 1,316 chars
+- v4-modal-composition - 839 chars
+- v4-world-encounter-social-composition - 377 chars
+- v4-region-home-composition - 1,385 chars
+- v4-bind-composition - 1,712 chars
+Subtotal: 5,629 chars
+
+TOTAL EXACT SOURCE TRANSFERRED
+21,119 characters
+
+METHOD
+- Every source slice was taken from the active transformed V11.24 compatibility runtime, not from an untransformed historical copy.
+- The complete V11.4 stage is stored verbatim in canonical Dungeons and executed synchronously when compatibility reaches the original js/v11_4.js position.
+- Fragment bodies are likewise stored verbatim and executed only from guarded installer markers at their original V3/V4 positions.
+- World Events owns only post-travel/world-pulse event hooks. Travel routing and Clock Sentinel remain systems.travel; battle resolution remains systems.combat.
+- ui.worldActions owns cross-system presentation/binding glue, not the underlying gameplay mechanics.
+- No extracted historical source body was semantically rewritten.
+
+COMPATIBILITY RESULT
+V11.24: 148,946 bytes
+V11.25: 129,864 bytes
+Reduction: 19,082 bytes (12.81%)
+
+ACTIVE COMPATIBILITY SHA-256
+f63663e2910c4a21e1c50bdeac93af400eb666f7f86babf23ec17c33bfd5e897

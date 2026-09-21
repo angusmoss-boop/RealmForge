@@ -1,0 +1,80 @@
+REALMFORGE V11.25.0 - PRODUCTION FOUNDATION AUDIT
+
+Baseline: V11.24.0 Canonical World Actions & Specialist Foundations
+Target: V11.25.0 Canonical Dungeon & World Event Foundations
+Save schema: 11.5.3 (unchanged)
+
+AUDIT TARGET
+Move the complete V11.4 Eightfold Dungeon/ecosystem stage into canonical Dungeons, then extract only coherent V3/V4 dungeon, encounter-ecology, forced-world-event and cross-system world presentation seams. Preserve mature Travel and Combat ownership.
+
+AUDIT FINDING
+The complete active transformed V11.4 stage is internally coherent around the existing V11.0 dungeon namespace RF.V1062 and can safely execute from systems.dungeons at its original chronological boundary. V3/V4 still contain several clean supporting seams, but their remaining combat/activity/collection logic is genuinely mixed and should not be bulk-moved.
+
+SAFE NEW OWNER
+- systems.worldEvents: historical world-pulse and post-travel event hooks only.
+
+SAFE EXISTING-OWNER TRANSFERS
+- Dungeons: full V11.4 Eightfold Dungeons stage plus the V3 Delve action-button ancestry.
+- World: V4 base encounter ecology / field table refresh foundation.
+- Encounters: V4 Nearby Creatures presentation ancestry.
+- World Actions: V3 dungeon/crime World-card composition and V4 cross-system modal/world/region/binding composition.
+
+DELIBERATELY RETAINED IN COMPATIBILITY
+- V3 Delve finish-activity wrapper because its non-Delve branch also contains Prospector mining behavior.
+- V4 migration, tactical combat core, collection/companion/specialisation presentation, and other inseparable mixed ancestry.
+- Travel routing, route recovery and Clock Sentinel remain systems.travel.
+- Tactical battle resolution, damage/status logic and mature combat UI remain systems.combat.
+
+TOTAL EXACT HISTORICAL SOURCE TRANSFERRED
+21,119 characters
+
+COMPATIBILITY RUNTIME SIZE
+V11.24: 148,946 bytes
+V11.25: 129,864 bytes
+Reduction: 19,082 bytes
+Reduction from V11.24 compatibility: 12.81%
+
+SAVE COMPATIBILITY
+Save schema remains 11.5.3. No new persistent migration is registered. Existing Equipment, identical Ring I/Ring II, populated Tool Belt, Pack/Bank, deliberate Pack overflow, skills/XP, research, quests, markets, dungeon records, crime/cooldowns, exploration/resources, property/buffs, Energy, active travel and active combat remain covered by the V11.25 advanced fixtures.
+
+OWNERSHIP SAFETY
+- systems.worldEvents reacts to world/travel milestones but does not own route planning or combat resolution.
+- systems.dungeons remains the authoritative dungeon owner and now also owns the V11.4 enrichment that historically targeted RF.V1062.
+- systems.world owns encounter ecology tables; systems.encounters owns inspect/nearby encounter presentation.
+- ui.worldActions owns mixed historical presentation/bindings only.
+- Valid Equipment and Tool Belt loadouts are not migrated, unequipped or deleted.
+
+KNOWN HARNESS WARNING
+The historical V10.9 fake-DOM modalHTML warning appears identically in V11.24 and V11.25 Node fake-browser harnesses and is not a browser/runtime regression.
+
+VALIDATION COUNTS
+- JavaScript files checked with node --check: 336
+- Syntax failures: 0
+- Executable Node regression harnesses: 53
+- Harness failures: 0
+- V11.25 runtime contract: PASS
+- V11.24 -> V11.25 parity: 55/55 PASS
+- Dungeon / World Event targeted suite: 24/24 PASS
+- Advanced/active-state save compatibility: 65/65 PASS
+- Active runtime/service-worker references: 9/9 PASS
+- All four production bundles reproduce byte-for-byte from documented source order: PASS
+
+RESIDUAL HOTSPOTS
+- js/v4.js: 21,688 chars
+- js/v8.js: 8,079 chars
+- js/v10.js: 7,756 chars
+- js/v3.js: 7,628 chars
+- js/v10_9.js: 7,310 chars
+- js/v10_21.js: 6,881 chars
+- js/v7.js: 6,617 chars
+- js/v10_7.js: 6,314 chars
+- js/v10_11.js: 5,771 chars
+- js/v10_1.js: 5,669 chars
+- js/v10_2.js: 3,827 chars
+- js/v8_2.js: 2,755 chars
+
+RECOMMENDED NEXT EXTRACTION
+V11.26 should audit the remaining V4 tactical-combat / collection / character-shell ancestry as the largest residual block, plus the V3 mixed Delve/Prospector activity hook. Move only exact coherent slices into existing Combat, Character, Encounters, Property or Specialist owners. Avoid a whole-stage V4 transfer merely to chase byte count.
+
+UPDATE-PACK RECONSTRUCTION
+A clean V11.24.0 Full Current Source tree was updated using only the 27-file V11.25 GitHub delta, with no deletions required. The reconstructed installation passed the V11.25 runtime contract, 55/55 parity checks, 65/65 advanced save checks, 24/24 targeted Dungeon / World Event checks, all 53 executable regression harnesses, all 336 JavaScript syntax checks, 9/9 active runtime/precache checks and 4/4 bundle reproduction checks.

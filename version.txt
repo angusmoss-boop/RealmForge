@@ -1,5 +1,5 @@
-version=11.24.0
-title=Canonical World Actions & Specialist Foundations
-built=2026-09-19T22:06:00+01:00
-build_id=20260919-v1124-world-actions-specialist
-notes=V7/V9 specialist actions, Mirefen world ancestry, quantity commerce/crafting, research/combat and cross-system world-action UI now execute from canonical domain owners. Save schema remains 11.5.3.
+version=11.25.0
+title=Canonical Dungeon & World Event Foundations
+built=2026-09-19T23:25:00+01:00
+build_id=20260919-v1125-dungeon-world-events
+notes=Eightfold Dungeons, V3/V4 world-event hooks, encounter ecology and residual world-action composition now execute from canonical owners. Save schema remains 11.5.3.
