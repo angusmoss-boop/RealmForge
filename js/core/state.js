@@ -41,7 +41,14 @@
     return `Realmforge-${who}-${stamp}.rfsave`;
   }
 
-  RF.newGame=function(...args){return normalise(baseNewGame(...args))};
+  RF.newGame=function(name,bg,avatar,options={}){
+    const state=normalise(baseNewGame(name,bg,avatar));
+    const mode=(options?.hardcore===true||options?.mode==='hardcore')?'hardcore':'standard';
+    state.campaign=state.campaign||{};
+    state.campaign.mode=mode;state.campaign.gameOver=false;
+    delete state.campaign.endedAt;delete state.campaign.death;
+    return state;
+  };
   RF.save=function(state=RF.state){
     if(!state)return false;
     if(!M.ready){try{RF.Core.Storage.set(C.MIRROR_KEY,JSON.stringify(state));return true}catch{return false}}
@@ -53,8 +60,8 @@
   RF.load=function(){return normalise(C.bootstrapRaw())};
   RF.exportSave=function(state=RF.state,meta={}){return pack(state,meta)};
   RF.importSave=function(payload){return normalise(unpack(payload))};
-  RF.startNew=function(name,bg,avatar){
-    const state=RF.newGame(name,bg,avatar);RF.state=state;
+  RF.startNew=function(name,bg,avatar,options={}){
+    const state=RF.newGame(name,bg,avatar,options);RF.state=state;
     const base=(name||'Wanderer').trim()||'Wanderer',existing=C.readIndex().filter(x=>x.name.startsWith(base)).length;
     const id=C.createSlot(state,`${base} • Campaign ${existing+1}`,{activate:true});
     if(!id)throw new Error('Could not create a verified campaign slot.');

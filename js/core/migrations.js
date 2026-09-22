@@ -94,6 +94,26 @@
     }
   };
   RF.Core.Migrations = RF.Modules.register('core.migrations', api, { owner: 'core', status: 'canonical', baselineSchema: RF.Core.contract.saveSchema });
+  // V12.5 introduces an explicit persisted campaign-rules record.
+  // Existing saves migrate to Standard mode; Hardcore is opt-in only at character creation.
+  api.register('11.5.3','12.5.0',state=>{
+    if(!state||typeof state!=='object')return state;
+    state.stats=state.stats||{};
+    if(state.stats.deaths==null)state.stats.deaths=0;
+    const previous=state.campaign&&typeof state.campaign==='object'&&!Array.isArray(state.campaign)?state.campaign:{};
+    state.campaign={
+      ...previous,
+      mode: previous.mode==='hardcore'?'hardcore':'standard',
+      gameOver: previous.mode==='hardcore'&&previous.gameOver===true
+    };
+    if(state.campaign.mode!=='hardcore'){
+      state.campaign.gameOver=false;
+      delete state.campaign.endedAt;
+      delete state.campaign.death;
+    }
+    return state;
+  });
+
 })();
 
 /* Realmforge V11.28.0 — historical migration definition ownership.

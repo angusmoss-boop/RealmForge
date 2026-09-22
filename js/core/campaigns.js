@@ -32,7 +32,7 @@
       const ids=new Set();
       for(const key of S.keys('realmforge_v95_')){const m=key.match(/^realmforge_v95_(.+)_(primary|backup|recovery)$/);if(m)ids.add(m[1]);}
       const recovered=[];
-      for(const id of ids){const d=this.readRawSlot(id);if(!d?.state)continue;const st=d.state;recovered.push({id,name:`${st.player?.name||'Recovered'} • Recovered`,created:d.savedAt||Date.now(),updated:d.savedAt||Date.now(),playerName:st.player?.name||'Wanderer',level:st.player?.level||1,day:st.day||1,location:st.location||'greenvale'});}
+      for(const id of ids){const d=this.readRawSlot(id);if(!d?.state)continue;const st=d.state;recovered.push({id,name:`${st.player?.name||'Recovered'} • Recovered`,created:d.savedAt||Date.now(),updated:d.savedAt||Date.now(),playerName:st.player?.name||'Wanderer',level:st.player?.level||1,day:st.day||1,location:st.location||'greenvale',mode:st.campaign?.mode==='hardcore'?'hardcore':'standard',gameOver:!!st.campaign?.gameOver});}
       recovered.sort((a,b)=>b.updated-a.updated);if(recovered.length)this.writeIndex(recovered);return recovered;
     },
     id() {
@@ -54,7 +54,7 @@
     },
     touchMeta(id,state,name) {
       const list=this.readIndex(),i=list.findIndex(x=>x.id===id),old=i>=0?list[i]:null;
-      const meta={id,name:name||old?.name||`${state.player?.name||'Wanderer'} Campaign`,created:old?.created||Date.now(),updated:Date.now(),playerName:state.player?.name||'Wanderer',level:state.player?.level||1,day:state.day||1,location:state.location||'greenvale'};
+      const meta={id,name:name||old?.name||`${state.player?.name||'Wanderer'} Campaign`,created:old?.created||Date.now(),updated:Date.now(),playerName:state.player?.name||'Wanderer',level:state.player?.level||1,day:state.day||1,location:state.location||'greenvale',mode:state.campaign?.mode==='hardcore'?'hardcore':'standard',gameOver:!!state.campaign?.gameOver};
       if(i>=0)list[i]=meta;else list.unshift(meta);this.writeIndex(list);return meta;
     },
     stateSlotId(state){return stampedId(state)},
