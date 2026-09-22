@@ -1,0 +1,25 @@
+REALMFORGE V12.2.1 - DATABASE RESPONSIVE PROVENANCE
+
+User-observed failure
+- On mobile, opening Items, Resources or Recipes caused the Codex to become wider than the screen.
+- The common factor was the category refine rail.
+
+V12.2 behavior
+- `.db122Chips` used a single non-wrapping flex row with horizontal scrolling.
+- Its intrinsic/minimum-content width could leak into the parent grid sizing algorithm.
+
+V12.2.1 behavior
+- `.db122Chips` uses `display:flex; flex-wrap:wrap; width:100%; overflow:visible`.
+- Each chip remains content-sized and automatically moves to a new row when required.
+- Codex layout containers and direct grid children use explicit min/max width containment.
+- Items can use several rows; Resources generally use fewer; Recipes wrap according to available width.
+
+Regression protection
+`tests/database_v1221.js` asserts:
+- all existing filter sets remain present;
+- Items/Resources/Recipes still classify V12.1 content correctly;
+- the search focus guard still works;
+- the modern stylesheet contains the wrapped chip contract;
+- the old single-line overflow rail is absent.
+
+No state migration or compatibility-layer change was required.

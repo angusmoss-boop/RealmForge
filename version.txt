@@ -1,5 +1,5 @@
-version=12.2.0
-title=Living Codex
-built=2026-09-22T08:04:00+01:00
-build_id=20260922-v1220-living-codex
-notes=Database search stability fix, category refiners for Items/Resources/Recipes, and full Living Codex interface redesign; save schema remains 11.5.3.
+version=12.2.1
+title=Living Codex - Responsive Refiners
+built=2026-09-22T08:41:00+01:00
+build_id=20260922-v1221-responsive-refiners
+notes=Mobile layout hotfix: Database refine chips now wrap across multiple rows and Codex panels are width-contained; save schema remains 11.5.3.

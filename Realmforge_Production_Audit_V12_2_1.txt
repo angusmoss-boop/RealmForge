@@ -1,0 +1,46 @@
+REALMFORGE V12.2.1 - PRODUCTION AUDIT
+
+SCOPE
+Mobile-width regression in Living Codex category refinement.
+
+ROOT CAUSE
+The V12.2 `.db122Chips` control was a non-wrapping horizontal flex rail. Inside the Codex CSS grid, its accumulated minimum-content width could expand the grid item beyond the mobile viewport. The screenshots supplied from Samsung showed the sector grid and workbench clipped horizontally on Items/Resources/Recipes, the three sectors that expose refiners.
+
+FIX
+- `.db122Chips`: `flex-wrap: wrap`; no horizontal overflow rail.
+- Codex layout containers: `min-width:0`, `max-width:100%`, `box-sizing:border-box`.
+- Direct Codex children: `min-width:0`.
+- Refine hint updated from swipe-oriented copy to non-scroll category copy.
+
+SAFETY
+- No persistent state changes.
+- Save schema 11.5.3 unchanged.
+- No compatibility-layer edits.
+- No content/balance changes.
+- Search focus protection remains intact.
+
+VERIFICATION
+- Database V12.2.1 regression: PASS.
+- Runtime contract V12.2.1: PASS.
+- Established-save compatibility V12.2.1: PASS.
+- Saveguard reliability V12.2.1: PASS.
+- Forge & Fletch progression compatibility: PASS.
+- RF.Authoring/content validation: PASS.
+- Executable regression harnesses: 98/98 PASS.
+- JavaScript syntax validation: 477/477 PASS.
+- Frozen compatibility runtime: 64,639 bytes, unchanged.
+
+INCREMENTAL ARTIFACT VERIFICATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_2_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_2_1_GitHub_Update.zip
+- Reconstructed tree: 704/704 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.2.1 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- V12.2.1 Database responsive regression after reconstruction: PASS
+- V12.2.1 runtime contract after reconstruction: PASS
+- V12.2.1 established-save compatibility after reconstruction: PASS
+- V12.2.1 Saveguard reliability after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS
+- V12.2.1 content-source reproduction after reconstruction: PASS

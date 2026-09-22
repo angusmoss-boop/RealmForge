@@ -1,0 +1,39 @@
+REALMFORGE V12.2.1 - CANONICAL BUNDLE PROVENANCE
+
+Save schema: 11.5.3
+
+- js/dist/save_core_v12_2_1.js | sha256 fad547173768e9b57a02d20336d251b048abee74987ddce735d82248643e6bcc | 74,638 bytes
+- js/dist/data_core_v12_2_1.js | sha256 59cf8adbbd8a2ee3651514e39db3e3135c1eab397bdb319a4a76de64f897b022 | 174,730 bytes
+- js/dist/systems_core_v12_2_1.js | sha256 963b8f05e90ca179a909da7fbb0bd23e15a049310370ffb8c64469ca2fb8b6e8 | 1,187,408 bytes
+- js/dist/canonical_v12_2_1.js | sha256 6766d93d59ee68a77fd3dc2c23684e4637c1deef1e8fe7c19fa82823f114a77b | 56,565 bytes
+- js/ui/database_modern.js | sha256 e99f2273759c6878bbee3cebb0edd7fcf6c0613ced26fb2e32e757d592ce7118 | 21,109 bytes
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js | sha256 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e | 64,639 bytes
+
+SOURCE REPRODUCTION
+- save_core_v12_2_1.js from canonical save sources: PASS
+- data_core_v12_2_1.js from tools/content_sources_v12_2_1.json + lexical content packs: PASS
+- systems_core_v12_2_1.js is byte-identical to source-reproduced V12.2.0 systems bundle: PASS
+- canonical_v12_2_1.js from save_manager/save_boot/data-finalize/config-finalize/shell/database_modern/system-ownership/finalizer: PASS
+
+RESPONSIVE DATABASE CHANGE
+- `js/ui/database_modern.js` is the sole gameplay/UI implementation changed for the width hotfix.
+- Category chip host wraps instead of scrolling horizontally.
+- Codex grid children are explicitly width-contained.
+
+COMPATIBILITY
+- frozen compatibility runtime was not edited and remains 64,639 bytes.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_2_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_2_1_GitHub_Update.zip
+- Reconstructed tree: 704/704 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.2.1 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- V12.2.1 Database responsive regression after reconstruction: PASS
+- V12.2.1 runtime contract after reconstruction: PASS
+- V12.2.1 established-save compatibility after reconstruction: PASS
+- V12.2.1 Saveguard reliability after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS
+- V12.2.1 content-source reproduction after reconstruction: PASS
