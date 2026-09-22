@@ -19,7 +19,7 @@
       const copies=C.backupSummary(m.id),health=copies.filter(x=>x.ok).length,loc=RF.DATA.locations[m.location]?.name||m.location||'Unknown';
       const date=new Date(m.updated).toLocaleString();
       return `<div class="saveSlot ${m.id===active?'activeSlot':''}">
-        <div class="saveSlotHead"><div><b>${m.id===active?'▶ ':''}${esc(m.name)}</b><small>${esc(m.playerName)} • Lv ${m.level} • Day ${m.day} • ${esc(loc)}</small><small>Saved ${esc(date)} • ${health}/3 verified local copies</small></div><span class="saveShield">${health===3?'🛡️':health>=2?'✅':'⚠️'}</span></div>
+        <div class="saveSlotHead"><div><b>${m.id===active?'▶ ':''}${esc(m.name)}${m.mode==='hardcore'?' <span class="v125SaveHardcore">☠ HARDCORE</span>':''}${m.gameOver?' <span class="v125SaveFallen">FALLEN</span>':''}</b><small>${esc(m.playerName)} • Lv ${m.level} • Day ${m.day} • ${esc(loc)}</small><small>Saved ${esc(date)} • ${health}/3 verified local copies</small></div><span class="saveShield">${health===3?'🛡️':health>=2?'✅':'⚠️'}</span></div>
         <div class="saveActions v12SaveActions">
           <button data-slot-load="${m.id}" ${m.id===active?'disabled':''}>Load</button>
           <button data-slot-save="${m.id}" ${m.id!==active?'disabled':''}>Save Now</button>
@@ -65,10 +65,13 @@
     }
     if(m?.action==='restart'){
       const meta=C.readIndex().find(x=>x.id===active);if(!active||!RF.state)return;
+      if(RF.CampaignMode?.isGameOver?.(RF.state)){
+        RF.UI.modal={type:'message',title:'Hardcore Campaign Fallen',text:'A fallen Hardcore campaign cannot be restarted or revived. Create a new character to begin another run.'};RF.UI.render(RF.state);return;
+      }
       if(!C.saveNow()){RF.UI.modal={type:'message',title:'Save Failed',text:'Restart cancelled because the current campaign could not be safely archived.'};RF.UI.render(RF.state);return}
       const archive=C.duplicate(active,`${meta?.name||RF.state.player?.name||'Campaign'} • Before Restart`.slice(0,40),{activate:false});
       if(!archive){RF.UI.modal={type:'message',title:'Archive Failed',text:'Restart cancelled because the safety duplicate could not be verified.'};RF.UI.render(RF.state);return}
-      const old=RF.state,fresh=RF.newGame(old.player.name,old.player.background,old.player.avatar);RF.state=C.migrate(fresh);
+      const old=RF.state,fresh=RF.newGame(old.player.name,old.player.background,old.player.avatar,{mode:old.campaign?.mode==='hardcore'?'hardcore':'standard'});RF.state=C.migrate(fresh);
       if(!C.replaceSlot(active,RF.state,meta?.name,{activate:true})){C.loadSlot(active);RF.UI.modal={type:'message',title:'Restart Failed',text:'The original campaign was restored. Its Before Restart duplicate is also available.'};RF.UI.render(RF.state);return}
       RF.UI.modal={type:'message',title:'Campaign Restarted',text:'The current slot has been restarted. A separate “Before Restart” duplicate was verified first.'};RF.UI.tab='world';RF.UI.render(RF.state);return;
     }
