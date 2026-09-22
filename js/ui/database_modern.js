@@ -1,12 +1,12 @@
-/* Realmforge V12.2.1 — Living Codex responsive refinement hotfix.
-   Post-compatibility Database presentation, refiners and focus-safe live search.
+/* Realmforge V12.3.0 — Living Codex knowledge links.
+   Post-compatibility Database presentation, alphabetical indexing, recipe/use links and focus-safe live search.
    Historical Database stages remain the data/detail authority. */
 (() => {
   'use strict';
   const RF=window.RF;if(!RF?.UI)return;
   const DB=RF.Views.Database=RF.Views.Database||{};
-  const V=DB.V122=DB.V122||{};
-  V.version='12.2.1';
+  const V=DB.V123=DB.V122=DB.V122||{};
+  V.version='12.3.0';
   DB.modernVersion=V.version;
 
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -66,11 +66,55 @@
     return bits.filter(v=>v!==undefined&&v!==null).join(' ').toLowerCase();
   };
   V.allEntries=function(s,type){return (RF.V1061?.entries?.(s,type)||[]).slice()};
+  V.alphaCompare=(a,b)=>String(a?.name||'').localeCompare(String(b?.name||''),undefined,{sensitivity:'base',numeric:true});
   V.filteredEntries=function(s,type,q='',filter=V.filterFor(type)){
     const needle=String(q||'').trim().toLowerCase();
-    return V.allEntries(s,type).filter(row=>V.matchesCategory(type,row.id,filter)&&(!needle||V.searchText(type,row.id,row).includes(needle)));
+    return V.allEntries(s,type)
+      .filter(row=>V.matchesCategory(type,row.id,filter)&&(!needle||V.searchText(type,row.id,row).includes(needle)))
+      .sort(V.alphaCompare);
   };
   V.countFor=(s,type,filter)=>V.allEntries(s,type).filter(row=>V.matchesCategory(type,row.id,filter)).length;
+
+  V.recipeDiscipline=function(r){
+    if(!r)return 'Crafting';
+    if(V.isFletching(r))return 'Fletching';
+    return RF.DATA.skills?.[r.skill]?.name||title(r.skill||'Crafting');
+  };
+  V.recipeUsesForItem=function(itemId){
+    const uses=[];
+    Object.entries(RF.DATA.recipes||{}).forEach(([id,r])=>{
+      const inputQty=Number(r?.inputs?.[itemId]||0);if(inputQty<=0)return;
+      const outputs=Object.entries(r.outputs||{}).map(([outId,qty])=>{
+        const it=RF.DATA.items?.[outId]||{};
+        return {id:outId,name:it.name||title(outId),icon:it.icon||'📦',qty:Number(qty)||1};
+      });
+      uses.push({id,name:r.name||title(id),discipline:V.recipeDiscipline(r),level:Number(r.level)||1,inputQty,outputs,camp:false});
+    });
+    Object.entries(RF.DATA.campRecipes||{}).forEach(([id,r])=>{
+      let inputQty=r?.input===itemId?Number(r.qty||1):0;
+      inputQty+=Number(r?.extra?.[itemId]||0);
+      if(inputQty<=0)return;
+      const outId=r.output,oit=RF.DATA.items?.[outId]||{};
+      uses.push({id,name:r.name||title(id),discipline:RF.DATA.skills?.[r.skill]?.name||title(r.skill||'Cooking'),level:Number(r.level)||1,inputQty,outputs:outId?[{id:outId,name:oit.name||title(outId),icon:oit.icon||r.icon||'🍲',qty:1}]:[],camp:true});
+    });
+    const seen=new Set();
+    return uses.filter(u=>{
+      const key=[u.name,u.discipline,u.level,u.inputQty,(u.outputs||[]).map(x=>`${x.id}:${x.qty}`).join(',')].join('|');
+      if(seen.has(key))return false;seen.add(key);return true;
+    }).sort((a,b)=>{
+      const ao=a.outputs?.[0]?.name||a.name,bo=b.outputs?.[0]?.name||b.name;
+      return String(ao).localeCompare(String(bo),undefined,{sensitivity:'base',numeric:true})||String(a.name).localeCompare(String(b.name),undefined,{sensitivity:'base',numeric:true});
+    });
+  };
+  V.usesHtml=function(itemId){
+    const item=RF.DATA.items?.[itemId],uses=V.recipeUsesForItem(itemId);
+    if(!item||!uses.length)return '';
+    const rows=uses.map(u=>{
+      const out=u.outputs?.map(x=>`${x.icon} ${esc(x.name)}${x.qty!==1?` ×${x.qty}`:''}`).join(' + ')||esc(u.name);
+      return `<div class="db123UseRow"><span class="db123UseIcon">${u.outputs?.[0]?.icon||'🛠️'}</span><span class="db123UseMeta"><b>${out}</b><small>${esc(u.name)} • ${esc(u.discipline)} Lv ${u.level} • Uses ${u.inputQty} × ${esc(item.name||itemId)}</small></span></div>`;
+    }).join('');
+    return `<h3 class="db123UsesTitle">Recipes &amp; Uses</h3><div class="db123Uses">${rows}</div>`;
+  };
 
   V.sectionCopy=function(type){
     const copy={
@@ -151,6 +195,16 @@
       };
     });
   };
+  // Enrich item and harvest-resource details without changing the historical detail authority.
+  const detailBase=RF.v94DetailHtml;
+  if(typeof detailBase==='function')RF.v94DetailHtml=function(s,type,id){
+    let h=detailBase.apply(this,arguments);if(!h)return h;
+    const itemId=type==='items'?id:(type==='resources'?RF.DATA.resourceDefs?.[id]?.item:null);
+    const uses=itemId?V.usesHtml(itemId):'';if(!uses)return h;
+    const close=h.lastIndexOf('</div></div>');
+    return close>=0?h.slice(0,close)+uses+h.slice(close):h+uses;
+  };
+
   V.forceRender=false;
   V.renderNow=function(s=RF.state){V.forceRender=true;try{return RF.UI.render(s)}finally{V.forceRender=false}};
   V.shouldHoldRender=function(){
@@ -203,6 +257,7 @@
   .db122Results{display:grid;grid-template-columns:1fr;gap:7px}.db122Result{width:100%;min-width:0;display:grid;grid-template-columns:48px minmax(0,1fr) 24px;align-items:center;gap:10px;padding:10px;border:1px solid #3b3127;border-radius:15px;background:linear-gradient(145deg,#1d1914,#14110e);color:inherit;text-align:left;box-shadow:0 6px 16px rgba(0,0,0,.14);transition:transform .12s,border-color .12s,background .12s}.db122Result:active{transform:scale(.988);border-color:#84623a;background:#221a12}.db122Icon{display:grid;place-items:center;width:48px;height:48px;border:1px solid rgba(209,164,91,.15);border-radius:13px;background:radial-gradient(circle at 35% 25%,rgba(224,181,108,.09),transparent 60%),#110f0c;font-size:25px}.db122Meta{min-width:0}.db122NameLine{display:flex;align-items:center;gap:7px;min-width:0}.db122NameLine b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e9d9ba;font:700 13px/1.2 system-ui}.db122NameLine em{flex:0 0 auto;padding:3px 6px;border:1px solid #4a3a28;border-radius:999px;background:#18130e;color:#aa8c5e;font:700 7.5px/1 system-ui;font-style:normal;text-transform:uppercase;letter-spacing:.04em}.db122Meta small{display:-webkit-box;margin-top:4px;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;color:#8f8371;font-size:9.5px;line-height:1.35}.db122Chevron{color:#7f6a4c;font:300 25px/1 Georgia,serif;text-align:center}.db122Empty{padding:28px 15px;border:1px dashed #44382b;border-radius:17px;background:#15120e;text-align:center}.db122Empty>span{display:block;color:#806842;font-size:27px}.db122Empty>b{display:block;margin-top:5px;color:#c7b693;font:700 14px Georgia,serif}.db122Empty>small{display:block;margin:5px auto 0;max-width:300px;color:#766d60;font-size:10px;line-height:1.45}
   .v112DbModal,.dbModal{border:1px solid rgba(210,165,91,.28)!important;border-radius:21px!important;background:radial-gradient(circle at 88% 0,rgba(196,138,55,.12),transparent 29%),linear-gradient(145deg,#211b15,#12100d)!important;box-shadow:0 22px 70px rgba(0,0,0,.68)!important}.v112DbModal .eyebrow,.dbModal .eyebrow{color:#a88958!important;letter-spacing:.16em!important}.v112DbModal .dbHero,.dbModal .dbHero{padding:9px;border:1px solid rgba(211,168,98,.13);border-radius:16px;background:rgba(8,7,6,.22)}.v112DbModal .dbHero>span,.dbModal .dbHero>span{border-color:rgba(215,170,96,.2)!important;background:#12100d!important;box-shadow:inset 0 0 20px rgba(197,139,57,.05)}.v112DbModal .dbStatGrid>div,.dbModal .dbStatGrid>div{border-color:rgba(210,163,89,.16)!important;background:#12100d!important}.v112DbModal .questInfo,.dbModal .questInfo{border-color:#3f3326!important;background:#15120e!important}.v112DbModal .dbText,.dbModal .dbText{border-color:#392f25!important;background:#12100d!important}.v112DbModal .dbChips span,.dbModal .dbChips span{border-color:#493825!important;background:#17130e!important;color:#cdbb99!important}
   @media(min-width:680px){.db122Results{grid-template-columns:repeat(2,minmax(0,1fr))}.db122Hero{padding:21px}.db122Sector{min-height:73px}.db122Sector span{font-size:27px}}
+  .db123UsesTitle{margin-top:18px!important}.db123Uses{display:grid;gap:7px}.db123UseRow{min-width:0;display:grid;grid-template-columns:39px minmax(0,1fr);align-items:center;gap:9px;padding:9px 10px;border:1px solid rgba(184,145,81,.2);border-radius:13px;background:linear-gradient(145deg,rgba(30,25,19,.78),rgba(16,13,10,.82));box-shadow:inset 0 1px rgba(255,255,255,.02)}.db123UseIcon{width:39px;height:39px;display:grid;place-items:center;border:1px solid rgba(191,150,82,.18);border-radius:11px;background:#120f0c;font-size:21px}.db123UseMeta{min-width:0;display:block}.db123UseMeta b{display:block;color:#ead3a5;font-size:11px;line-height:1.3}.db123UseMeta small{display:block;margin-top:3px;color:#9c8f7b;font-size:9px;line-height:1.45}
   @media(max-width:390px){.db122Hero{padding:15px}.db122Hero h2{font-size:24px}.db122Hero p{font-size:10.5px}.db122Count{min-width:61px}.db122Sectors{gap:6px}.db122Sector{min-height:61px;border-radius:13px}.db122Sector span{font-size:22px}.db122Sector b{font-size:8.3px}.db122Result{grid-template-columns:44px minmax(0,1fr) 20px;padding:9px}.db122Icon{width:44px;height:44px;font-size:23px}.db122NameLine em{max-width:86px;overflow:hidden;text-overflow:ellipsis}}
   `;document.head.appendChild(st);
 })();
