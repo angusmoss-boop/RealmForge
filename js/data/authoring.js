@@ -58,6 +58,22 @@
         if(o.type==='skill')ref(skills,'missing-skill-ref',`quests.${id}.objectives`,o.target,'skill');
       }
     }
+    const resourceDefs=RF.DATA?.resourceDefs||{}, locationResources=RF.DATA?.locationResources||{};
+    for(const [id,d] of Object.entries(resourceDefs)){
+      const p=`resourceDefs.${id}`;
+      if(!isRecord(d))issues.push(issue('error','invalid-resource',p,`${p} must be an object.`));
+      else{
+        ref(items,'missing-item-ref',`${p}.item`,d.item,'item');
+        ref(skills,'missing-skill-ref',`${p}.skill`,d.skill,'skill');
+        if(!Number.isFinite(d.level)||d.level<1)issues.push(issue('error','invalid-resource-level',`${p}.level`,`${p}.level must be a positive number.`));
+        if(!Array.isArray(d.yield)||d.yield.length!==2||d.yield.some(x=>!Number.isFinite(x)||x<1))issues.push(issue('error','invalid-resource-yield',`${p}.yield`,`${p}.yield must be [min,max] positive numbers.`));
+      }
+    }
+    for(const [loc,ids] of Object.entries(locationResources)){
+      ref(locations,'missing-location-ref',`locationResources.${loc}`,loc,'location');
+      if(!Array.isArray(ids))issues.push(issue('error','invalid-location-resources',`locationResources.${loc}`,`locationResources.${loc} must be an array.`));
+      else for(const id of ids)if(!resourceDefs[id])issues.push(issue('error','missing-resource-ref',`locationResources.${loc}`,`locationResources.${loc} references missing resource ${id}`));
+    }
     for(const id of (RF.DATA?.shopStock||[]))ref(items,'missing-item-ref','shopStock',id,'item');
     for(const [i,e] of (RF.DATA?.events||[]).entries())for(const loc of (e?.locations||[]))ref(locations,'missing-location-ref',`events[${i}].locations`,loc,'location');
     return issues;
