@@ -2,7 +2,7 @@
 'use strict';
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),vm=require('vm'),cp=require('child_process');
 const root=path.resolve(__dirname,'..');
-const manifestPath=path.join(__dirname,'content_sources_v12_2.json');
+const manifestPath=path.join(__dirname,'content_sources_v12_2_1.json');
 const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
 const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
 const joinSources=rels=>rels.map(read).join('\n');
@@ -17,7 +17,7 @@ const data=joinSources([...manifest.dataBundleSources,...packSources]);
 new vm.Script(base,{filename:'js/data/base_content.js'});
 new vm.Script(data,{filename:`js/dist/data_core_v${manifest.version.replace(/\./g,'_').replace(/_0$/,'')}.js`});
 fs.writeFileSync(path.join(root,'js/data/base_content.js'),base);
-fs.writeFileSync(path.join(root,'js/dist/data_core_v12_2.js'),data);
+fs.writeFileSync(path.join(root,'js/dist/data_core_v12_2_1.js'),data);
 console.log(JSON.stringify({
   version:manifest.version,
   baseSources:manifest.baseContentSources.length,
