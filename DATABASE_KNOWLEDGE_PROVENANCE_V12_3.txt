@@ -1,0 +1,54 @@
+REALMFORGE V12.3.0 - DATABASE KNOWLEDGE PROVENANCE
+
+Purpose
+Turn Living Codex detail pages into production-aware reference pages and make record ordering deterministic for the player.
+
+Recipes & Uses
+- Final owner: js/ui/database_modern.js
+- Ordinary recipe source: RF.DATA.recipes
+- Camp/home cooking source: RF.DATA.campRecipes
+- Ordinary recipe membership is detected from each recipe's `inputs` object.
+- Camp recipe membership detects the primary `input`/`qty` pair and `extra` ingredients.
+- Uses are de-duplicated before display.
+- Uses are sorted alphabetically by crafted output.
+- Each rendered use exposes crafted output, recipe name, skill/discipline level and inspected-ingredient quantity.
+- Fletching continues to be inferred from Crafting recipes that output bows/ammunition, preserving the existing skill model.
+- Item entries with zero downstream recipe uses receive no empty section.
+- Resource entries resolve their yielded item and show that item's downstream uses.
+
+Example verified
+Greenleaf Herb resolves live uses including:
+- Minor Healing Potion — Herblore Lv 2 — 3 x Greenleaf Herb
+- Antivenom — Herblore Lv 6 — 1 x Greenleaf Herb
+- Focus Draught — Herblore Lv 10 — 2 x Greenleaf Herb
+- Smoke Bomb — Crafting Lv 6 — 1 x Greenleaf Herb
+- Venison Stew — Cooking Lv 4 — 1 x Greenleaf Herb
+
+Camp recipe coverage
+- Primary camp ingredients are included.
+- Quantity fields are respected.
+- Optional/extra ingredients are included, e.g. Wild Berries used by Marsh Stew.
+
+Alphabetical contract
+- Filtering/searching occurs before sorting.
+- Final records are sorted A-Z by displayed name.
+- Applied to Items, Resources, Recipes, Enemies, NPCs, Locations and Dungeons.
+- Applied to All and every Item/Resource/Recipe refinement category.
+- Bestiary Research 3/3 eligibility remains unchanged and is sorted only after eligible records are selected.
+
+Regression protection
+`tests/database_v1230.js` asserts:
+- all V12.2/V12.2.1 filter/search/responsive contracts remain present;
+- every populated Database sector is alphabetical;
+- every refinement category is alphabetical;
+- Greenleaf recipe graph contains the expected production results;
+- ingredient quantities/skill levels are correct;
+- camp and extra ingredients participate;
+- item details place Recipes & Uses after Known sources;
+- harvest-resource details inherit yielded-item uses;
+- unused final products do not receive an empty Uses block.
+
+Persistence / compatibility
+- Save schema remains 11.5.3.
+- No migration required.
+- Frozen compatibility runtime was not edited.

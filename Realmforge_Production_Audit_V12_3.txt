@@ -1,0 +1,49 @@
+REALMFORGE V12.3.0 - PRODUCTION AUDIT
+
+SCOPE
+Living Codex production relationships and deterministic alphabetical ordering.
+
+IMPLEMENTATION
+- Added live recipe/use graph helpers to the final canonical Database presentation owner.
+- Added Recipes & Uses cards beneath item Known Sources when the inspected item is consumed by production.
+- Added downstream uses to harvest-resource details via each resource's yielded item.
+- Added canonical + camp recipe coverage, including optional camp ingredients.
+- Added de-duplication for recipe paths exposed through more than one historical surface.
+- Added final A-Z sorting after search/category refinement.
+
+PRESERVED
+- V12.2 focus-safe search.
+- V12.2.1 responsive wrapping refiners.
+- Bestiary 3/3 research gating.
+- Location, NPC, Dungeon and Magic Database behavior.
+- Forge & Fletch content and balance.
+- Saveguard and all campaign/loadout protections.
+- Save schema 11.5.3.
+- Frozen compatibility runtime: 64,639 bytes.
+
+VALIDATION BEFORE PACKAGING
+- Dedicated V12.3 Database knowledge/alphabetical regression: PASS (54 checks).
+- V12.3 runtime contract: PASS.
+- V12.3 established-save compatibility: PASS.
+- V12.3 Saveguard reliability: PASS.
+- V12.1 Forge & Fletch progression compatibility: PASS.
+- V12.3 content-source reproduction: PASS.
+- RF.Authoring/content validation: PASS.
+- Executable Node regression harnesses: 104/104 PASS.
+- Full-source JavaScript syntax validation: 489/489 PASS.
+- Known fake-DOM V10.9 `modalHTML.bind` warning remains harness-only and unchanged.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_2_1_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_3_0_GitHub_Update.zip
+- Reconstructed tree: 722/722 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.3 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- V12.3 Database knowledge/alphabetical regression after reconstruction: PASS
+- V12.3 runtime contract after reconstruction: PASS
+- V12.3 established-save compatibility after reconstruction: PASS
+- V12.3 Saveguard reliability after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS
+- V12.3 content-source reproduction after reconstruction: PASS
