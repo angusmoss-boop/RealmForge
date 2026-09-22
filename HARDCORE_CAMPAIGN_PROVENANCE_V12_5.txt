@@ -1,0 +1,64 @@
+REALMFORGE V12.5.0 - HARDCORE CAMPAIGN & CHARACTER RECORD PROVENANCE
+
+SCOPE
+- Opt-in Hardcore mode at character creation.
+- Permanent one-life campaign termination.
+- Fallen-run memorial persistence.
+- Standard-mode death counter presentation.
+
+PERSISTENCE OWNER
+- js/core/bootstrap.js: app/save contract now 12.5.0.
+- js/core/migrations.js: explicit 11.5.3 -> 12.5.0 migration.
+- js/core/state.js: new-game/start-new campaign mode initialization.
+- js/core/campaigns.js: slot metadata records mode + gameOver.
+
+HARDCORE OWNER
+- js/systems/hardcore.js
+- Canonical module: systems.hardcore / RF.CampaignMode
+- Loaded in final post-compatibility canonical bundle so its defeat/render rules cannot be superseded by historical layers.
+
+DEATH POLICY
+Standard campaigns delegate unchanged to the mature defeat chain.
+Hardcore campaigns intercept RF.loseV4Battle before recovery and:
+- increment stats.deaths once;
+- set campaign.gameOver=true;
+- preserve final killer/day/time/location/level;
+- set HP/Stamina to zero;
+- clear combat/activity;
+- freeze the world clock;
+- save the final state;
+- render the permanent memorial UI.
+
+SAVE POLICY
+- Fallen save is NOT deleted.
+- Fallen save remains eligible for export and non-activating duplicate.
+- Imported/duplicated fallen saves remain fallen.
+- Fallen Hardcore state cannot be restarted or revived through Save Manager.
+- New Character creates a separate slot.
+
+BACKWARD COMPATIBILITY
+- Old 11.5.3 campaigns migrate to mode=standard, gameOver=false.
+- Hardcore is never inferred from prior death count or progression.
+- Existing stats.deaths is reused for Standard characters; no duplicate death counter field is introduced.
+- All other campaign/save data is preserved through the existing migration/Saveguard pipeline.
+
+FROZEN COMPATIBILITY
+js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js
+- bytes: 64,639
+- sha256: 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e
+- edited in V12.5: NO
+
+DEDICATED REGRESSION COVERAGE
+- existing save -> Standard migration;
+- Standard default/new-character state;
+- creator Hardcore warning;
+- Hardcore Character-page banner;
+- Standard Character-page deaths counter;
+- Hardcore death before revival/gold-loss/relocation;
+- memorial killer/location/day/level record;
+- save/reload remains permanently fallen;
+- duplicate/export/import preserve fallen status;
+- fallen Restart Campaign blocked;
+- Standard defeat still recovers and increments once;
+- save-slot Hardcore/Fallen metadata;
+- frozen compatibility hash.

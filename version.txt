@@ -1,5 +1,5 @@
-version=12.4.0
-title=Pack Dossiers & Tool Belt Integrity
-built=2026-09-22T09:45:00+01:00
-build_id=20260922-v1240-pack-dossiers
-notes=Pack item details now use Codex-grade information and compact 4-column action tiles; detached Tool Belt saves no longer regrow historical starter tools; save schema remains 11.5.3.
+version=12.5.0
+title=Hardcore & Character Records
+built=2026-09-22T15:57:00+01:00
+build_id=20260922-v1250-hardcore
+notes=Adds opt-in Hardcore campaigns with permanent game-over on death, memorial saves, highlighted Hardcore character records, and visible Standard-mode death counts. Save schema advances explicitly to 12.5.0.

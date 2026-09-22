@@ -1,0 +1,54 @@
+REALMFORGE V12.5.0 - PRODUCTION AUDIT
+
+SCOPE
+Hardcore campaign rules, permanent-death enforcement and Character-page death records.
+
+IMPLEMENTATION
+- Added canonical post-compatibility owner `js/systems/hardcore.js` (`systems.hardcore` / `RF.CampaignMode`).
+- Character Creator now offers Standard and Hardcore campaign rules with explicit Hardcore confirmation warning.
+- Standard remains default; existing campaigns migrate to Standard.
+- Hardcore defeat is intercepted before the mature recovery stack and permanently marks the campaign Fallen.
+- Fallen state renders a dedicated memorial Game Over screen and cannot resume gameplay.
+- Standard Character page exposes the existing lifetime deaths counter.
+- Hardcore Character page receives a highlighted one-life banner.
+- Save-slot metadata identifies Hardcore and Fallen campaigns.
+- Save Manager refuses Restart Campaign on a fallen Hardcore run.
+
+SAVE SAFETY
+- Save schema explicitly advances 11.5.3 -> 12.5.0.
+- Existing campaign state migrates losslessly.
+- Fallen Hardcore saves are preserved instead of deleted.
+- Duplicate/export/import preserve Hardcore/Fallen state.
+- Saveguard campaign identity and triple-copy protections remain active.
+- Equipment, dual rings, detached Tool Belt, Pack/Bank, skills/XP, research, quests, markets, crime/cooldowns, property/buffs, collection, dungeons, Energy, active travel/combat and overflow behavior remain covered by regression fixtures.
+
+VALIDATION BEFORE PACKAGING
+- RF.Authoring/content validation: PASS (226 items, 88 enemies, 21 locations, 20 configs, schema 12.5.0).
+- Dedicated V12.5 Hardcore regression: PASS.
+- V12.5 runtime contract: PASS.
+- V12.5 established-save compatibility: PASS.
+- V12.5 Saveguard reliability: PASS.
+- V12.5 Database regression: PASS.
+- V12.5 Pack/Tool Belt regression: PASS.
+- V12.1 Forge & Fletch progression compatibility: PASS.
+- Executable Node regression harnesses: 120/120 PASS.
+- Full-source JavaScript syntax validation: 519/519 PASS.
+- Known fake-DOM V10.9 `modalHTML.bind` warning remains harness-only and unchanged.
+- Frozen compatibility runtime remains 64,639 bytes / sha256 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_4_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_5_0_GitHub_Update.zip
+- Reconstructed tree: 764/764 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.5 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- Dedicated V12.5 Hardcore regression after reconstruction: PASS
+- V12.5 runtime contract after reconstruction: PASS
+- V12.5 established-save compatibility after reconstruction: PASS
+- V12.5 Saveguard reliability after reconstruction: PASS
+- V12.5 Database regression after reconstruction: PASS
+- V12.5 Pack/Tool Belt regression after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS
+- V12.5 content-source reproduction after reconstruction: PASS

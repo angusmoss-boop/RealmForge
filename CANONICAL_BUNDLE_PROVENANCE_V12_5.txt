@@ -1,0 +1,44 @@
+REALMFORGE V12.5.0 - CANONICAL BUNDLE PROVENANCE
+
+Save schema: 12.5.0
+
+ACTIVE BUNDLES
+- js/dist/save_core_v12_5.js | sha256 3242e97ae73005220b3131b5aa3d26a24f7757d6c82836123dedd76e063dc86f | 75,978 bytes
+- js/dist/data_core_v12_5.js | sha256 59cf8adbbd8a2ee3651514e39db3e3135c1eab397bdb319a4a76de64f897b022 | 174,730 bytes
+- js/dist/systems_core_v12_5.js | sha256 a834f3bad0589536a80867b6d43f487bd1b618ec031a2cc436053330e12107ad | 1,187,596 bytes
+- js/dist/canonical_v12_5.js | sha256 d84e60522d45f955cf34526eddb20db81e65a402f43771ebcec4d0cb6af790a6 | 89,787 bytes
+- js/systems/hardcore.js | sha256 46c1a80e278d0862a121bee0c38cc72539801f2534564bfde741f81fb858a341 | 14,174 bytes
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js | sha256 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e | 64,639 bytes
+
+SOURCE REPRODUCTION
+- save_core_v12_5.js is the exact LF-joined concatenation of bootstrap, browser-platform, migrations, scoped-runtime, compatibility-classification, storage, campaigns, state and lifecycle readable sources: PASS.
+- data_core_v12_5.js reproduced by tools/build_content.js from tools/content_sources_v12_5.json plus lexical content packs: PASS.
+- systems_core_v12_5.js is the exact LF-joined concatenation of 38 readable canonical systems/UI substrate sources: PASS.
+- canonical_v12_5.js is the exact LF-joined concatenation of save-manager, save-boot, data/config finalizers, shell, Living Codex, Pack dossier, Hardcore owner, V12.5 ownership verifier and finalizer: PASS.
+- data_core_v12_5.js is byte-identical to V12.4 because V12.5 adds no content records: PASS.
+- systems_core_v12_5.js is byte-identical to V12.4 because Hardcore intentionally requires post-compatibility final ownership: PASS.
+
+V12.5 OWNERSHIP CHANGE
+- New final canonical owner: systems.hardcore / js/systems/hardcore.js.
+- Persistent campaign rule ownership is split cleanly across core migrations/state/campaign metadata and final Hardcore gameplay policy.
+- No chronological v12_5.js patch file exists.
+
+COMPATIBILITY
+- Frozen compatibility runtime was not edited and remains 64,639 bytes with the frozen SHA-256 above.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_4_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_5_0_GitHub_Update.zip
+- Reconstructed tree: 764/764 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.5 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- Dedicated V12.5 Hardcore regression after reconstruction: PASS
+- V12.5 runtime contract after reconstruction: PASS
+- V12.5 established-save compatibility after reconstruction: PASS
+- V12.5 Saveguard reliability after reconstruction: PASS
+- V12.5 Database regression after reconstruction: PASS
+- V12.5 Pack/Tool Belt regression after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS
+- V12.5 content-source reproduction after reconstruction: PASS
