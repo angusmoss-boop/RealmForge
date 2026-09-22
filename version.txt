@@ -1,5 +1,5 @@
-version=12.3.0
-title=Living Codex - Recipes & Uses
-built=2026-09-22T09:22:00+01:00
-build_id=20260922-v1230-codex-uses
-notes=Database details now expose recipe/use relationships for ingredients and harvested materials; every Codex result list is alphabetically ordered in All and refinement views; save schema remains 11.5.3.
+version=12.4.0
+title=Pack Dossiers & Tool Belt Integrity
+built=2026-09-22T09:45:00+01:00
+build_id=20260922-v1240-pack-dossiers
+notes=Pack item details now use Codex-grade information and compact 4-column action tiles; detached Tool Belt saves no longer regrow historical starter tools; save schema remains 11.5.3.

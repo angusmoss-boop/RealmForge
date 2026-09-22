@@ -1,0 +1,57 @@
+REALMFORGE V12.4.0 - PRODUCTION AUDIT
+
+SCOPE
+Pack item dossiers and Tool Belt persistence integrity.
+
+IMPLEMENTATION
+- Added canonical post-compatibility Pack detail owner `js/ui/item_detail_modern.js`.
+- Added Codex-grade Pack detail information: contextual description, stats, requirements, equipment/tool comparison, Known Sources and Recipes & Uses.
+- Replaced oversized vertical item actions with square action tiles capped at four columns and wrapping to additional rows.
+- Fixed V6 starter-kit migration so detached Tool Belt saves are not granted replacement starter copies during normalize/reload/update.
+- Kept readable `js/v6.js` and canonical Fieldcraft embedded source aligned.
+
+SAVE SAFETY
+- Save schema remains 11.5.3.
+- No inventory item is auto-deleted.
+- Existing duplicate/spare tools are preserved losslessly.
+- Superior equipped Tool Belt items remain equipped across the V12.3 -> V12.4 upgrade fixture.
+- Once unwanted historical starter copies are manually removed, repeated normalize/save/reload does not recreate them.
+- New campaigns and pre-detached historical saves retain valid starter-kit behaviour.
+
+PRESERVED
+- V12.3 Recipes & Uses / alphabetical Codex behavior.
+- V12.2 Living Codex search and refinement.
+- V12.2.1 responsive refiners.
+- V12.1 Forge & Fletch progression.
+- V12.0 Saveguard and campaign identity protections.
+- Equipment, dual rings, detached Tool Belt, Pack/Bank, skills/XP, research, quests, markets, crime/cooldowns, property/buffs, collection, dungeons, Energy, active travel/combat and lossless overflow.
+- Frozen compatibility runtime remains 64,639 bytes.
+
+VALIDATION BEFORE PACKAGING
+- RF.Authoring/content validation: PASS (226 items, 80 recipes, 28 resources, schema 11.5.3).
+- Dedicated V12.4 Pack/Tool Belt regression: PASS.
+- Dedicated V12.3 -> V12.4 persisted Tool Belt upgrade regression: PASS.
+- V12.4 runtime contract: PASS.
+- V12.4 established-save compatibility: PASS.
+- V12.4 Saveguard reliability: PASS.
+- V12.4 Database regression: PASS.
+- V12.1 Forge & Fletch progression compatibility: PASS.
+- Executable Node regression harnesses: 112/112 PASS.
+- Full-source JavaScript syntax validation: 504/504 PASS.
+- Known fake-DOM V10.9 `modalHTML.bind` warning remains harness-only and unchanged.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_3_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_4_0_GitHub_Update.zip
+- Reconstructed tree: 743/743 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.4 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- V12.4 Pack/Tool Belt regression after reconstruction: PASS
+- V12.3 -> V12.4 persisted Tool Belt upgrade regression after reconstruction: PASS
+- V12.4 runtime contract after reconstruction: PASS
+- V12.4 established-save compatibility after reconstruction: PASS
+- V12.4 Saveguard reliability after reconstruction: PASS
+- V12.4 Database regression after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS

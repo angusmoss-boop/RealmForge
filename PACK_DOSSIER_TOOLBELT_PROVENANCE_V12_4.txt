@@ -1,0 +1,50 @@
+REALMFORGE V12.4.0 - PACK DOSSIER & TOOL BELT INTEGRITY PROVENANCE
+
+SCOPE
+- Pack item-detail redesign.
+- Starter Tool Belt duplicate/regeneration defect.
+
+ROOT-CAUSE CONFIRMATION
+The historical V6 migration unconditionally ensured these items existed in Pack whenever migrateV6 ran:
+- crude_pickaxe
+- crude_axe
+- reed_rod
+- flint_kit
+
+V10.53 later introduced the detached Tool Belt model. In a detached save, the equipped item copy is deliberately not present in Pack. Re-running V6 normalization therefore interpreted intentional absence as missing starter inventory and granted replacement copies.
+
+FIX
+- `js/v6.js`: starter-kit seeding now executes only before `s.v1053.detached` exists.
+- `js/systems/fieldcraft.js`: the canonical embedded V6 historical stage carries the same guard.
+- The frozen compatibility runtime was not edited.
+- No inventory cleanup/deletion migration was added.
+
+UPGRADE BEHAVIOUR
+- A V12.3 save with superior Tool Belt items can reproduce the old bug and persist all four unwanted starter copies.
+- Opening that exact save under V12.4 preserves the superior Tool Belt and preserves the already-owned Pack copies losslessly.
+- After those unwanted copies are removed by the player, V12.4 normalization does not recreate them.
+- Saving and fully reloading the same campaign does not recreate them.
+- Legitimate spare starter tools remain legitimate inventory and are preserved.
+- Genuinely pre-detached historical saves still receive the starter kit.
+
+PACK DOSSIER
+Final presentation owner: `js/ui/item_detail_modern.js`.
+The Pack dossier reuses:
+- authored item data from RF.DATA.items;
+- equip requirements/comparison from the mature Equipment owner;
+- Known Sources from the established item-source graph;
+- Recipes & Uses from the V12.3 Living Codex knowledge graph.
+
+ACTION CONTRACT
+- square action tiles;
+- maximum 4 columns;
+- automatic additional rows;
+- Use for consumables;
+- Equip for wearable/tool items;
+- Drop 1 / Drop All where applicable;
+- Close always available.
+
+PERSISTENCE
+- Save schema: 11.5.3 unchanged.
+- No V12.4 persistent UI state.
+- No destructive inventory migration.

@@ -1,9 +1,9 @@
-Realmforge: Wanderer's Rise - V12.1.0 Forge & Fletch
+Realmforge: Wanderer's Rise - V12.4.0 Pack Dossiers & Tool Belt Integrity
 
-Second V12 release. V12.1 expands the canonical gathering/production progression without changing the save schema or re-opening the frozen compatibility archaeology.
+V12.4 modernises Pack item inspection and fixes the historical starter-tool regeneration bug without changing the save schema or deleting player inventory.
 
 APPLICATION VERSION
-12.1.0
+12.4.0
 
 SAVE SCHEMA
 11.5.3 (unchanged)
@@ -12,39 +12,32 @@ ACTIVE PRODUCTION RUNTIME
 1. js/data/base_content.js
 2. js/legacy/base/state.js
 3. js/legacy/base/ui.js
-4. js/dist/save_core_v12_1.js
-5. js/dist/data_core_v12_1.js
+4. js/dist/save_core_v12_4.js
+5. js/dist/data_core_v12_4.js
 6. js/legacy/base/main.js
-7. js/dist/systems_core_v12_1.js
+7. js/dist/systems_core_v12_4.js
 8. js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js
-9. js/dist/canonical_v12_1.js
+9. js/dist/canonical_v12_4.js
 
-V12.1 FORGE & FLETCH
-- Added one declarative V12 content pack: js/data/content/packs/10_forge_and_fletch.js.
-- Added 56 items and 59 recipes. Live catalogue is now 226 items / 80 recipes.
-- Added Cobalt, Redstone and Stariron mining resources.
-- Added Ash, Maple and Ancient Ironwood woodcutting resources.
-- Added Cobalt, Emberglass, Redsteel and Stariron refined bars.
-- Added Tier 4/5/6 Mining pickaxes and Woodcutting axes.
-- Completed Bronze, Iron and Steel craftable armour progression and added full Cobalt, Redsteel and Stariron armour sets.
-- Added 10 craftable melee weapons and 4 new craftable bows.
-- Added six bar + timber arrow-fletching recipes producing the existing Arrow ammunition stack.
-- Fletching deliberately remains under the existing Crafting skill; no parallel skill/save-state migration was introduced.
-- New resources are supplied through canonical RF.Config + systems.gathering integration rather than historical patch files.
-- RF.Authoring now validates resource definitions and location-resource references.
-- Exact-level harvesting/crafting requirements are regression-tested.
-- Crafted endgame gear is deliberately below the strongest Legendary dungeon equipment.
+V12.4 PACK DOSSIERS
+- Added final canonical UI owner js/ui/item_detail_modern.js.
+- Pack item taps now open a Codex-grade dossier with richer description/context, stats, requirements, equipment/tool comparison, Known Sources and Recipes & Uses where applicable.
+- Actions are compact square tiles in a maximum four-column grid and wrap into additional rows as needed.
+- Food exposes Use; equipment/tools expose Equip; Drop 1 / Drop All / Close remain available where valid.
+- The dossier reuses live Database recipe/use knowledge rather than maintaining duplicate metadata.
 
-HARVEST REQUIREMENTS
-Mining: Cobalt 16, Redstone 22, Stariron 30.
-Woodcutting: Ash 9, Maple 18, Ancient Ironwood 28.
+V12.4 TOOL BELT INTEGRITY
+- Fixed the V6 starter-kit normalizer re-granting Crude Pickaxe, Crude Axe, Reed Rod and Flint Kit after the detached Tool Belt migration had already run.
+- Modern detached Tool Belt saves no longer regrow starter tools during normalize/reload/update.
+- New campaigns and genuinely old pre-detached saves still receive the historical starter kit correctly.
+- Existing Pack copies are preserved losslessly. V12.4 never guesses that an owned spare should be deleted.
 
 FROZEN COMPATIBILITY
-js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js remains 64,639 bytes and byte-identical to V11.30.0/V12.0.0.
+js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js remains 64,639 bytes and byte-identical to the frozen V11.30/V12 baseline.
 
 KEY DOCUMENTS
-- REALMFORGE_ARCHITECTURE_V12_1.md
-- Realmforge_Production_Audit_V12_1.txt
-- CONTENT_EXPANSION_PROVENANCE_V12_1.txt
-- CANONICAL_BUNDLE_PROVENANCE_V12_1.txt
-- Realmforge_Development_Log_V1_to_V12_1_0.txt
+- REALMFORGE_ARCHITECTURE_V12_4.md
+- Realmforge_Production_Audit_V12_4.txt
+- PACK_DOSSIER_TOOLBELT_PROVENANCE_V12_4.txt
+- CANONICAL_BUNDLE_PROVENANCE_V12_4.txt
+- Realmforge_Development_Log_V1_to_V12_4_0.txt
