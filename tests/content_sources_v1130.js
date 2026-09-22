@@ -17,8 +17,10 @@ checks.configGraph=JSON.stringify(cfg(A.RF))===JSON.stringify(cfg(B.RF));
 checks.legacyMetadata=JSON.stringify(A.RF.Content.legacyBlocks())===JSON.stringify(B.RF.Content.legacyBlocks());
 checks.counts=Object.keys(B.RF.DATA.items).length===170&&Object.keys(B.RF.DATA.enemies).length===88&&Object.keys(B.RF.DATA.locations).length===21&&B.RF.Config.size()===19&&B.RF.Content.legacyBlockCount()===87;
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'tools/content_sources_v11_30.json'),'utf8'));
-const packs=fs.readdirSync(path.join(root,manifest.contentPackDirectory)).filter(x=>x.endsWith('.js')).sort().map(x=>`${manifest.contentPackDirectory}/${x}`);
-const join=rels=>rels.map(rel=>fs.readFileSync(path.join(root,rel),'utf8')).join('\n');
+// Historical release fixture: no content packs existed in this release. Future packs in the live source tree must not enter historical bundle reproduction.
+const packs=[];
+const historicalSource=rel=>rel==='js/data/authoring.js'?'tests/fixtures/authoring_v1200.js':rel;
+const join=rels=>rels.map(rel=>fs.readFileSync(path.join(root,historicalSource(rel)),'utf8')).join('\n');
 checks.baseRepro=join(manifest.baseContentSources)===fs.readFileSync(path.join(root,'js/data/base_content.js'),'utf8');
 checks.dataRepro=join([...manifest.dataBundleSources,...packs])===fs.readFileSync(path.join(root,'js/dist/data_core_v11_30.js'),'utf8');
 checks.decomposed=manifest.baseContentSources.length===11&&manifest.dataBundleSources.filter(x=>x.includes('/content/legacy/')).length===11&&manifest.dataBundleSources.filter(x=>x.includes('/config/')).length===7&&!manifest.dataBundleSources.includes('js/data/content_blocks_v11_9.js')&&!manifest.dataBundleSources.includes('js/data/world_config_v11_10.js');
