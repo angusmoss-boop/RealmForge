@@ -1,0 +1,154 @@
+REALMFORGE V12.2.0 - CANONICAL BUNDLE PROVENANCE
+
+Generated bundles are deterministic LF-joined concatenations of readable canonical sources. Save schema remains 11.5.3.
+
+SAVE CORE
+- js/dist/save_core_v12_2.js | sha256 c6c4c38a89649c17ceee8be1d5fd9bfe91361884e9b3cc49db0857a67a2cd426 | 74,638 bytes | source reproduction: PASS
+- js/core/bootstrap.js | sha256 07e58976e4cd7ca84a70d23e41973e5818111605942455aed5071d8b698e041f | 1,251 bytes
+- js/platform/browser.js | sha256 3de5a490592ef29c2be88037b734e1a82c9a55845b67bc5dcccd6fbfc3d0addd | 5,877 bytes
+- js/core/migrations.js | sha256 f67578e1650b036c0f6a5b620698f9680e2d4f2c330fbe5f841c1ec04dece3e3 | 12,559 bytes
+- js/core/scoped_runtime.js | sha256 034a8d26e7f41a3dd369e19ae221df7ef72cb45097918b2bf8e033beef683084 | 7,864 bytes
+- js/core/compatibility_classification.js | sha256 26810fe9dc1abbabe7d5975fa1ef6e8f7e00367f6b6e3ff99c93c57e3d75164c | 26,828 bytes
+- js/core/storage.js | sha256 758d0739a92309619d2d52871462dc3ed92d28c5a1f331d1366ac3ffa98b63ab | 998 bytes
+- js/core/campaigns.js | sha256 a96d05e697e498cb491f94ed42d99bfd23f023c3e4fbd091c28b4fca27608512 | 10,537 bytes
+- js/core/state.js | sha256 c7415cb7d763d802f222261473ade7cee92c43c84f4cd8a70479078b66b189d7 | 6,070 bytes
+- js/core/lifecycle.js | sha256 17939ba72ff41609e064367fe66775b1ae80dfc2cc13dd9f3313b5eddc31228b | 2,646 bytes
+
+DATA CORE
+- js/dist/data_core_v12_2.js | sha256 59cf8adbbd8a2ee3651514e39db3e3135c1eab397bdb319a4a76de64f897b022 | 174,730 bytes | source reproduction: PASS
+- js/data/catalog.js | sha256 44a72543fc1bae6a8107c2485ba54dea3efe320bf456ad12d6032b38170fc84a | 2,942 bytes
+- js/data/config_registry.js | sha256 6379439478078f7e27f44f354e3c11aa2cad7fd941fbb82d33546ea3b609cfd4 | 1,151 bytes
+- js/data/assets.js | sha256 564dedb2f4cf36ffe0ff4239e2ae7f0b618ae1b7123999b2ca0b8e3ac5bdadc3 | 1,921 bytes
+- js/data/authoring.js | sha256 96e028a7c00e142baef20a751766d073b014e2eb6fdeb7a2e6f226ff3d917039 | 12,810 bytes
+- js/data/content/legacy/00_registry.js | sha256 741d371b9cb57f6f604a903fd02c781ad5e6b712c3febb4eff62544ad4b082e4 | 2,001 bytes
+- js/data/content/legacy/10_items.js | sha256 92247e5fee2c64a0bd93421f486183f4ddac0891664b8fcf618f6b96150164d7 | 14,277 bytes
+- js/data/content/legacy/20_locations.js | sha256 f206fda126d300ae90aabad5318e6b5998bccaa342d76686ea136f5316bac2fa | 5,771 bytes
+- js/data/content/legacy/30_creatures_combat_data.js | sha256 c33b76193aa2b97b40bb0afdcd32ffcbf1d252195569b5b557a74be746b4f556 | 16,841 bytes
+- js/data/content/legacy/40_recipes_crafting.js | sha256 c96710702de7b55e5c62df59d13fcab074be58dbba63526695622cc1beeb3540 | 4,563 bytes
+- js/data/content/legacy/45_skills_perks.js | sha256 446da07d4f13fefa29373968edb77612c4a9c0429f2b89aa59019e1320d07f77 | 1,819 bytes
+- js/data/content/legacy/50_people_social.js | sha256 619c3b1b689360d155e05fcee0a52390eaedacabe6667d57e752e679b064f950 | 21,607 bytes
+- js/data/content/legacy/60_quests_events.js | sha256 47db3c8961c3bd45a172a5da059514990dcf0b0be49bf3428a27ee4e642027df | 23,496 bytes
+- js/data/content/legacy/70_world_activity_data.js | sha256 d147297c558e54f45a75e55ac5eb7a3e15344b942520a71c96b3ae199c74b676 | 7,237 bytes
+- js/data/content/legacy/90_mixed_historical.js | sha256 0806f9edbc8f4995f2576447f6a067189fd7e63e927915a2d2e29ffb48ec860b | 312 bytes
+- js/data/content/legacy/99_finalize.js | sha256 58ac63afeb7f5c0b3b91be9b2755de15d3f84553b864e48927626036e63d171d | 493 bytes
+- js/data/config/exploration.js | sha256 268f9962099539c809f584f94b48d595e9348ef1547cc74a7e9924c9540d6959 | 2,699 bytes
+- js/data/config/crime.js | sha256 a2ae057f6b83b88dbc04145f29087d4b36d6ead1d8e064b6792a6223a2c08699 | 4,280 bytes
+- js/data/config/services.js | sha256 e4b61455124751bdb17ac4a0a70d6df1d971ac81258005d6559672f833f51dd7 | 791 bytes
+- js/data/config/commerce.js | sha256 d0f7c70a90d426c00010a1432bbeb8c94401e9753cbfc06b24b464bf65cdbcc3 | 4,744 bytes
+- js/data/config/equipment.js | sha256 9cecceed6183464a3e9bc98e1767bee81abeb9c0b96750e3e7c150945156e774 | 1,606 bytes
+- js/data/config/world.js | sha256 7ff1a4cfe92f95389353b59b004755b6885047a9bdfd5d962cf450ff15ee49ce | 2,400 bytes
+- js/data/config/dungeons.js | sha256 77579095b64cc7335a553ad00a2f7cd1ff7674d9f08d1fbb61ca3e868434661a | 19,150 bytes
+- js/data/content/packs/10_forge_and_fletch.js | sha256 d0af2e85f45b0ffd14ff5f523c3546d7df6e100403349ee65d5da8d4af4c70ac | 21,797 bytes
+
+BASE CONTENT
+- js/data/base_content.js | sha256 a8417bcc735b4f91b65b78b15bf1299158d57123a1907b100b5048077b7dd6d7 | 13,315 bytes | source reproduction: PASS
+- js/data/content/base/00_bootstrap.js | sha256 91992896b8191bde197a3e871da2db8fcd07fff284539318944c08003d6cb91c | 319 bytes
+- js/data/content/base/10_backgrounds.js | sha256 2126c5a53d9695d8d847f23d83dcc62c30b1c9669963b76f33dc3da382e18be9 | 1,119 bytes
+- js/data/content/base/11_items.js | sha256 b5d2ff9f34aa9f57260562631524486d519b26c79bbcdbe139f8fcd76d2284d5 | 2,663 bytes
+- js/data/content/base/12_skills.js | sha256 e3ea980c20038c5d48e2a9f3399145c5043a628a0ce8217052b51bf1836a356a | 962 bytes
+- js/data/content/base/13_locations.js | sha256 a00f59ec3133e6b2fb85ae30dafaf839da5986bf43c48a1bfe03ba608ed94988 | 1,755 bytes
+- js/data/content/base/14_enemies.js | sha256 bc47df982abe9751d806bc2d9d2062da18484d751ad9c5c964f011555af0c8f2 | 769 bytes
+- js/data/content/base/15_recipes.js | sha256 a7333adea91600efef00a00583be7ae2a52793d69dc4f6f9740f7b7515706fcf | 806 bytes
+- js/data/content/base/16_shop_stock.js | sha256 b9f7d7026479f18512602b0d31cca15641f913cee88bf349e909fb06250c0911 | 293 bytes
+- js/data/content/base/17_quests.js | sha256 073a0513eceff5176cab4e16f7b01c0810ca845bd38bca5472e8a19dde676007 | 1,106 bytes
+- js/data/content/base/18_events.js | sha256 bc4fc424c1be367b6d00e9d9467e1293ee70802a4c3ade0cd29ee1c56bf8ee71 | 3,251 bytes
+- js/data/content/base/99_finalize.js | sha256 91b16a4e32d011d7edbf3ededf6a2391116da0d198737c224a53d5eabdf04e2b | 262 bytes
+
+SYSTEMS + UI CORE
+- js/dist/systems_core_v12_2.js | sha256 963b8f05e90ca179a909da7fbb0bd23e15a049310370ffb8c64469ca2fb8b6e8 | 1,187,408 bytes | source reproduction: PASS
+- js/systems/fieldcraft.js | sha256 066b0a6c76e7388c748a0ea5d103d5a528dcce994eb3c544ca61031cfebfb9e0 | 55,080 bytes
+- js/systems/world.js | sha256 ee64b5284eef949d1e3f42f5e195f3c14c65c5e370c6c7a376d0cb106a98ed46 | 20,536 bytes
+- js/systems/world_events.js | sha256 766c24f36a1f713bfc9c1bfc2540d58411f546af6d4c73d6e6f3425f21ffd826 | 7,587 bytes
+- js/systems/social.js | sha256 78e0f086a8e77b048bb6ba970640911eca6be0b9ddb6f3d94464cf3e06a20cba | 20,211 bytes
+- js/systems/character.js | sha256 8780e3fe62eae870e498fbecafede01fff1e57e3a584e4451b41181e2bef667a | 14,463 bytes
+- js/systems/collection.js | sha256 67ff65c58b42d15c6aacbbedff9f8877d6ac9fc9f5617d3a8d42eab7cd102181 | 2,773 bytes
+- js/systems/specialist.js | sha256 dc8270e21f09156a61b0b8347be73b235f7066807e1310a9f620f6917fb19b9a | 3,668 bytes
+- js/systems/cadence.js | sha256 1e4d4c86fde32262afa4be49981534f1f98932167756255664cd1571604778c5 | 3,809 bytes
+- js/systems/encounters.js | sha256 a9b303cd7d70af9c084485513c58a472df9795e0698678d96c610343565bbb93 | 7,046 bytes
+- js/systems/property.js | sha256 6ad04ac1741540bb88da5218a02b05a0ee0734967ef9736176764c327ae99444 | 20,498 bytes
+- js/systems/gathering.js | sha256 20f84c9da9a50700768164ae4fb84a91ce182b10e7fe3bd24dbddac1964392d2 | 20,202 bytes
+- js/systems/fishing.js | sha256 29f4dd0aa786c645323884af99cbeb2dcfed9467a1d35b4d22d97a3f49586c82 | 539 bytes
+- js/systems/hunting.js | sha256 4f0dd594b34e16c18a79dd5065c9f7ad4e19d3cb895ed630a6788438630af56e | 448 bytes
+- js/systems/cooking.js | sha256 82668fef406e7d7128f6a039c342bf78fddd37903d784e0e1548037c1b691eff | 1,029 bytes
+- js/ui/app_shell.js | sha256 d1e1d71687151eaaf7fa5d7e4d6ce1703fd468e1d5ac356cf7963fa272aecd40 | 16,875 bytes
+- js/ui/developer.js | sha256 035519471503942c62cb7b9732f15a37c1c7fa0706cdc1aa011e5e46ebd085c1 | 30,766 bytes
+- js/ui/database.js | sha256 00ade7f453286035c2f1cb2b022ce125cd40244c4b5a1f45ddb540e8eb0765d7 | 35,237 bytes
+- js/ui/navigation.js | sha256 996b1b7c8a1f65b708a317269d3d931d0a74e4f6f97c38c8a4388e116d1edcad | 7,376 bytes
+- js/ui/presentation.js | sha256 551aa2fb9eaceae4ed2983db5c4fde709c6112b352e6976a61e23f36a120c7c9 | 52,268 bytes
+- js/ui/overlays.js | sha256 4500e2ce427062e11a93f49fc3555f2b233b9ac90fd8fd6b442db2ee7584e09d | 14,410 bytes
+- js/ui/focus_clock.js | sha256 19dc3871eaec2d229a09c5cb9ef03aeca673229e98acf2a3d150b3c740639fe5 | 8,847 bytes
+- js/ui/item_browser.js | sha256 ae8dd670a70e7c3c7cea6274a66994b2677be3c29cf0d98737271717e77e04e1 | 40,653 bytes
+- js/ui/world_actions.js | sha256 0135ff8087c76008c4e7f470e6dddab2536a7ceb3d727f76fbf49ceb101d9a05 | 30,940 bytes
+- js/systems/time_energy.js | sha256 da09163251ad21d4e1c34da39020bed623e3701322b9dd8dabb0b3570b33b3fe | 31,635 bytes
+- js/systems/exploration.js | sha256 b4318a5da1940b880588252b676dde54bbce3b36819486c52cd58b42c6f08cd7 | 37,481 bytes
+- js/systems/locks.js | sha256 98c28129dc5eb94761b86a6193995761cd5cf16e7c721f19bb6ab12401432d3b | 59,558 bytes
+- js/systems/crime.js | sha256 922ba48f32da969768421be9c4eb499bc48758d07f72c623f5bd7e7f98ba7134 | 94,113 bytes
+- js/systems/commerce.js | sha256 18ea1bcf9ea1fb43ef8afe6c5886285f9f03050808f4e074ff6c476d9115f6f1 | 30,220 bytes
+- js/systems/dungeons.js | sha256 cee4db5bab1b350fb6bad5959596e98f0a820972cc2a23a3e2cc7308ad05824d | 39,630 bytes
+- js/systems/travel.js | sha256 0791164dd7fb0d7e9302b70f593f08d7f76e031aed6031d4027867700d92b806 | 63,524 bytes
+- js/systems/quests.js | sha256 9124d0b239a1301b72cf73e0c6ab7a8438fcfcf0f9578b2b1bc1fe7a5a998e04 | 7,149 bytes
+- js/systems/wayfinder.js | sha256 b1477f8db5c336b46b2b8492250e66676497ede0d8dc15e43b5f21c3b462237c | 12,860 bytes
+- js/systems/inventory.js | sha256 28bdcc7a019e5f3c478bb0acfddc1393f0c76ee4033fcd0d62564554f6311a43 | 105,588 bytes
+- js/systems/equipment.js | sha256 c36a26efb9b2a89f4278da08ba3ee0b19866ee1773e1d991d5631a5eaca421c5 | 74,173 bytes
+- js/systems/combat.js | sha256 143b226ef676adc44adeb5088b64d22627c232be93e1a727349923e14d895a79 | 100,760 bytes
+- js/systems/research.js | sha256 945af013edb8380a415fd398d2c73c42801456328d22ebde2617b590292a0a2a | 38,262 bytes
+- js/systems/crafting.js | sha256 54246ff64a85d3364d5b53d8a966a48d96c8bf53b9df5b3e7bcf2ac017f1f090 | 50,192 bytes
+- js/systems/skills.js | sha256 643ba16fba2c7972402d4ca2c6bb05e304d43c5022cf771c7ea0483f93b22081 | 26,965 bytes
+
+FINALISATION / LIVING CODEX
+- js/dist/canonical_v12_2.js | sha256 57f78dd315cf7dcf0ee6916a4bf587bead3112875ee60d7b83b9973a1a7146a2 | 56,348 bytes | source reproduction: PASS
+- js/ui/save_manager.js | sha256 be91a9c1cc7ae749ee965ad410e5939b98679138e0758673830efc49e5d9f1a2 | 9,678 bytes
+- js/core/save_boot.js | sha256 1af2520a081c3bd06c5943a2f13edc531677acdd49ba08f20ed3d03b713025d8 | 805 bytes
+- js/data/finalize.js | sha256 9e905397337ad0909aebb875483be9818c953dc1cc73a9b4c15b0addf02326b2 | 895 bytes
+- js/data/config_finalize.js | sha256 1a59037c1f70d040db8ac3af0547290541bcfe866c99b8b398fb4ea0b0c3bd45 | 2,701 bytes
+- js/ui/shell.js | sha256 2911cfb8c0f3439cec0534c0e8c1c29e7d51306bb4e017ec0a01c0349d0197ca | 804 bytes
+- js/ui/database_modern.js | sha256 de283316828e23a307904fad2f4e22f092b870ac89f36b7f1edf2a7412a1968f | 20,923 bytes
+- js/core/system_ownership_v12_2.js | sha256 5f743a78fedeec0b44626a97a3e8ce246bd2c9483f3cd78f09ad2502c74c66e6 | 17,954 bytes
+- js/core/finalize.js | sha256 ebd20a9f3bbce5d98836bae894ee2cdba2df26e88e505e9fcc4311c02e524b15 | 2,581 bytes
+
+FROZEN COMPATIBILITY
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js | sha256 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e | 64,639 bytes
+- Expected frozen hash: 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e
+- Byte/hash unchanged: PASS
+
+CONTENT BUILD
+- tools/content_sources_v12_2.json is the active V12.2 content-source manifest.
+- tools/build_content.js rebuilds js/data/base_content.js and js/dist/data_core_v12_2.js.
+- Content packs discovered lexically: js/data/content/packs/10_forge_and_fletch.js
+- tools/validate_content.js validates the V12.2.0 runtime and RF.Authoring graph.
+
+V12.2 FINALISATION ORDER
+- js/ui/save_manager.js
+- js/core/save_boot.js
+- js/data/finalize.js
+- js/data/config_finalize.js
+- js/ui/shell.js
+- js/ui/database_modern.js (post-compat Living Codex owner)
+- js/core/system_ownership_v12_2.js
+- js/core/finalize.js
+
+PRE-PACKAGING VERIFICATION
+- Base-content source reproduction: PASS
+- Save bundle source reproduction: PASS
+- Data bundle source reproduction: PASS
+- Systems/UI bundle source reproduction: PASS
+- Canonical finalisation bundle source reproduction: PASS
+- Save schema 11.5.3: PASS
+- Full-source JavaScript syntax validation: 465/465 PASS
+- Executable Node regression harnesses: 92/92 PASS
+- Dedicated V12.2 Database regression harness: PASS
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_1_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_2_0_GitHub_Update.zip
+- Reconstructed tree: 686/686 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.2 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- V12.2 Database regression harness after reconstruction: PASS
+- V12.2 runtime contract after reconstruction: PASS
+- V12.2 established-save compatibility after reconstruction: PASS
+- V12.2 Saveguard reliability after reconstruction: PASS
+- V12.1 content/progression compatibility after reconstruction: PASS
+- V12.2 content-source reproduction after reconstruction: PASS

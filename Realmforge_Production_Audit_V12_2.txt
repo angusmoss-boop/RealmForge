@@ -1,0 +1,90 @@
+REALMFORGE V12.2.0 — PRODUCTION AUDIT
+Release: Living Codex
+Date: 22 Sep 2026
+Save schema: 11.5.3 (unchanged)
+
+SCOPE
+- Repair Database search focus loss on touch/mobile.
+- Add category refiners for Items, Resources and Recipes.
+- Redesign the Database/Codex presentation and detail skin.
+- Preserve established Database data/detail semantics and research gating.
+- No Android/Capacitor wrapper work.
+- No persistent-state schema change.
+- No frozen compatibility archaeology reopened.
+
+ROOT CAUSE CONFIRMED
+- Running simulated time redraws the visible UI roughly every 0.18 seconds.
+- The historical Database search field was destroyed/recreated by that passive render cycle.
+- Android keyboard focus therefore disappeared almost immediately after tapping Search.
+
+REPAIR
+- Added post-compatibility canonical js/ui/database_modern.js.
+- Active Database text editing now holds passive full-page renders only while the search input owns focus.
+- World time continues advancing.
+- Modal/combat/action/navigation renders remain allowed.
+- Search and category refinement update Database results in-place.
+
+CATEGORY REFINERS
+Items:
+- All, Weapons, Armour, Tools, Food, Materials, Ammo, Utilities, Trinkets, Quest & Treasure.
+Resources:
+- All, Mining, Woodcutting, Fishing, Foraging.
+Recipes:
+- All, Smithing, Fletching, Crafting, Cooking, Herblore.
+- Fletching is a Codex classification of Crafting recipes that produce bows/ammunition; no new saved skill was introduced.
+
+DESIGN RESULT
+- New Codex hero/header and live result counter.
+- Reworked 4x2 sector grid.
+- Search workbench with focus treatment and clear control.
+- Swipeable refine chips with live category counts.
+- Modern result cards with icon, metadata badge and stronger typography hierarchy.
+- Responsive wider two-column result layout.
+- Designed empty state.
+- Existing Database detail content retained and visually upgraded.
+
+DATA / GAMEPLAY INTEGRITY
+- Items: 226 (unchanged from V12.1)
+- Resources: 28 (unchanged)
+- Recipes: 80 (unchanged)
+- Enemies: 88 (unchanged)
+- Locations: 21 (unchanged)
+- Config definitions: 20 (unchanged)
+- Field Research 3/3 bestiary gating: preserved.
+- Dungeon records: preserved.
+- Magic placeholder/archive: preserved.
+
+SAVE SAFETY
+- Save schema remains 11.5.3.
+- No migration required.
+- Refiner state is runtime-only.
+- Existing campaign/loadout fixtures preserve Equipment, duplicate rings, Tool Belt, Pack, Bank, skills/XP, research, quests, markets, crime/cooldowns, property/buffs, collection, dungeons, Energy, active travel, active combat and legal Pack overflow.
+- V12 Saveguard reliability remains green.
+
+FROZEN COMPATIBILITY
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js
+- Expected bytes: 64,639
+- Expected SHA-256: 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e
+- File not edited by V12.2.
+
+VALIDATION COMPLETED BEFORE PACKAGING
+- RF.Authoring/content validation: PASS.
+- Dedicated V12.2 Database regression harness: PASS.
+- V12.2 runtime contract: PASS.
+- V12.2 established-save compatibility: PASS.
+- V12.2 Saveguard reliability: PASS.
+- V12.1 content/progression compatibility under V12.2: PASS.
+- 92/92 executable Node regression harnesses: PASS.
+- Full-source JavaScript syntax validation: 465/465 PASS.
+
+SOURCE DIFF BEFORE FINAL PACKAGING
+- V12.1 -> V12.2: 26 changed/new files, 0 deletions.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_1_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_2_0_GitHub_Update.zip
+- Reconstructed tree: 686/686 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.2 Full Source working tree: 0
+- Critical reconstructed release tests: 7/7 PASS.

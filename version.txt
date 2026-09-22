@@ -1,5 +1,5 @@
-version=12.1.0
-title=Forge & Fletch
-built=2026-09-22T06:21:00+01:00
-build_id=20260922-v1210-forge-fletch
-notes=Canonical mining, woodcutting, smithing and fletching progression expansion with new materials, tools, armour, weapons, bows and bar-plus-timber arrow recipes; save schema remains 11.5.3.
+version=12.2.0
+title=Living Codex
+built=2026-09-22T08:04:00+01:00
+build_id=20260922-v1220-living-codex
+notes=Database search stability fix, category refiners for Items/Resources/Recipes, and full Living Codex interface redesign; save schema remains 11.5.3.

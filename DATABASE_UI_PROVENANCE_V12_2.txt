@@ -1,0 +1,58 @@
+REALMFORGE V12.2.0 — DATABASE / LIVING CODEX PROVENANCE
+
+FINAL PRESENTATION OWNER
+- Readable source: js/ui/database_modern.js
+- Runtime position: canonical finalisation bundle, after frozen compatibility chronology.
+- Version marker: RF.Views.Database.modernVersion = 12.2.0
+- Ownership verification: core.systemOwnership.databaseModern
+
+MATURE DATA / DETAIL ANCESTRY PRESERVED
+- Canonical historical stage installer: js/ui/database.js
+- js/v9_4.js — original Database sectors, detail data and modal contract.
+- js/v10_61.js — sector grid, progression ordering, Research 3/3 bestiary gate.
+- js/v11_1.js — Location facilities/services enrichment.
+- js/v11_3.js — Dungeons + Magic sectors and dungeon records.
+- No historical stage source above was modified for V12.2.
+
+SEARCH FAILURE ROOT CAUSE
+- systems.timeEnergy installs the mature running-world clock.
+- While speed > 0 and no modal is open, the world clock requests a full RF.UI.render about every 0.18 seconds.
+- Historical Database Search was an ordinary input inside the fully regenerated page.
+- Result: keyboard/focus briefly opened, then the input node was replaced by the next passive render.
+
+V12.2 RENDER BOUNDARY
+- Search input is marked data-rf-live-edit="database-search".
+- RF.Views.Database.V122.shouldHoldRender() returns true only when:
+  - Database is the active tab;
+  - that exact search field owns document focus;
+  - no RF.UI modal is open;
+  - no action game is active;
+  - no combat is active;
+  - no explicit forced Codex render is in progress.
+- Search typing updates the result list/counter/clear control in-place.
+- Sector navigation uses an explicit allowed render.
+- World time is not paused by this guard.
+
+REFINER PROVENANCE
+Items -> RF.DATA.items[id].type
+Resources -> RF.DATA.resourceDefs[id].skill
+Recipes -> RF.DATA.recipes[id].skill plus Fletching classification for Crafting outputs that are ammo/bows.
+Refiner state is held only in RF.Views.Database.V122.activeFilters and is not serialized.
+
+SEARCH INDEX PROVENANCE
+Items -> ID/name/subtitle/type/rarity/description/value.
+Resources -> ID/name/subtitle/skill/description/yield item ID/name.
+Recipes -> ID/name/subtitle/skill/level/input IDs+names/output IDs+names.
+Other sectors -> established row name/subtitle representation.
+
+REGRESSION ASSERTIONS
+- Weapon refine includes stariron_warhammer and excludes stariron_bar.
+- Mining refine includes stariron and excludes ironwood.
+- Woodcutting refine includes ironwood and excludes stariron.
+- Fletching refine includes stariron_arrows and ironwood_greatbow.
+- Generic Crafting refine excludes those Fletching records.
+- Search resolves high-tier recipe/resource ingredient/output terminology.
+- Research 2/3 Wolf stays absent from Bestiary; Research 3/3 Wolf becomes visible.
+- Dungeons remain 8; Magic remains an intentionally empty future archive.
+- Existing Database detail modal contract remains operational.
+- Active-search focus guard holds passive renders and releases for modal/non-Database contexts.
