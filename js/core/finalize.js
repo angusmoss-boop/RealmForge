@@ -1,9 +1,9 @@
-/* Realmforge V12.2.0 production finalizer. */
+/* Realmforge V12.2.1 production finalizer. */
 (() => {
   'use strict';
   const RF=window.RF;
-  RF.VERSION='12.2.0';
-  RF.BUILD={version:'12.2.0',title:'Living Codex',built:'22 Sep 2026 • V12',buildId:'20260922-v1220-living-codex'};
+  RF.VERSION='12.2.1';
+  RF.BUILD={version:'12.2.1',title:'Living Codex — Responsive Refiners',built:'22 Sep 2026 • V12',buildId:'20260922-v1221-responsive-refiners'};
   RF.PRODUCTION_FOUNDATION=RF.PRODUCTION_FOUNDATION||{};
   Object.assign(RF.PRODUCTION_FOUNDATION,{
     phase:26,architecture:'canonical-systems-v12',legacyBaseline:'11.5.3',compatibilityLayer:'js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js',saveSchema:RF.Core.contract.saveSchema,
