@@ -51,3 +51,34 @@
   const oldNames=typeof api.fragmentNames==='function'?api.fragmentNames.bind(api):()=>[];
   api.fragmentNames=()=>Array.from(new Set([...oldNames(),...Object.keys(extraSources)]));
 })();
+
+
+/* Realmforge V12.1.0 — canonical gathering content-pack integration. */
+(() => {
+  'use strict';
+  const RF=window.RF,api=RF.Systems?.Gathering;
+  if(!api)throw new Error('Gathering canonical owner missing before V12.1 content integration.');
+  const applied=new Set();
+  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  api.applyConfiguredContent=function(){
+    RF.DATA.resourceDefs=RF.DATA.resourceDefs||{};
+    RF.DATA.locationResources=RF.DATA.locationResources||{};
+    const keys=(RF.Config?.keys?.()||[]).filter(k=>k.startsWith('gathering.content.')).sort();
+    for(const key of keys){
+      if(applied.has(key))continue;
+      const cfg=RF.Config.clone(key)||{};
+      for(const [id,def] of Object.entries(cfg.resourceDefs||{})){
+        const current=RF.DATA.resourceDefs[id];
+        if(current&&!same(current,def))throw new Error(`Gathering resource collision: ${id} from ${key}`);
+        if(!current)RF.DATA.resourceDefs[id]=def;
+      }
+      for(const [loc,ids] of Object.entries(cfg.locationResources||{})){
+        const list=RF.DATA.locationResources[loc]||(RF.DATA.locationResources[loc]=[]);
+        for(const id of ids||[])if(!list.includes(id))list.push(id);
+      }
+      applied.add(key);
+    }
+    return {packs:[...applied],resources:Object.keys(RF.DATA.resourceDefs).length,locations:Object.keys(RF.DATA.locationResources).length};
+  };
+  api.configuredContent=()=>[...applied];
+})();
