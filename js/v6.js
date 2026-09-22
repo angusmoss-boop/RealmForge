@@ -35,7 +35,9 @@ RF.migrateV6 = function(s){
   if(s.stats.linesBroken==null)s.stats.linesBroken=0;
   if(s.stats.perfectCooks==null)s.stats.perfectCooks=0;
   const kit=['crude_pickaxe','crude_axe','reed_rod','flint_kit'];
-  kit.forEach(id=>{if((s.inventory[id]||0)<1) RF.addItem(s,id,1);});
+  // V12.4: detached Tool Belt copies are intentionally absent from Pack.
+  // Only seed the historical starter kit before the detached-loadout migration has run.
+  if(!s.v1053?.detached) kit.forEach(id=>{if((s.inventory[id]||0)<1) RF.addItem(s,id,1);});
   return s;
 };
 
