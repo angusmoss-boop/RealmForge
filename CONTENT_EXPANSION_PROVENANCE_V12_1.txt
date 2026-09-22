@@ -1,0 +1,94 @@
+REALMFORGE V12.1.0 — CONTENT EXPANSION PROVENANCE
+Title: Forge & Fletch
+
+AUTHORITATIVE READABLE SOURCE
+js/data/content/packs/10_forge_and_fletch.js
+
+CANONICAL INTEGRATION SOURCES
+js/systems/gathering.js
+js/data/authoring.js
+js/core/system_ownership_v12_1.js
+js/core/finalize.js
+
+ADDED ITEMS: 56
+Materials (10)
+- Cobalt Ore / Cobalt Bar
+- Redstone Ore / Redsteel Bar
+- Stariron Ore / Stariron Bar
+- Emberglass Bar
+- Ash Logs / Maple Logs / Ironwood Logs
+
+Tools (6)
+- Cobalt Pickaxe / Cobalt Wood Axe — Tier 4
+- Redsteel Pickaxe / Redsteel Wood Axe — Tier 5
+- Stariron Pickaxe / Stariron Wood Axe — Tier 6
+
+Armour additions (26)
+- Bronze completion: Helm, Cuirass, Greaves, Boots (existing Bronze Buckler retained)
+- Iron completion: Cuirass, Greaves, Boots, Kite Shield (existing Iron Helm retained)
+- Steel completion: Greaves, Sabatons, Tower Shield (existing Steel Sallet/Cuirass retained)
+- Cobalt: Helm, Cuirass, Greaves, Boots, Kite Shield
+- Redsteel: Helm, Cuirass, Greaves, Boots, Bulwark
+- Stariron: Helm, Cuirass, Greaves, Boots, Aegis
+
+Melee weapons (10)
+- Bronze Mace
+- Iron Warhammer
+- Steel Spear
+- Cobalt Longblade
+- Cobalt Warhammer
+- Emberglass Sabre
+- Redsteel Longblade
+- Redsteel Maul
+- Stariron Longblade
+- Stariron Warhammer
+
+Bows (4)
+- Willow Recurve Bow
+- Yew Longbow
+- Maple Warbow
+- Ironwood Greatbow
+
+ADDED RECIPES: 59
+- 4 refined-bar/alloy recipes
+- 44 smithing equipment/tool recipes
+- 11 fletching recipes under Crafting: Shortbow, 4 new bows, 6 arrow batches
+
+HARVEST LADDER
+Mining
+- Cobalt Seam: Lv16, Deep Galleries + Redstone Quarry
+- Redstone Vein: Lv22, Redstone Quarry
+- Stariron Vein: Lv30, Emberdeep
+
+Woodcutting
+- Ash Tree: Lv9, Whisperwood
+- Maple Tree: Lv18, Whisperwood
+- Ancient Ironwood: Lv28, Whisperwood
+
+BAR LADDER
+- Cobalt Bar — Smithing 16 — 2 Cobalt Ore + 1 Coal
+- Emberglass Bar — Smithing 21 — 2 Ember Shards + 1 Steel Bar + 1 Charcoal
+- Redsteel Bar — Smithing 24 — 2 Redstone Ore + 2 Coal
+- Stariron Bar — Smithing 32 — 2 Stariron Ore + 1 Charcoal + 1 Coal
+
+FLETCHING / CRAFTING LADDER
+- Shortbow: Crafting 2 — Oak Logs + Waxed Thread
+- Bronze Arrows: Crafting 3 — Bronze Bar + Oak Logs -> 20 Arrows
+- Willow Recurve: Crafting 6
+- Iron Arrows: Crafting 7 — Iron Bar + Willow Logs -> 30
+- Steel Arrows: Crafting 12 — Steel Bar + Ash Logs -> 40
+- Yew Longbow: Crafting 14
+- Cobalt Arrows: Crafting 19 — Cobalt Bar + Yew Logs -> 55
+- Maple Warbow: Crafting 22
+- Redsteel Arrows: Crafting 27 — Redsteel Bar + Maple Logs -> 75
+- Ironwood Greatbow: Crafting 30
+- Stariron Arrows: Crafting 35 — Stariron Bar + Ironwood Logs -> 100
+
+ARROW DESIGN NOTE
+The existing Realmforge Arrow item remains the ammunition object. V12.1 expands how arrows are produced but deliberately does not introduce tiered arrow combat stats/consumption as a hidden mechanic change. A future ranged-combat/ammunition overhaul can own that explicitly if desired.
+
+BALANCE CEILING
+Crafted Stariron is intentionally powerful but below the strongest Legendary dungeon/relic equipment. This preserves rare-drop and dungeon value while giving production skills a dependable high-end progression route.
+
+SAVE IMPACT
+None. These additions are catalogue/config content. Save schema remains 11.5.3.

@@ -1,0 +1,87 @@
+REALMFORGE V12.1.0 — PRODUCTION AUDIT
+Release: Forge & Fletch
+Date: 22 Sep 2026
+Save schema: 11.5.3 (unchanged)
+
+SCOPE
+- Canonical mining/woodcutting/smithing/fletching content expansion.
+- No Android/Capacitor wrapper work.
+- No save-state schema change.
+- No historical gameplay archaeology reopened.
+
+CONTENT RESULT
+- Items: 170 -> 226 (+56)
+- Recipes: 21 -> 80 (+59)
+- Resource definitions: 22 -> 28 (+6)
+- Config definitions: 19 -> 20 (+1 canonical Gathering content config)
+- Enemies: 88 (unchanged)
+- Locations: 21 (unchanged)
+
+NEW HARVEST NODES
+- Mining 16: Cobalt Seam -> Cobalt Ore
+- Mining 22: Redstone Vein -> Redstone Ore
+- Mining 30: Stariron Vein -> Stariron Ore
+- Woodcutting 9: Ash Tree -> Ash Logs
+- Woodcutting 18: Maple Tree -> Maple Logs
+- Woodcutting 28: Ancient Ironwood -> Ironwood Logs
+
+NEW PRODUCTION FAMILIES
+- Bars/alloys: Cobalt, Emberglass, Redsteel, Stariron
+- Tool tiers: Cobalt T4, Redsteel T5, Stariron T6 for Mining and Woodcutting
+- Armour: completed Bronze/Iron/Steel progression; full Cobalt/Redsteel/Stariron sets
+- Melee: 10 additional craftable weapons
+- Ranged: 4 additional bows plus a craft recipe for the existing Shortbow
+- Arrows: 6 bar+wood recipes, 20 -> 100 arrows per batch as material tier rises
+
+BALANCE / REQUIREMENT REVIEW
+- Existing low-tier items/recipes retained; new content fills progression gaps instead of rewriting mature values.
+- Exact-level requirement behavior tested for harvesting and workshop production.
+- Stariron Warhammer: 25 damage / 6 armour; existing requirement resolver -> Attack 11.
+- Ironwood Greatbow: 19 ranged damage / 3 armour; requirement -> Archery 11.
+- Stariron Cuirass: 5 damage / 16 armour; requirement -> Defence 12.
+- Crafted Stariron weapon/armour ceiling remains below strongest Legendary dungeon gear.
+
+AUTHORING / BUILD
+- V12.1 pack is declarative through RF.Authoring.
+- Gathering extension is configured through RF.Config and installed by canonical systems.gathering.
+- RF.Authoring resource/location validation added.
+- Content build manifest: tools/content_sources_v12_1.json.
+- Generated bundles are not hand-maintained.
+
+SAVE SAFETY
+- Save schema remains 11.5.3.
+- Existing campaign fixtures preserve Equipment, dual rings, Tool Belt, Pack, Bank, skills/XP, research, quests, markets, crime/cooldowns, property/buffs, dungeon state, Energy, active travel, active combat and legal Pack overflow.
+- V12.0 Saveguard reliability suite remains green under V12.1.
+
+FROZEN COMPATIBILITY
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js
+- Bytes: 64,639
+- SHA-256: 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e
+- Expected V12.0/V11.30 hash: 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e
+- Byte/hash unchanged: PASS
+
+VALIDATION COMPLETED BEFORE PACKAGING
+- RF.Authoring.assertClean(): PASS
+- Dedicated V12.1 content/progression harness: PASS
+- V12.1 runtime contract: PASS
+- V12.1 established-save compatibility: PASS
+- V12.1 Saveguard reliability: PASS
+- 86/86 executable Node regression harnesses: PASS
+- Save schema 11.5.3: PASS
+
+Final incremental ZIP reconstruction is recorded in release packaging/provenance after the update artifact is built.
+- Full-source JavaScript syntax validation: 452/452 PASS.
+- V12.0 -> V12.1 source diff: 31 files, 0 deletions.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_0_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_1_0_GitHub_Update.zip
+- Reconstructed tree: 667/667 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.1 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- V12.1 content progression harness after reconstruction: PASS
+- V12.1 runtime contract after reconstruction: PASS
+- V12.1 established-save compatibility after reconstruction: PASS
+- V12.1 Saveguard reliability after reconstruction: PASS

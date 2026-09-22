@@ -1,9 +1,9 @@
-Realmforge: Wanderer's Rise - V12.0.0 Saveguard
+Realmforge: Wanderer's Rise - V12.1.0 Forge & Fletch
 
-First V12 release. V11.30.0 remains the frozen Production Foundation baseline; V12.0.0 fixes and hardens the canonical save/load system without changing gameplay content or the save schema.
+Second V12 release. V12.1 expands the canonical gathering/production progression without changing the save schema or re-opening the frozen compatibility archaeology.
 
 APPLICATION VERSION
-12.0.0
+12.1.0
 
 SAVE SCHEMA
 11.5.3 (unchanged)
@@ -12,34 +12,39 @@ ACTIVE PRODUCTION RUNTIME
 1. js/data/base_content.js
 2. js/legacy/base/state.js
 3. js/legacy/base/ui.js
-4. js/dist/save_core_v12_0.js
-5. js/dist/data_core_v12_0.js
+4. js/dist/save_core_v12_1.js
+5. js/dist/data_core_v12_1.js
 6. js/legacy/base/main.js
-7. js/dist/systems_core_v12_0.js
+7. js/dist/systems_core_v12_1.js
 8. js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js
-9. js/dist/canonical_v12_0.js
+9. js/dist/canonical_v12_1.js
 
-V12.0 SAVEGUARD
-- Fixed New Campaign overwriting the currently active campaign.
-- Canonical RF.startNew remains authoritative; legacy/base/main.js may no longer replace it.
-- Added storage-layer cross-campaign overwrite rejection.
-- New campaign slots start with three verified local copies immediately.
-- Duplicate creates a separate verified slot without changing the active campaign.
-- Options & Saves now provides per-slot Duplicate and Export controls.
-- Export uses a versioned checksummed .rfsave backup package.
-- Import accepts V12 .rfsave files and pre-V12 base64 text exports.
-- Imports always create a separate campaign slot.
-- Browser file download/file-pick behavior lives behind RF.Platform for future Android/Capacitor adapters.
-- Corrupt slot indexes can be reconstructed from verified slot envelopes.
-- Primary -> Backup -> Recovery fallback remains intact.
-- Save schema remains 11.5.3.
+V12.1 FORGE & FLETCH
+- Added one declarative V12 content pack: js/data/content/packs/10_forge_and_fletch.js.
+- Added 56 items and 59 recipes. Live catalogue is now 226 items / 80 recipes.
+- Added Cobalt, Redstone and Stariron mining resources.
+- Added Ash, Maple and Ancient Ironwood woodcutting resources.
+- Added Cobalt, Emberglass, Redsteel and Stariron refined bars.
+- Added Tier 4/5/6 Mining pickaxes and Woodcutting axes.
+- Completed Bronze, Iron and Steel craftable armour progression and added full Cobalt, Redsteel and Stariron armour sets.
+- Added 10 craftable melee weapons and 4 new craftable bows.
+- Added six bar + timber arrow-fletching recipes producing the existing Arrow ammunition stack.
+- Fletching deliberately remains under the existing Crafting skill; no parallel skill/save-state migration was introduced.
+- New resources are supplied through canonical RF.Config + systems.gathering integration rather than historical patch files.
+- RF.Authoring now validates resource definitions and location-resource references.
+- Exact-level harvesting/crafting requirements are regression-tested.
+- Crafted endgame gear is deliberately below the strongest Legendary dungeon equipment.
+
+HARVEST REQUIREMENTS
+Mining: Cobalt 16, Redstone 22, Stariron 30.
+Woodcutting: Ash 9, Maple 18, Ancient Ironwood 28.
 
 FROZEN COMPATIBILITY
-js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js remains byte-identical to V11.30.0 at 64,639 bytes. No V12 gameplay/save feature was added to the historical compatibility layer.
+js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js remains 64,639 bytes and byte-identical to V11.30.0/V12.0.0.
 
 KEY DOCUMENTS
-- REALMFORGE_ARCHITECTURE_V12_0.md
-- Realmforge_Production_Audit_V12_0.txt
-- SAVE_SYSTEM_PROVENANCE_V12_0.txt
-- CANONICAL_BUNDLE_PROVENANCE_V12_0.txt
-- Realmforge_Development_Log_V1_to_V12_0_0.txt
+- REALMFORGE_ARCHITECTURE_V12_1.md
+- Realmforge_Production_Audit_V12_1.txt
+- CONTENT_EXPANSION_PROVENANCE_V12_1.txt
+- CANONICAL_BUNDLE_PROVENANCE_V12_1.txt
+- Realmforge_Development_Log_V1_to_V12_1_0.txt

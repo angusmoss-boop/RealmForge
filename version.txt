@@ -1,5 +1,5 @@
-version=12.0.0
-title=Saveguard
-built=2026-09-21T17:09:00+01:00
-build_id=20260921-v1200-saveguard
-notes=V12 save-system hardening: cross-campaign overwrite protection, verified three-copy slot creation, safe duplicate/export/import, and canonical save ownership repaired. Save schema remains 11.5.3.
+version=12.1.0
+title=Forge & Fletch
+built=2026-09-22T06:21:00+01:00
+build_id=20260922-v1210-forge-fletch
+notes=Canonical mining, woodcutting, smithing and fletching progression expansion with new materials, tools, armour, weapons, bows and bar-plus-timber arrow recipes; save schema remains 11.5.3.
