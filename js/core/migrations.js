@@ -113,6 +113,23 @@
     }
     return state;
   });
+  api.register('12.5.0','12.6.0',state=>{
+    if(!state||typeof state!=='object'||!state.player)return state;
+    const level=Math.max(1,Math.min(100,Number(state.player.level)||1));
+    const legacyCurve=100+(level-1)*2;
+    const oldMax=Math.max(1,Number(state.player.maxEnergy)||legacyCurve);
+    let oldEnergy=Number(state.player.energy);
+    if(!Number.isFinite(oldEnergy))oldEnergy=oldMax;
+    const nextMax=1000+(level-1)*20;
+    const ratio=Math.max(0,Math.min(1,oldEnergy/oldMax));
+    state.player.maxEnergy=nextMax;
+    state.player.energy=Math.max(0,Math.min(nextMax,ratio*nextMax));
+    state.v126=state.v126||{};
+    state.v126.energyScale=10;
+    state.v126.energyMigrationTarget=state.player.energy;
+    return state;
+  });
+
 
 })();
 
