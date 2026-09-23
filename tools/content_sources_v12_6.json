@@ -1,0 +1,41 @@
+{
+  "version": "12.6.0",
+  "baseContentSources": [
+    "js/data/content/base/00_bootstrap.js",
+    "js/data/content/base/10_backgrounds.js",
+    "js/data/content/base/11_items.js",
+    "js/data/content/base/12_skills.js",
+    "js/data/content/base/13_locations.js",
+    "js/data/content/base/14_enemies.js",
+    "js/data/content/base/15_recipes.js",
+    "js/data/content/base/16_shop_stock.js",
+    "js/data/content/base/17_quests.js",
+    "js/data/content/base/18_events.js",
+    "js/data/content/base/99_finalize.js"
+  ],
+  "dataBundleSources": [
+    "js/data/catalog.js",
+    "js/data/config_registry.js",
+    "js/data/assets.js",
+    "js/data/authoring.js",
+    "js/data/content/legacy/00_registry.js",
+    "js/data/content/legacy/10_items.js",
+    "js/data/content/legacy/20_locations.js",
+    "js/data/content/legacy/30_creatures_combat_data.js",
+    "js/data/content/legacy/40_recipes_crafting.js",
+    "js/data/content/legacy/45_skills_perks.js",
+    "js/data/content/legacy/50_people_social.js",
+    "js/data/content/legacy/60_quests_events.js",
+    "js/data/content/legacy/70_world_activity_data.js",
+    "js/data/content/legacy/90_mixed_historical.js",
+    "js/data/content/legacy/99_finalize.js",
+    "js/data/config/exploration.js",
+    "js/data/config/crime.js",
+    "js/data/config/services.js",
+    "js/data/config/commerce.js",
+    "js/data/config/equipment.js",
+    "js/data/config/world.js",
+    "js/data/config/dungeons.js"
+  ],
+  "contentPackDirectory": "js/data/content/packs"
+}
