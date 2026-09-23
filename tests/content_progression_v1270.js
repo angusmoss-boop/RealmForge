@@ -1,0 +1,46 @@
+const fs=require('fs'),vm=require('vm'),path=require('path');
+const root=path.resolve(__dirname,'..');
+function el(){return {innerHTML:'',textContent:'',value:'',disabled:false,hidden:false,style:{},dataset:{},classList:{add(){},remove(){},contains(){return false},toggle(){}},setAttribute(){},getAttribute(){return null},appendChild(){},remove(){},addEventListener(){},removeEventListener(){},querySelectorAll(){return[]},querySelector(){return null},closest(){return null},focus(){},blur(){},onclick:null,offsetWidth:1,nodeType:1};}
+const app=el(),document={visibilityState:'visible',head:el(),body:el(),documentElement:el(),activeElement:null,getElementById:id=>id==='app'?app:el(),createElement(tag){const x=el();x.tagName=String(tag).toUpperCase();return x},querySelectorAll(){return[]},querySelector(){return null},addEventListener(){},removeEventListener(){}};const storage=new Map();
+const ctx=vm.createContext({console,Math,Date,JSON,Object,Array,String,Number,Boolean,Map,Set,Promise,RegExp,Error,TypeError,parseInt,parseFloat,isNaN,encodeURIComponent,decodeURIComponent,escape,unescape,btoa:s=>Buffer.from(s,'binary').toString('base64'),atob:s=>Buffer.from(s,'base64').toString('binary'),__errs:[],document,navigator:{onLine:true,clipboard:{writeText:async()=>{}}},location:{protocol:'file:',pathname:'/',href:'file:///'},history:{state:{},pushState(){},replaceState(){},back(){}},performance:{now:()=>0},requestAnimationFrame:()=>1,cancelAnimationFrame(){},queueMicrotask:fn=>fn(),setTimeout:()=>1,clearTimeout(){},setInterval:()=>1,clearInterval(){},alert(){},prompt(){return null},confirm(){return true},localStorage:{getItem:k=>storage.has(k)?storage.get(k):null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k),key:i=>Array.from(storage.keys())[i]||null,get length(){return storage.size}},MutationObserver:class{observe(){}disconnect(){}},ResizeObserver:class{observe(){}disconnect(){}},getComputedStyle:()=>({}),URL,Intl});ctx.window=ctx;ctx.globalThis=ctx;ctx.self=ctx;ctx.addEventListener=()=>{};ctx.removeEventListener=()=>{};ctx.scrollTo=()=>{};ctx.scrollX=0;ctx.scrollY=0;ctx.pageXOffset=0;ctx.pageYOffset=0;
+document.head.appendChild=function(x){if(x?.tagName==='SCRIPT'&&x.textContent){try{vm.runInContext(x.textContent,ctx,{filename:String(x.textContent.match(/sourceURL=([^\n]+)/)?.[1]||'embedded-runtime.js')})}catch(e){ctx.__errs.push(String(e.stack||e))}}return x};document.documentElement.appendChild=document.head.appendChild;
+const scripts=['js/data/base_content.js','js/legacy/base/state.js','js/legacy/base/ui.js','js/dist/save_core_v12_7.js','js/dist/data_core_v12_7.js','js/legacy/base/main.js','js/dist/systems_core_v12_7.js','js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js','js/dist/canonical_v12_7.js'];
+for(const rel of scripts)try{vm.runInContext(fs.readFileSync(path.join(root,rel),'utf8'),ctx,{filename:rel})}catch(e){ctx.__errs.push(rel+': '+String(e.stack||e));}
+const R=ctx.RF,D=R.DATA,checks={};const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+checks.version=R.VERSION==='12.7.0';checks.schema=R.V95?.SCHEMA==='12.6.0';checks.authoring=R.Authoring?.report?.().valid===true;
+checks.itemCount=Object.keys(D.items||{}).length===226;checks.enemyCount=Object.keys(D.enemies||{}).length===88;checks.locationCount=Object.keys(D.locations||{}).length===21;checks.configCount=R.Config?.size?.()===20;
+checks.packApplied=R.Systems?.Gathering?.configuredContent?.().includes('gathering.content.v12_1_forge_fletch')===true;
+const res=D.resourceDefs||{},loc=D.locationResources||{};
+checks.miningRequirements=res.cobalt?.level===16&&res.redstone?.level===22&&res.stariron?.level===30&&res.cobalt?.skill==='mining'&&res.redstone?.skill==='mining'&&res.stariron?.skill==='mining';
+checks.woodRequirements=res.ash?.level===9&&res.maple?.level===18&&res.ironwood?.level===28&&res.ash?.skill==='woodcutting'&&res.maple?.skill==='woodcutting'&&res.ironwood?.skill==='woodcutting';
+checks.resourceItems=['cobalt','redstone','stariron','ash','maple','ironwood'].every(id=>!!D.items[res[id]?.item]);
+checks.resourceLocality=['cobalt'].every(x=>loc.deep_mine?.includes(x))&&['cobalt','redstone'].every(x=>loc.quarry?.includes(x))&&loc.ember_cave?.includes('stariron')&&['ash','maple','ironwood'].every(x=>loc.forest?.includes(x));
+checks.oldResourcesPreserved=['copper','tin','iron','coal','silver','ember','oak','willow','yew'].every(x=>!!res[x]);
+const rec=D.recipes||{};
+checks.bronzeEntry=rec.bronze_bar?.level===1;
+checks.barLadder=rec.cobalt_bar?.level===16&&rec.emberglass_bar?.level===21&&rec.redsteel_bar?.level===24&&rec.stariron_bar?.level===32;
+checks.arrowRecipes=['bronze_arrows','iron_arrows','steel_arrows','cobalt_arrows','redsteel_arrows','stariron_arrows'].every(id=>{const x=rec[id];if(!x||x.skill!=='crafting'||x.outputs?.arrow<1)return false;const inputs=Object.keys(x.inputs||{});return inputs.some(k=>k.endsWith('_bar'))&&inputs.some(k=>k==='logs'||k.endsWith('_logs'));});
+checks.arrowYieldCurve=eq(['bronze_arrows','iron_arrows','steel_arrows','cobalt_arrows','redsteel_arrows','stariron_arrows'].map(x=>rec[x].outputs.arrow),[20,30,40,55,75,100]);
+checks.bowLadder=rec.shortbow_fletching?.level===2&&rec.willow_recurve?.level===6&&rec.yew_longbow?.level===14&&rec.maple_warbow?.level===22&&rec.ironwood_greatbow?.level===30;
+checks.toolLadder=D.items.cobalt_pickaxe?.tier===4&&D.items.redsteel_pickaxe?.tier===5&&D.items.stariron_pickaxe?.tier===6&&D.items.cobalt_axe?.tier===4&&D.items.redsteel_axe?.tier===5&&D.items.stariron_axe?.tier===6;
+checks.armourSets=['cobalt','redsteel','stariron'].every(t=>['helm','cuirass','greaves','boots'].every(p=>!!D.items[`${t}_${p}`]))&&!!D.items.cobalt_kite_shield&&!!D.items.redsteel_bulwark&&!!D.items.stariron_aegis;
+checks.bronzeIronSteelFilled=['bronze_helm','bronze_cuirass','bronze_greaves','bronze_boots','iron_cuirass','iron_greaves','iron_boots','iron_kite_shield','steel_greaves','steel_boots','steel_tower_shield'].every(x=>!!D.items[x]);
+checks.weaponCurve=[['bronze_mace',7],['iron_warhammer',10],['steel_spear',14],['cobalt_longblade',17],['redsteel_longblade',21],['stariron_longblade',24],['stariron_warhammer',25]].every(([id,d])=>D.items[id]?.damage===d);
+checks.bowStats=[['shortbow',5],['willow_recurve',8],['yew_longbow',11],['maple_warbow',15],['ironwood_greatbow',19]].every(([id,d])=>D.items[id]?.damage===d&&D.items[id]?.ranged===true);
+const req=id=>R.itemRequirement(D.items[id]);
+checks.equipRequirements=req('bronze_mace')?.skill==='attack'&&req('bronze_mace')?.level===3&&req('stariron_warhammer')?.level===11&&req('willow_recurve')?.skill==='archery'&&req('willow_recurve')?.level===5&&req('ironwood_greatbow')?.level===11&&req('stariron_cuirass')?.skill==='defence'&&req('stariron_cuirass')?.level===12;
+checks.rareCeiling=D.items.stariron_warhammer.damage<D.items.heron_spear.damage&&D.items.stariron_warhammer.damage<D.items.heartforge_greatblade.damage&&D.items.stariron_cuirass.armor<D.items.heron_scale_mail.armor;
+checks.smithingCurve=rec.bronze_cuirass?.level===5&&rec.iron_cuirass?.level===8&&rec.steel_cuirass_recipe?.level===14&&rec.cobalt_cuirass?.level===21&&rec.redsteel_cuirass?.level===28&&rec.stariron_cuirass?.level===37;
+// Exact-level production and harvesting remain valid through the mature requirement system.
+const s=R.newGame('ForgeTest','smith','⚒️');s.location='greenvale';
+s.skills.smithing.level=37;s.skills.smithing.xp=R.xpForLevel(37);s.inventory.stariron_bar=5;
+checks.exactSmithing=R.V1056?.craftAnalysis?.(s,'stariron_cuirass')?.max>=1;
+s.skills.crafting.level=30;s.skills.crafting.xp=R.xpForLevel(30);s.inventory.ironwood_logs=4;s.inventory.waxed_thread=3;
+checks.exactFletching=R.V1056?.craftAnalysis?.(s,'ironwood_greatbow')?.max>=1;
+s.skills.crafting.level=35;s.skills.crafting.xp=R.xpForLevel(35);s.inventory.stariron_bar=1;s.inventory.ironwood_logs=1;
+checks.exactArrowFletching=R.V1056?.craftAnalysis?.(s,'stariron_arrows')?.max>=1;
+checks.exactHarvestLevels=R.meetsSkillRequirement?.({...s,skills:{...s.skills,mining:{level:30,xp:R.xpForLevel(30)},woodcutting:{level:28,xp:R.xpForLevel(28)}}},'mining',30)===true&&R.meetsSkillRequirement?.({...s,skills:{...s.skills,mining:{level:30,xp:R.xpForLevel(30)},woodcutting:{level:28,xp:R.xpForLevel(28)}}},'woodcutting',28)===true;
+checks.schemaAdvanced=R.Core.contract.saveSchema==='12.6.0';checks.ownership=R.PRODUCTION_FOUNDATION?.systemOwnership?.valid===true;
+const unexpected=ctx.__errs.filter(x=>!String(x).includes('modalHTML'));
+console.log(JSON.stringify({checks,counts:{items:Object.keys(D.items).length,recipes:Object.keys(rec).length,resources:Object.keys(res).length,configs:R.Config.size()},requirements:{starironWarhammer:req('stariron_warhammer'),ironwoodGreatbow:req('ironwood_greatbow'),starironCuirass:req('stariron_cuirass')},unexpectedErrors:unexpected},null,2));
+if(Object.values(checks).some(v=>!v)||unexpected.length)process.exit(2);
