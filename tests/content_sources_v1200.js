@@ -19,7 +19,7 @@ checks.counts=Object.keys(B.RF.DATA.items).length===170&&Object.keys(B.RF.DATA.e
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'tools/content_sources_v12_0.json'),'utf8'));
 // Historical release fixture: no content packs existed in this release. Future packs in the live source tree must not enter historical bundle reproduction.
 const packs=[];
-const historicalSource=rel=>rel==='js/data/authoring.js'?'tests/fixtures/authoring_v1200.js':rel;
+const historicalSource=rel=>rel==='js/data/authoring.js'?'tests/fixtures/authoring_v1200.js':rel==='js/data/content/legacy/40_recipes_crafting.js'?'tests/fixtures/40_recipes_crafting_pre_v1260.js':rel;
 const join=rels=>rels.map(rel=>fs.readFileSync(path.join(root,historicalSource(rel)),'utf8')).join('\n');
 checks.baseRepro=join(manifest.baseContentSources)===fs.readFileSync(path.join(root,'js/data/base_content.js'),'utf8');
 checks.dataRepro=join([...manifest.dataBundleSources,...packs])===fs.readFileSync(path.join(root,'js/dist/data_core_v12_0.js'),'utf8');
