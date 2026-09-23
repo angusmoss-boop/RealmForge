@@ -28,7 +28,7 @@ RF.DATA.campRecipes = {
 },{"patch": "js/v5.js", "line": 56, "bytes": 961, "kind": "direct"});
 define("v7@L50",function(){
 Object.assign(RF.DATA.recipes,{
-  bronze_bar:{name:'Smelt Bronze Bar',skill:'smithing',level:2,time:8,inputs:{copper_ore:1,tin_ore:1},outputs:{bronze_bar:1},xp:24},
+  bronze_bar:{name:'Smelt Bronze Bar',skill:'smithing',level:1,time:8,inputs:{copper_ore:1,tin_ore:1},outputs:{bronze_bar:1},xp:24},
   bronze_sword:{name:'Forge Bronze Sword',skill:'smithing',level:3,time:12,inputs:{bronze_bar:3},outputs:{bronze_sword:1},xp:46},
   bronze_buckler:{name:'Forge Bronze Buckler',skill:'smithing',level:4,time:12,inputs:{bronze_bar:3},outputs:{bronze_buckler:1},xp:50},
   silver_bar:{name:'Refine Silver Bar',skill:'smithing',level:12,time:15,inputs:{silver_ore:2,charcoal:1},outputs:{silver_bar:1},xp:72},
