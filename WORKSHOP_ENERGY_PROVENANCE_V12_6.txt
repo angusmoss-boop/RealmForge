@@ -1,0 +1,31 @@
+REALMFORGE V12.6.0 - WORKSHOP / ENERGY PROVENANCE
+
+SMITHING
+- Canonical readable recipe source: js/data/content/legacy/40_recipes_crafting.js
+- Bronze Bar requirement changed Level 2 -> Level 1.
+- XP remains 24; Smithing Level 2 threshold is 45 XP.
+- Historical source fixture: tests/fixtures/40_recipes_crafting_pre_v1260.js (exact V12.5 readable bytes).
+
+ENERGY
+- Migration owner: js/core/migrations.js
+- Final runtime owner: js/systems/energy_scale.js / systems.energyScale
+- Old cap curve: 100 + 2*(level-1)
+- New cap curve: 1000 + 20*(level-1)
+- Existing current Energy is proportionally converted.
+- Tested established conversion: 53/158 -> 530/1580.
+- Tested active-travel conversion: 154/158 -> 1540/1580.
+- Activity Energy costs were deliberately not multiplied.
+
+WORKSHOP
+- Historical functional substrate: V10.28 Workshop handlers/state.
+- Final presentation owner: js/ui/workshop_modern.js / ui.workshop
+- Categories: All Recipes, Weapons, Armour, Consumables, Materials, Tools, Treasure, Other.
+- Layout: 4 columns x 2 rows, mobile-contained.
+- Native select removed from final Workshop modal.
+- Final close action: top-right X.
+
+SAVE / COMPATIBILITY
+- Save schema: 12.6.0.
+- V12.5 campaign mode / Hardcore / Fallen state is preserved through migration.
+- Equipment, Tool Belt, Pack/Bank, skills, research, quests, markets, crime, property, dungeon records, active travel and active combat fixtures all pass.
+- Frozen compatibility runtime was not edited.

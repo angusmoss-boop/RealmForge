@@ -1,0 +1,43 @@
+REALMFORGE V12.6.0 - CANONICAL BUNDLE PROVENANCE
+
+Save schema: 12.6.0
+
+ACTIVE BUNDLES
+- js/dist/save_core_v12_6.js | sha256 2182daf9fda5b49a13f92b4be1fd3f6695cf36056ec307d765f1066ba664db0d | 76,719 bytes
+- js/dist/data_core_v12_6.js | sha256 edc2806bacc3f2014ed20cbc790983a180704e906ec65d9baaa070240533ebd9 | 174,730 bytes
+- js/dist/systems_core_v12_6.js | sha256 a834f3bad0589536a80867b6d43f487bd1b618ec031a2cc436053330e12107ad | 1,187,596 bytes
+- js/dist/canonical_v12_6.js | sha256 e9a406ff91899bc6a5c8a2613a24913610d99bcf00fe286e659cc2dbb5c0ad1d | 98,355 bytes
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js | sha256 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e | 64,639 bytes
+
+SOURCE REPRODUCTION
+- save_core_v12_6.js is the exact LF-joined concatenation of bootstrap, browser-platform, migrations, scoped-runtime, compatibility-classification, storage, campaigns, state and lifecycle readable sources: PASS.
+- data_core_v12_6.js reproduced by tools/build_content.js from tools/content_sources_v12_6.json plus lexical content packs: PASS.
+- systems_core_v12_6.js is byte-identical to V12.5 because no mature canonical system substrate required editing: PASS.
+- canonical_v12_6.js is the exact LF-joined concatenation of save-manager, save-boot, data/config finalizers, shell, Living Codex, Pack dossier, Hardcore owner, Energy Scale owner, Workshop owner, V12.6 ownership verifier and finalizer: PASS.
+- No chronological v12_6.js patch file exists.
+
+COMPATIBILITY
+- Frozen compatibility runtime remains exactly 64,639 bytes with the frozen SHA-256 above.
+
+VALIDATION
+- RF.Authoring/content validation: PASS.
+- 125/125 executable Node harnesses: PASS.
+- 537/537 JavaScript syntax checks: PASS.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_5_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_6_0_GitHub_Update.zip
+- Reconstructed tree: 788/788 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.6 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- Dedicated V12.6 Workshop/Energy regression after reconstruction: PASS
+- V12.6 runtime contract after reconstruction: PASS
+- V12.6 established-save compatibility after reconstruction: PASS
+- V12.6 Saveguard reliability after reconstruction: PASS
+- V12.6 Hardcore regression after reconstruction: PASS
+- V12.6 Database regression after reconstruction: PASS
+- V12.6 Pack/Tool Belt regression after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS
+- V12.6 content-source reproduction after reconstruction: PASS

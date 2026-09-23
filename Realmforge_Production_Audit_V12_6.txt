@@ -1,0 +1,50 @@
+REALMFORGE V12.6.0 - PRODUCTION AUDIT
+
+Release: Workshop & Energy Expansion
+App version: 12.6.0
+Save schema: 12.6.0
+
+CHANGE AUDIT
+- Bronze Bar Smithing requirement: Level 1 (was 2).
+- Bronze XP remains 24; two bars cross the 45 XP Level-2 threshold.
+- Greenvale Workshop native dropdown removed from final canonical Workshop UI.
+- Workshop category selector: 8 in-game tabs, fixed 4 columns x 2 rows, width-contained.
+- Workshop closes from top-right X; no bottom Leave Workshop action.
+- Energy curve: 1000 + 20 per Character Level after Level 1.
+- Energy costs: unchanged.
+- Existing 12.5 saves: proportional Energy migration.
+- Schema migration: 12.5.0 -> 12.6.0.
+- Hardcore/Fallen rules preserved.
+- Frozen compatibility runtime unchanged.
+
+VALIDATION
+- RF.Authoring/content validation: PASS (226 items, 88 enemies, 21 locations, 20 configs).
+- Dedicated Workshop/Energy V12.6 regression: PASS.
+- Runtime contract V12.6: PASS.
+- Established-save compatibility V12.6: PASS.
+- Saveguard reliability V12.6: PASS.
+- Hardcore V12.6: PASS.
+- Database + Pack/Tool Belt regressions: PASS.
+- Forge & Fletch progression regression: PASS.
+- Historical content-source reproduction: PASS via frozen pre-V12.6 recipe fixture.
+- Executable Node harnesses: 125/125 PASS.
+- JavaScript syntax: 537/537 PASS.
+- Compatibility runtime: 64,639 bytes, frozen SHA-256 retained.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_5_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_6_0_GitHub_Update.zip
+- Reconstructed tree: 788/788 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.6 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- Dedicated V12.6 Workshop/Energy regression after reconstruction: PASS
+- V12.6 runtime contract after reconstruction: PASS
+- V12.6 established-save compatibility after reconstruction: PASS
+- V12.6 Saveguard reliability after reconstruction: PASS
+- V12.6 Hardcore regression after reconstruction: PASS
+- V12.6 Database regression after reconstruction: PASS
+- V12.6 Pack/Tool Belt regression after reconstruction: PASS
+- V12.1 Forge & Fletch progression compatibility after reconstruction: PASS
+- V12.6 content-source reproduction after reconstruction: PASS
