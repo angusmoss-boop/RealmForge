@@ -1,5 +1,5 @@
-version=12.6.0
-title=Workshop & Energy Expansion
-built=2026-09-23T03:16:00+01:00
-build_id=20260923-v1260-workshop-energy
-notes=Fixes Smithing level-1 progression, modernises the Greenvale Village Workshop with a contained 4x2 category grid, and expands Energy to a 1000-point baseline with proportional save migration while preserving activity costs.
+version=12.7.0
+title=Fallen Memorials
+built=2026-09-23T04:37:00+01:00
+build_id=20260923-v1270-fallen-memorials
+notes=Fixes Hardcore memorial navigation, adds optional confirmed deletion for fallen saves, and upgrades fallen Hardcore cards on the campaign front door.

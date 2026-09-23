@@ -1,0 +1,42 @@
+REALMFORGE V12.7.0 - CANONICAL BUNDLE PROVENANCE
+
+Save schema: 12.6.0 (unchanged)
+
+ACTIVE BUNDLES
+- js/dist/save_core_v12_7.js | sha256 e4bc075bc415c57efb535ee817c4ab90bded52ae61b51dd7f06864d1ff0aa3a2 | 76,719 bytes
+- js/dist/data_core_v12_7.js | sha256 edc2806bacc3f2014ed20cbc790983a180704e906ec65d9baaa070240533ebd9 | 174,730 bytes
+- js/dist/systems_core_v12_7.js | sha256 a834f3bad0589536a80867b6d43f487bd1b618ec031a2cc436053330e12107ad | 1,187,596 bytes
+- js/dist/canonical_v12_7.js | sha256 10c22944d1e84f2030caea74b65980d1a96b188dc4d2659908c1312e4b8684d2 | 102,578 bytes
+- js/legacy/compat_gameplay_scoped_residuals_trimmed_v1153.js | sha256 68d0283ff351fe7c285a04f06be84a2ef38f4cab0454910c0845d0cce6a4620e | 64,639 bytes
+
+SOURCE REPRODUCTION
+- save_core_v12_7.js is the exact LF-joined concatenation of bootstrap, browser-platform, migrations, scoped-runtime, compatibility-classification, storage, campaigns, state and lifecycle readable sources: PASS.
+- data_core_v12_7.js reproduced by tools/build_content.js from tools/content_sources_v12_7.json plus lexical content packs: PASS.
+- systems_core_v12_7.js is byte-identical to V12.6 because mature gameplay systems did not require modification: PASS.
+- canonical_v12_7.js is the exact LF-joined concatenation of save-manager, save-boot, data/config finalizers, shell, Living Codex, Pack dossier, Hardcore/Fallen owner, Energy Scale owner, Workshop owner, V12.7 ownership verifier and finalizer: PASS.
+- No chronological v12_7.js patch file exists.
+
+COMPATIBILITY
+- Frozen compatibility runtime remains exactly 64,639 bytes with the frozen SHA-256 above.
+
+VALIDATION
+- RF.Authoring/content validation: PASS.
+- Dedicated V12.7 Hardcore memorial regression: PASS.
+- 139/139 executable Node harnesses: PASS.
+- 553/553 JavaScript syntax checks: PASS.
+
+FINAL INCREMENTAL UPDATE SIMULATION
+- Input baseline: Realmforge_Wanderers_Rise_V12_6_0_Source.zip
+- Applied artifact: Realmforge_Wanderers_Rise_V12_7_0_GitHub_Update.zip
+- Reconstructed tree: 810/810 files
+- Missing files: 0
+- Extra files: 0
+- Byte differences versus V12.7 Full Source working tree: 0
+- RF.Authoring/content validation after reconstruction: PASS
+- Dedicated V12.7 Hardcore memorial regression after reconstruction: PASS
+- V12.7 runtime contract after reconstruction: PASS
+- V12.7 established-save compatibility after reconstruction: PASS
+- V12.7 Saveguard reliability after reconstruction: PASS
+- V12.7 Hardcore regression after reconstruction: PASS
+- V12.7 Workshop/Energy regression after reconstruction: PASS
+- V12.7 content-source reproduction after reconstruction: PASS

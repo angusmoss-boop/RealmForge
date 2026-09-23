@@ -1,0 +1,42 @@
+REALMFORGE V12.7.0 - HARDCORE MEMORIAL PROVENANCE
+
+OWNER
+- js/systems/hardcore.js
+- Canonical module: systems.hardcore / RF.CampaignMode
+- V12.7 owner version: 12.7.0
+- Persistent schema: 12.6.0 (unchanged)
+
+BUG ROOT CAUSE
+The V12.5/V12.6 Hardcore UI render wrapper evaluated `campaign.gameOver` before delegating to the historical main-menu render owner. Main Menu was rendered immediately on tap, but any later passive `RF.UI.render(RF.state)` call saw the fallen state first and replaced the front door with Game Over again.
+
+FIX
+V12.7 makes explicit main-menu state authoritative before the fallen-campaign render override. Leaving a memorial remains stable across later redraws. Loading the fallen slot again clears main-menu state through the established loader and correctly returns to the memorial.
+
+OPTIONAL DELETE FLOW
+- Game Over adds Delete Save.
+- First tap reveals an in-game confirmation panel.
+- Keep Memorial cancels without storage mutation.
+- Delete Memorial calls canonical RF.Core.Campaigns.delete(activeId).
+- Canonical deletion removes index metadata and primary/backup/recovery/temp/recovery_at local records.
+- RF.state is cleared and the campaign selector is rendered.
+- Deletion is optional and never occurs as part of death itself.
+
+FRONT-DOOR MEMORIAL PRESENTATION
+Only metadata with mode=hardcore and gameOver=true is decorated:
+- subtle red-tinted save card
+- skull-and-crossbones icon
+- FALLEN badge
+- subtitle ends in Game Over rather than location
+Living Hardcore and Standard saves are left unchanged.
+
+REGRESSION COVERAGE
+- die -> memorial
+- memorial -> Main Menu
+- passive render after Main Menu remains on front door
+- reopen fallen slot -> memorial
+- deletion prompt opens
+- cancellation preserves slot and verified data
+- confirmation removes slot and verified copies
+- fallen-card metadata presentation
+- schema remains 12.6.0
+- frozen compatibility hash preserved
