@@ -1,12 +1,12 @@
-/* Realmforge V12.5.0 — Hardcore Campaign Rules.
-   Final canonical owner for campaign mode selection, permadeath and character-record presentation. */
+/* Realmforge V12.7.0 — Hardcore Campaign Rules & Fallen Memorials.
+   Final canonical owner for campaign mode selection, permadeath, fallen memorial UX and character-record presentation. */
 (() => {
   'use strict';
   const RF=window.RF;
   if(!RF?.UI||!RF.Core?.Campaigns||!RF.Core?.State)throw new Error('Hardcore campaign rules require canonical UI and persistence.');
 
   const api={
-    version:'12.5.0',
+    version:'12.7.0',
     mode:s=>s?.campaign?.mode==='hardcore'?'hardcore':'standard',
     isHardcore:s=>s?.campaign?.mode==='hardcore',
     isGameOver:s=>s?.campaign?.mode==='hardcore'&&s?.campaign?.gameOver===true
@@ -115,13 +115,24 @@
           <button data-v125-new-character><span>✨</span><b>New Character</b><small>Begin a separate campaign</small></button>
           <button data-v125-main-menu><span>🏰</span><b>Main Menu</b><small>Return to campaign selection</small></button>
           <button data-v125-export-final><span>📤</span><b>Export Memorial</b><small>Keep a portable final save</small></button>
+          <button class="v127DeleteAction" data-v127-delete-save><span>🗑️</span><b>Delete Save</b><small>Optionally remove this memorial</small></button>
+        </div>
+        <div class="v127DeleteConfirm" data-v127-delete-confirm hidden>
+          <span class="v127DeleteSkull">☠️</span><div><b>Delete this fallen campaign?</b><p>This permanently removes the memorial and all verified local copies. This cannot be undone.</p></div>
+          <div class="v127DeleteConfirmActions"><button data-v127-delete-cancel>Keep Memorial</button><button class="danger" data-v127-delete-confirmed>Delete Memorial</button></div>
         </div>
       </section>
     </main>`;
   }
+  function showMainMenu(){
+    RF.UI.modal=null;
+    if(RF.state)RF.state.speed=0;
+    if(RF.V101){RF.V101.mainMenu=true;RF.V101.renderMainMenu?.();return true;}
+    return false;
+  }
   function bindGameOver(){
     document.querySelector('[data-v125-main-menu]')?.addEventListener('click',()=>{
-      RF.Core.Campaigns.saveNow?.();if(RF.V101){RF.V101.mainMenu=true;RF.V101.renderMainMenu?.();}
+      showMainMenu();
     });
     document.querySelector('[data-v125-new-character]')?.addEventListener('click',()=>{
       RF.Core.Campaigns.saveNow?.();RF.Core.Campaigns.activate('',null);RF.state=null;RF.UI.modal=null;
@@ -134,10 +145,42 @@
         if(btn){const b=btn.querySelector?.('b');if(b)b.textContent=r?.method==='file'?'Memorial Exported':'Memorial Copied';}
       }catch(err){console.warn(err);if(btn){const b=btn.querySelector?.('b');if(b)b.textContent='Export Failed';}}
     });
+    const confirm=document.querySelector('[data-v127-delete-confirm]');
+    document.querySelector('[data-v127-delete-save]')?.addEventListener('click',()=>{if(confirm)confirm.hidden=false;});
+    document.querySelector('[data-v127-delete-cancel]')?.addEventListener('click',()=>{if(confirm)confirm.hidden=true;});
+    document.querySelector('[data-v127-delete-confirmed]')?.addEventListener('click',()=>{
+      const id=RF.Core.Campaigns.activeId();
+      if(!id||!api.isGameOver(RF.state))return;
+      RF.Core.Campaigns.delete(id);
+      RF.state=null;RF.UI.modal=null;
+      showMainMenu();
+    });
+  }
+
+  // Final front-door decoration for fallen Hardcore memorials. The underlying campaign
+  // metadata remains authoritative; this only changes the presentation of dead slots.
+  if(RF.V101?.renderMainMenu){
+    const renderMenuBase=RF.V101.renderMainMenu.bind(RF.V101);
+    RF.V101.renderMainMenu=function(){
+      renderMenuBase();
+      const metas=new Map(RF.Core.Campaigns.readIndex().map(m=>[m.id,m]));
+      document.querySelectorAll('[data-v101-load]').forEach(btn=>{
+        const m=metas.get(btn.dataset.v101Load);
+        if(!m||m.mode!=='hardcore'||m.gameOver!==true)return;
+        btn.classList.add('v127FallenSave');
+        const title=btn.querySelector('b'),sub=btn.querySelector('small');
+        if(title)title.innerHTML=`<span class="v127FallenIcon">☠️</span> ${esc(m.name)} <span class="v127FallenBadge">FALLEN</span>`;
+        if(sub)sub.textContent=`${m.playerName||'Wanderer'} • Lv ${m.level||1} • Day ${m.day||1} • Game Over`;
+        btn.setAttribute('aria-label',`${m.name}, fallen Hardcore campaign, level ${m.level||1}, day ${m.day||1}, game over`);
+      });
+    };
   }
 
   const renderBase=RF.UI.render.bind(RF.UI);
   RF.UI.render=function(s){
+    // Explicit front-door state outranks the fallen-campaign guard. Without this check,
+    // passive clock/UI redraws repaint Game Over immediately after the player leaves it.
+    if(RF.V101?.mainMenu)return renderBase(s);
     if(s&&api.isGameOver(s)){
       const root=document.getElementById('app');if(!root)return;
       root.innerHTML=gameOverHtml(s);bindGameOver(s);return root.innerHTML;
@@ -150,8 +193,8 @@
     .v125HardcoreConfirm{margin-top:10px;padding:12px;border:1px solid #7f3f39;border-radius:16px;background:linear-gradient(145deg,#25110f,#160d0c);box-shadow:0 12px 30px rgba(0,0,0,.25)}.v125HardcoreWarning{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px}.v125Skull{font-size:28px}.v125HardcoreWarning b{color:#f0b0a1;font:700 15px Georgia,serif}.v125HardcoreWarning p{margin:5px 0;color:#d2b8ad;font-size:10px;line-height:1.45}.v125HardcoreWarning strong{color:#e7c98d;font-size:9px}.v125ConfirmActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.v125ConfirmActions button{min-height:42px;border:1px solid #574332;border-radius:12px;background:#211812;color:#dbc59e;font-weight:800}.v125ConfirmActions button:first-child{border-color:#a34840;background:#3a1714;color:#f3b6aa}
     .v125HardcoreBanner{margin:0 0 14px;padding:11px 13px;border:1px solid rgba(192,75,63,.55);border-radius:17px;background:radial-gradient(circle at 90% 10%,rgba(184,70,52,.18),transparent 40%),linear-gradient(140deg,#24100e,#16100d);display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 10px 28px rgba(0,0,0,.22)}.v125HardcoreBanner>div{display:flex;align-items:center;gap:10px}.v125HardcoreBanner>div>span{font-size:27px}.v125HardcoreBanner b,.v125HardcoreBanner small{display:block}.v125HardcoreBanner b{color:#f0b1a1;font-size:12px;letter-spacing:.08em}.v125HardcoreBanner small{margin-top:2px;color:#b99c91;font-size:9px}.v125HardcoreBanner>strong{padding:5px 8px;border:1px solid rgba(219,144,93,.35);border-radius:999px;color:#e8c17f;font-size:9px;letter-spacing:.1em}
     .v125DeathStat{border-color:rgba(126,92,71,.55)!important}.v125SaveHardcore{color:#e2a194;font-size:9px}.v125SaveFallen{color:#d07869;font-size:9px}
-    .v125GameOver{min-height:100dvh;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 8%,rgba(130,34,28,.23),transparent 35%),linear-gradient(#0e0908,#070606);color:#e6d8bd}.v125Memorial{width:min(620px,100%);padding:22px;border:1px solid #69382f;border-radius:26px;background:radial-gradient(circle at 80% 0,rgba(169,67,45,.12),transparent 35%),#17100e;box-shadow:0 30px 90px rgba(0,0,0,.75);text-align:center}.v125GameOverMark{font-size:54px}.v125GameOverEyebrow{display:block;margin-top:6px;color:#b86f60;font-size:9px;font-weight:900;letter-spacing:.22em}.v125Memorial h1{margin:7px 0 2px;color:#edb2a4;font:700 38px Georgia,serif}.v125Memorial h2{margin:0;color:#ead4a7;font:700 22px Georgia,serif}.v125Memorial>p{margin:14px auto;max-width:470px;color:#bbaa94;font-size:11px;line-height:1.6}.v125MemorialGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;text-align:left}.v125MemorialGrid>div{padding:10px 11px;border:1px solid #392a23;border-radius:13px;background:#110d0b}.v125MemorialGrid small,.v125MemorialGrid b{display:block}.v125MemorialGrid small{color:#826f61;font-size:8px;text-transform:uppercase;letter-spacing:.08em}.v125MemorialGrid b{margin-top:3px;color:#dbc7a1;font-size:11px}.v125FinalRule{margin-top:12px;padding:10px;border:1px solid #743c34;border-radius:13px;background:#24110f;color:#dca99d;font-size:9px;font-weight:800}.v125GameOverActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.v125GameOverActions button{min-height:92px;padding:10px 7px;border:1px solid #4e3829;border-radius:15px;background:#1c1511;color:#d9c49e}.v125GameOverActions span,.v125GameOverActions b,.v125GameOverActions small{display:block}.v125GameOverActions span{font-size:20px}.v125GameOverActions b{margin-top:4px;font-size:10px}.v125GameOverActions small{margin-top:3px;color:#897a68;font-size:7.5px;line-height:1.35}@media(max-width:430px){.v125ModeGrid{grid-template-columns:1fr}.v125GameOverActions{grid-template-columns:repeat(2,minmax(0,1fr))}.v125GameOverActions button:first-child{grid-column:1/-1}.v125MemorialGrid{grid-template-columns:1fr 1fr}}
+    .v125GameOver{min-height:100dvh;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 8%,rgba(130,34,28,.23),transparent 35%),linear-gradient(#0e0908,#070606);color:#e6d8bd}.v125Memorial{width:min(620px,100%);padding:22px;border:1px solid #69382f;border-radius:26px;background:radial-gradient(circle at 80% 0,rgba(169,67,45,.12),transparent 35%),#17100e;box-shadow:0 30px 90px rgba(0,0,0,.75);text-align:center}.v125GameOverMark{font-size:54px}.v125GameOverEyebrow{display:block;margin-top:6px;color:#b86f60;font-size:9px;font-weight:900;letter-spacing:.22em}.v125Memorial h1{margin:7px 0 2px;color:#edb2a4;font:700 38px Georgia,serif}.v125Memorial h2{margin:0;color:#ead4a7;font:700 22px Georgia,serif}.v125Memorial>p{margin:14px auto;max-width:470px;color:#bbaa94;font-size:11px;line-height:1.6}.v125MemorialGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;text-align:left}.v125MemorialGrid>div{padding:10px 11px;border:1px solid #392a23;border-radius:13px;background:#110d0b}.v125MemorialGrid small,.v125MemorialGrid b{display:block}.v125MemorialGrid small{color:#826f61;font-size:8px;text-transform:uppercase;letter-spacing:.08em}.v125MemorialGrid b{margin-top:3px;color:#dbc7a1;font-size:11px}.v125FinalRule{margin-top:12px;padding:10px;border:1px solid #743c34;border-radius:13px;background:#24110f;color:#dca99d;font-size:9px;font-weight:800}.v125GameOverActions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}.v125GameOverActions button{min-height:92px;padding:10px 7px;border:1px solid #4e3829;border-radius:15px;background:#1c1511;color:#d9c49e}.v125GameOverActions span,.v125GameOverActions b,.v125GameOverActions small{display:block}.v127DeleteAction{border-color:#67342f!important;background:linear-gradient(180deg,#281310,#1c0e0c)!important}.v127DeleteAction b{color:#eab1a5}.v125GameOverActions span{font-size:20px}.v125GameOverActions b{margin-top:4px;font-size:10px}.v125GameOverActions small{margin-top:3px;color:#897a68;font-size:7.5px;line-height:1.35}.v127DeleteConfirm{margin-top:10px;padding:12px;border:1px solid #6e3932;border-radius:15px;background:#21100e;text-align:left;display:grid;grid-template-columns:34px minmax(0,1fr);gap:9px}.v127DeleteConfirm[hidden]{display:none}.v127DeleteSkull{font-size:25px}.v127DeleteConfirm b{color:#efb1a4;font-size:11px}.v127DeleteConfirm p{margin:4px 0 0;color:#b8978f;font-size:9px;line-height:1.45}.v127DeleteConfirmActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:3px}.v127DeleteConfirmActions button{min-height:40px;border:1px solid #514035;border-radius:11px;background:#1a1511;color:#d8c5a3;font-weight:800;font-size:9px}.v127DeleteConfirmActions .danger{border-color:#8a443b;background:#371714;color:#f0b0a3}.v127FallenSave{border-color:#6c3a34!important;background:radial-gradient(circle at 92% 10%,rgba(154,55,45,.17),transparent 42%),linear-gradient(180deg,#211411,#17110f)!important;box-shadow:inset 3px 0 0 rgba(181,71,59,.5),0 8px 24px rgba(55,10,8,.12)}.v127FallenSave b{color:#ecc2b5!important}.v127FallenSave small{color:#b88e84!important}.v127FallenIcon{font-size:17px;margin-right:2px}.v127FallenBadge{display:inline-block;margin-left:7px;padding:3px 6px;border:1px solid rgba(201,91,76,.48);border-radius:999px;background:rgba(116,38,31,.34);color:#e69787;font-size:7px;letter-spacing:.12em;vertical-align:2px}@media(max-width:430px){.v125ModeGrid{grid-template-columns:1fr}.v125GameOverActions{grid-template-columns:repeat(2,minmax(0,1fr))}.v125GameOverActions button:first-child{grid-column:1/-1}.v125MemorialGrid{grid-template-columns:1fr 1fr}}
   `;document.head.appendChild(style);
 
-  RF.CampaignMode=RF.Modules.register('systems.hardcore',api,{owner:'systems',status:'canonical',introducedIn:'12.5.0',persistent:true,saveSchema:'12.5.0'});
+  RF.CampaignMode=RF.Modules.register('systems.hardcore',api,{owner:'systems',status:'canonical',introducedIn:'12.5.0',updatedIn:'12.7.0',persistent:true,saveSchema:'12.6.0'});
 })();
